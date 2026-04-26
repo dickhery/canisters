@@ -1,0 +1,368 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --font-display: "Geist Mono";
+    --font-body: "Geist Mono";
+    --font-mono: "Geist Mono";
+    --radius: 0;
+
+    /* Near-black background, phosphor green foreground */
+    --background: 0.07 0 0;
+    --foreground: 0.82 0.2 112;
+    --card: 0.1 0 0;
+    --card-foreground: 0.82 0.2 112;
+    --popover: 0.1 0 0;
+    --popover-foreground: 0.82 0.2 112;
+
+    --primary: 0.82 0.2 112;
+    --primary-foreground: 0.07 0 0;
+
+    --secondary: 0.18 0 0;
+    --secondary-foreground: 0.82 0.2 112;
+    --muted: 0.18 0 0;
+    --muted-foreground: 0.48 0.06 112;
+
+    /* Bright acid green accent for running state */
+    --accent: 0.78 0.22 145;
+    --accent-foreground: 0.07 0 0;
+
+    --destructive: 0.52 0.22 25;
+    --destructive-foreground: 0.95 0 0;
+
+    --border: 0.28 0.04 112;
+    --input: 0.14 0 0;
+    --ring: 0.78 0.22 145;
+
+    --chart-1: 0.82 0.2 112;
+    --chart-2: 0.78 0.22 145;
+    --chart-3: 0.52 0.22 25;
+    --chart-4: 0.65 0.16 145;
+    --chart-5: 0.6 0.18 112;
+
+    --sidebar: 0.09 0 0;
+    --sidebar-foreground: 0.82 0.2 112;
+    --sidebar-primary: 0.82 0.2 112;
+    --sidebar-primary-foreground: 0.07 0 0;
+    --sidebar-accent: 0.18 0 0;
+    --sidebar-accent-foreground: 0.82 0.2 112;
+    --sidebar-border: 0.28 0.04 112;
+    --sidebar-ring: 0.78 0.22 145;
+
+    --color-success: 0.65 0.16 145;
+    --color-success-bg: 0.65 0.16 145 / 0.2;
+    --color-warning: 0.82 0.2 112;
+    --color-warning-bg: 0.82 0.2 112 / 0.2;
+  }
+
+  .dark {
+    --background: 0.07 0 0;
+    --foreground: 0.82 0.2 112;
+    --card: 0.1 0 0;
+    --card-foreground: 0.82 0.2 112;
+    --popover: 0.1 0 0;
+    --popover-foreground: 0.82 0.2 112;
+
+    --primary: 0.82 0.2 112;
+    --primary-foreground: 0.07 0 0;
+
+    --secondary: 0.18 0 0;
+    --secondary-foreground: 0.82 0.2 112;
+    --muted: 0.18 0 0;
+    --muted-foreground: 0.48 0.06 112;
+
+    --accent: 0.78 0.22 145;
+    --accent-foreground: 0.07 0 0;
+
+    --destructive: 0.52 0.22 25;
+    --destructive-foreground: 0.95 0 0;
+
+    --border: 0.28 0.04 112;
+    --input: 0.14 0 0;
+    --ring: 0.78 0.22 145;
+
+    --chart-1: 0.82 0.2 112;
+    --chart-2: 0.78 0.22 145;
+    --chart-3: 0.52 0.22 25;
+    --chart-4: 0.65 0.16 145;
+    --chart-5: 0.6 0.18 112;
+
+    --sidebar: 0.09 0 0;
+    --sidebar-foreground: 0.82 0.2 112;
+    --sidebar-primary: 0.82 0.2 112;
+    --sidebar-primary-foreground: 0.07 0 0;
+    --sidebar-accent: 0.18 0 0;
+    --sidebar-accent-foreground: 0.82 0.2 112;
+    --sidebar-border: 0.28 0.04 112;
+    --sidebar-ring: 0.78 0.22 145;
+
+    --color-success: 0.65 0.16 145;
+    --color-success-bg: 0.65 0.16 145 / 0.2;
+    --color-warning: 0.82 0.2 112;
+    --color-warning-bg: 0.82 0.2 112 / 0.2;
+  }
+
+  * {
+    @apply border-border;
+  }
+
+  html {
+    color-scheme: dark;
+  }
+
+  body {
+    @apply bg-background text-foreground font-body antialiased;
+    /* Subtle CRT flicker on the entire screen */
+    animation: crt-flicker 8s infinite;
+  }
+}
+
+/* ─── Keyframes ──────────────────────────────────────────────────────────── */
+@keyframes blink {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0;
+  }
+}
+
+@keyframes crt-flicker {
+  0% {
+    opacity: 1;
+  }
+  2% {
+    opacity: 0.98;
+  }
+  4% {
+    opacity: 1;
+  }
+  19% {
+    opacity: 1;
+  }
+  21% {
+    opacity: 0.97;
+  }
+  23% {
+    opacity: 1;
+  }
+  60% {
+    opacity: 1;
+  }
+  62% {
+    opacity: 0.985;
+  }
+  64% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 1;
+  }
+}
+
+@keyframes scanline-move {
+  0% {
+    background-position: 0 0;
+  }
+  100% {
+    background-position: 0 100%;
+  }
+}
+
+@keyframes text-glitch {
+  0% {
+    transform: translateX(0);
+  }
+  10% {
+    transform: translateX(-1px);
+  }
+  20% {
+    transform: translateX(1px);
+  }
+  30% {
+    transform: translateX(0);
+  }
+  100% {
+    transform: translateX(0);
+  }
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* ─── Utilities ──────────────────────────────────────────────────────────── */
+@layer utilities {
+  .transition-smooth {
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  .tabular-nums {
+    font-variant-numeric: tabular-nums;
+  }
+
+  .monospace-value {
+    font-family: var(--font-mono);
+    font-size: 0.875rem;
+    font-weight: 500;
+    letter-spacing: 0.04em;
+  }
+
+  /* Intense phosphor glow — layered shadows */
+  .retro-glow {
+    text-shadow: 0 0 4px oklch(var(--foreground) / 0.9), 0 0 10px
+      oklch(var(--foreground) / 0.7), 0 0 20px oklch(var(--foreground) / 0.45),
+      0 0 40px oklch(var(--foreground) / 0.2), 0 0 80px
+      oklch(var(--foreground) / 0.08);
+  }
+
+  /* Dimmer glow for secondary elements */
+  .retro-glow-sm {
+    text-shadow: 0 0 4px oklch(var(--foreground) / 0.6), 0 0 12px
+      oklch(var(--foreground) / 0.3), 0 0 24px oklch(var(--foreground) / 0.12);
+  }
+
+  /* Box glow for borders/panels */
+  .retro-box-glow {
+    box-shadow: 0 0 0 1px oklch(var(--primary) / 0.4), 0 0 8px
+      oklch(var(--primary) / 0.15), inset 0 0 12px oklch(var(--primary) / 0.04);
+  }
+
+  .retro-border {
+    border: 1px solid oklch(var(--border));
+  }
+
+  .retro-border-dashed {
+    border: 1px dashed oklch(var(--border) / 0.8);
+  }
+
+  /* Heavy scanlines — double-line pattern for more visible CRT effect */
+  .scanline {
+    position: relative;
+  }
+
+  .scanline::before {
+    content: "";
+    pointer-events: none;
+    position: fixed;
+    inset: 0;
+    z-index: 9998;
+    background-image: repeating-linear-gradient(
+      0deg,
+      transparent,
+      transparent 2px,
+      oklch(0 0 0 / 0.07) 2px,
+      oklch(0 0 0 / 0.07) 3px
+    );
+    background-size: 100% 3px;
+  }
+
+  /* CRT vignette — strong corner darkening */
+  .scanline::after {
+    content: "";
+    pointer-events: none;
+    position: fixed;
+    inset: 0;
+    z-index: 9997;
+    background: radial-gradient(
+      ellipse 80% 80% at 50% 50%,
+      transparent 50%,
+      oklch(0 0 0 / 0.3) 70%,
+      oklch(0 0 0 / 0.65) 88%,
+      oklch(0 0 0 / 0.88) 100%
+    );
+  }
+
+  /* Noise grain overlay */
+  .crt-noise {
+    position: relative;
+    overflow: hidden;
+  }
+
+  .crt-noise::after {
+    content: "";
+    pointer-events: none;
+    position: absolute;
+    inset: 0;
+    opacity: 0.025;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
+    background-size: 128px 128px;
+  }
+
+  /* Terminal corner brackets via pseudo-elements */
+  .terminal-card {
+    position: relative;
+  }
+
+  .terminal-card::before,
+  .terminal-card::after {
+    content: "┌─";
+    position: absolute;
+    top: -1px;
+    font-family: var(--font-mono);
+    font-size: 10px;
+    color: oklch(var(--primary) / 0.5);
+    pointer-events: none;
+    line-height: 1;
+  }
+
+  .terminal-card::before {
+    left: -1px;
+  }
+
+  .terminal-card::after {
+    content: "─┐";
+    right: -1px;
+  }
+
+  /* Pixel grid background pattern */
+  .pixel-grid {
+    background-image: linear-gradient(
+        0deg,
+        oklch(var(--border) / 0.12) 1px,
+        transparent 1px
+      ),
+      linear-gradient(90deg, oklch(var(--border) / 0.12) 1px, transparent 1px);
+    background-size: 24px 24px;
+  }
+
+  /* Animation helpers */
+  .animate-blink {
+    animation: blink 1s step-end infinite;
+  }
+
+  .animate-fade-in-up {
+    animation: fadeInUp 0.3s ease-out;
+  }
+
+  /* Reduced motion */
+  @media (prefers-reduced-motion: reduce) {
+    body {
+      animation: none;
+    }
+    .animate-blink {
+      animation: none;
+      opacity: 1;
+    }
+    .animate-fade-in-up {
+      animation: none;
+    }
+  }
+}
+
+@font-face {
+  font-family: "Geist Mono";
+  src: url("/assets/fonts/GeistMono.woff2") format("woff2");
+  font-weight: 400 700;
+  font-display: swap;
+}

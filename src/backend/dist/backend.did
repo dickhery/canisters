@@ -1,0 +1,98 @@
+type UserId = principal;
+type UserAccount = 
+ record {
+   accountId: text;
+   subaccount: blob;
+   userId: UserId;
+ };
+type TxKind = 
+ variant {
+   icpTransfer: record {toAccountId: text;};
+   topUp: record {
+            canisterId: principal;
+            cyclesAdded: Cycles;
+          };
+ };
+type Transaction = 
+ record {
+   amountE8s: E8s;
+   id: nat;
+   kind: TxKind;
+   memo: text;
+   timestamp: Timestamp;
+   userId: UserId;
+ };
+type Timestamp = int;
+type Result_2 = 
+ variant {
+   err: text;
+   ok;
+ };
+type Result_1 = 
+ variant {
+   err: text;
+   ok: Cycles;
+ };
+type Result = 
+ variant {
+   err: text;
+   ok: nat64;
+ };
+type Page_1 = 
+ record {
+   items: vec Transaction;
+   page: nat;
+   pageSize: nat;
+   total: nat;
+ };
+type Page = 
+ record {
+   items: vec CanisterSummary;
+   page: nat;
+   pageSize: nat;
+   total: nat;
+ };
+type E8s = nat64;
+type Cycles = nat;
+type CanisterSummary = 
+ record {
+   canisterId: CanisterId;
+   customName: text;
+   cycleBalance: Cycles;
+   lastChecked: Timestamp;
+   status: CanisterStatus;
+ };
+type CanisterStatus = 
+ variant {
+   running;
+   stopped;
+   stopping;
+ };
+type CanisterId = principal;
+type CanisterDetails = 
+ record {
+   canisterId: CanisterId;
+   controllers: vec principal;
+   createdAt: Timestamp;
+   customName: text;
+   cycleBalance: Cycles;
+   lastChecked: Timestamp;
+   status: CanisterStatus;
+ };
+service : {
+  addCanister: (canisterId: CanisterId, customName: text) -> (Result_2);
+  addController: (canisterId: CanisterId, controller: principal) ->
+   (Result_2);
+  getAppPrincipal: () -> (principal) query;
+  getCanisterDetails: (canisterId: CanisterId) -> (opt CanisterDetails);
+  getMyAccount: () -> (UserAccount);
+  getMyBalance: () -> (E8s);
+  getTransactionHistory: (page: nat) -> (Page_1);
+  listCanisters: (page: nat) -> (Page);
+  removeCanister: (canisterId: CanisterId) -> (Result_2);
+  removeController: (canisterId: CanisterId, controller: principal) ->
+   (Result_2);
+  renameCanister: (canisterId: CanisterId, newName: text) -> (Result_2);
+  topUpCanister: (canisterId: CanisterId, icpAmountE8s: E8s) -> (Result_1);
+  transferIcp: (toAccountId: text, amountE8s: E8s, memo: text) -> (Result);
+}

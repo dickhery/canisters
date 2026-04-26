@@ -1,0 +1,23 @@
+{
+  "overview": "CANISTERS is a retro terminal-style ICP canister management dashboard. Track cycle balances, manage controllers, and top up canisters from your ICP account — all wrapped in a full CRT phosphor-green aesthetic.",
+  "features": [
+    "Retro CRT terminal theme with phosphor green, scanlines, and glow effects",
+    "Track and monitor ICP canisters with live cycle balance display",
+    "Top up canister cycles by converting ICP from your in-app account",
+    "Manage canister controllers — add, remove, and view the app controller PID",
+    "View transaction history for all top-ups and ICP transfers",
+    "Internet Identity authentication with Principal ID and ICP Account ID display"
+  ],
+  "category": "developer-tools",
+  "tags": [
+    "icp",
+    "internet-computer",
+    "canisters",
+    "cycles",
+    "canister-management",
+    "retro",
+    "terminal",
+    "developer-tools"
+  ],
+  "last_updated": "2026-04-26T10:34:48.064Z"
+}

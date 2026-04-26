@@ -1,0 +1,105 @@
+// Version: 1.0.0
+type CanisterId__276104819 = CanisterId__863882071;
+type CanisterId__863882071 = Principal;
+type Cycles__410059581 = Nat;
+type Data__791452850<K, V> =
+  {var count : Nat__490723111; kvs : [var ?(K, V)]};
+type E8s__328334695 = Nat64;
+type E8s__861091686 = E8s__328334695;
+type Internal__8484328<K, V> =
+  {children : [var ?Node__46230540<K, V>]; data : Data__791452850<K, V>};
+type Leaf__809889148<K, V> = {data : Data__791452850<K, V>};
+type List__415060402<T> = List__790383201<T>;
+type List__790383201<T> =
+  {
+    var blockIndex : Nat__490723111;
+    var blocks : [var [var ?T]];
+    var elementIndex : Nat__490723111
+  };
+type Nat__490723111 = Nat__920180692;
+type Nat__920180692 = Nat;
+type Node__46230540<K, V> =
+  {#internal : Internal__8484328<K, V>; #leaf : Leaf__809889148<K, V>};
+type Timestamp__301639476 = Int;
+type Timestamp__647675121 = Timestamp__301639476;
+type Timestamp__884806187 = Timestamp__301639476;
+type TrackedCanister__955140980 =
+  {
+    addedAt : Timestamp__647675121;
+    canisterId : CanisterId__276104819;
+    var customName : Text
+  };
+type Transaction__554140998 =
+  {
+    amountE8s : E8s__861091686;
+    id : Nat;
+    kind : TxKind__1024749679;
+    memo : Text;
+    timestamp : Timestamp__884806187;
+    userId : UserId__503354635
+  };
+type TxKind__1024749679 =
+  {
+    #icpTransfer : {toAccountId : Text};
+    #topUp : {canisterId : Principal; cyclesAdded : Cycles__410059581}
+  };
+type UserAccount__951397460 =
+  {accountId : Text; subaccount : Blob; userId : UserId__503354635};
+type UserId__158757552 = Principal;
+type UserId__503354635 = UserId__158757552;
+actor {
+  stable CMC_ID : Principal;
+  stable ICP_FEE_E8S : Nat64;
+  stable ICP_LEDGER_ID : Principal;
+  stable ic :
+    actor {
+      canister_status :
+        shared {canister_id : Principal} ->
+          async
+            {
+              cycles : Nat;
+              idle_cycles_burned_per_day : Nat;
+              module_hash : ?Blob;
+              settings :
+                {
+                  compute_allocation : Nat;
+                  controllers : [Principal];
+                  freezing_threshold : Nat;
+                  memory_allocation : Nat
+                };
+              status : {#running; #stopped; #stopping}
+            };
+      update_settings :
+        shared {
+                 canister_id : Principal;
+                 settings :
+                   {
+                     compute_allocation : ?Nat;
+                     controllers : ?[Principal];
+                     freezing_threshold : ?Nat;
+                     memory_allocation : ?Nat
+                   }
+               } ->
+          async ()
+    };
+  stable nextTxId : {var value : Nat};
+  stable selfPrincipal : Principal;
+  stable txLog :
+    {
+      var blockIndex : Nat__490723111;
+      var blocks : [var [var ?Transaction__554140998]];
+      var elementIndex : Nat__490723111
+    };
+  stable userAccounts :
+    {
+      var root : Node__46230540<UserId__158757552, UserAccount__951397460>;
+      var size : Nat__490723111
+    };
+  stable userCanisters :
+    {
+      var root :
+        Node__46230540<UserId__158757552,
+                        List__415060402<TrackedCanister__955140980>>;
+      var size : Nat__490723111
+    }
+};
