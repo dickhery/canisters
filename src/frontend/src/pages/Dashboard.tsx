@@ -1,6 +1,5 @@
-import type { CanisterStatus } from "@/backend.d";
+import type { DashboardItem } from "@/backend.d";
 import { CopyableId } from "@/components/CopyableId";
-import { StatusBadge } from "@/components/StatusBadge";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -13,8 +12,10 @@ import { Label } from "@/components/ui/label";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
   useGetAppPrincipal,
+  useGetLowestCyclesCanisters,
   useGetMyAccount,
   useGetMyBalance,
+  useGetRecentCanisters,
   useListCanisters,
 } from "@/hooks/useBackend";
 import { useAddCanister } from "@/hooks/useCanisterMutations";
@@ -30,6 +31,7 @@ import {
   Plus,
   Send,
   Server,
+  TrendingDown,
   TrendingUp,
   Wallet,
 } from "lucide-react";
@@ -183,28 +185,29 @@ function AddCanisterModal({
   );
 }
 
-// ── Recent Canister Row ────────────────────────────────────────────────────────
+// ── Dashboard Canister Row ────────────────────────────────────────────────────
 
-interface RecentCanisterRowProps {
-  name: string;
-  canisterId: string;
-  cycles: bigint;
-  status: CanisterStatus;
+interface DashboardRowProps {
+  item: DashboardItem;
   index: number;
+  ocidPrefix: string;
 }
 
-function RecentCanisterRow({
-  name,
-  canisterId,
-  cycles,
-  status,
-  index,
-}: RecentCanisterRowProps) {
+function DashboardRow({ item, index, ocidPrefix }: DashboardRowProps) {
+  const canisterId = item.canisterId.toText();
+  const displayName = item.customName
+    ? item.customName.toUpperCase()
+    : "UNNAMED_CANISTER";
+  const truncatedId =
+    canisterId.length > 30
+      ? `${canisterId.slice(0, 14)}...${canisterId.slice(-8)}`
+      : canisterId;
+
   return (
     <Link
       to="/canisters/$canisterId"
       params={{ canisterId }}
-      data-ocid={`recent_canisters.item.${index}`}
+      data-ocid={`${ocidPrefix}.item.${index}`}
       className="group flex items-center gap-4 px-3 py-2.5 hover:bg-primary/8 transition-colors duration-100 border-b border-border/20 last:border-b-0 font-mono"
     >
       {/* ASCII prefix */}
@@ -216,22 +219,109 @@ function RecentCanisterRow({
       </div>
       <div className="flex-1 min-w-0">
         <p className="text-xs font-mono text-foreground truncate group-hover:text-primary transition-colors tracking-[0.1em] uppercase">
-          {name || "UNNAMED_CANISTER"}
+          {displayName}
         </p>
         <p className="font-mono text-[10px] text-muted-foreground mt-0.5 truncate tracking-wide">
-          {canisterId.length > 30
-            ? `${canisterId.slice(0, 14)}...${canisterId.slice(-8)}`
-            : canisterId}
+          {truncatedId}
         </p>
       </div>
-      <div className="hidden sm:flex items-center gap-3 shrink-0">
+      <div className="hidden sm:flex items-center gap-2 shrink-0">
         <span className="font-mono text-xs font-bold text-primary tabular-nums retro-glow-sm">
-          {formatCycles(cycles)}
+          {formatCycles(item.cycleBalance)}
         </span>
-        <StatusBadge status={status} />
+        <span
+          className={`font-mono text-[9px] px-1.5 py-0.5 border tracking-[0.1em] ${
+            item.isController
+              ? "border-primary/60 text-primary bg-primary/10"
+              : "border-border/40 text-muted-foreground/60 bg-transparent"
+          }`}
+        >
+          {item.isController ? "◆CTRL" : "◇NO-CTRL"}
+        </span>
       </div>
       <ArrowRight className="h-3.5 w-3.5 text-muted-foreground group-hover:text-primary group-hover:translate-x-0.5 transition-all shrink-0" />
     </Link>
+  );
+}
+
+// ── Dashboard Canister List ───────────────────────────────────────────────────
+
+interface DashboardListProps {
+  items: DashboardItem[] | undefined;
+  isLoading: boolean;
+  emptyMessage: string;
+  ocidPrefix: string;
+  onAddClick?: () => void;
+}
+
+function DashboardList({
+  items,
+  isLoading,
+  emptyMessage,
+  ocidPrefix,
+  onAddClick,
+}: DashboardListProps) {
+  if (isLoading) {
+    return (
+      <div
+        className="space-y-1 py-1 px-3"
+        data-ocid={`${ocidPrefix}.loading_state`}
+      >
+        {[1, 2, 3].map((i) => (
+          <div key={i} className="flex items-center gap-4 px-3 py-2.5">
+            <Skeleton className="h-7 w-7 shrink-0" />
+            <div className="flex-1 space-y-1.5">
+              <Skeleton className="h-3 w-40" />
+              <Skeleton className="h-2.5 w-56" />
+            </div>
+            <Skeleton className="h-4 w-20 hidden sm:block" />
+          </div>
+        ))}
+      </div>
+    );
+  }
+
+  if (!items || items.length === 0) {
+    return (
+      <div
+        data-ocid={`${ocidPrefix}.empty_state`}
+        className="flex flex-col items-start gap-2 py-6 px-5"
+      >
+        {onAddClick ? (
+          <>
+            <p className="font-mono text-[11px] text-muted-foreground tracking-[0.15em]">
+              &gt; NO_CANISTERS_TRACKED
+            </p>
+            <Button
+              size="sm"
+              onClick={onAddClick}
+              data-ocid={`${ocidPrefix}.add_first_button`}
+              className="font-mono text-[10px] tracking-[0.15em] uppercase gap-1.5 mt-1"
+            >
+              <Plus className="h-3 w-3" />
+              ADD CANISTER
+            </Button>
+          </>
+        ) : (
+          <p className="font-mono text-[11px] text-muted-foreground tracking-[0.15em]">
+            &gt; {emptyMessage}
+          </p>
+        )}
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-0 px-0" data-ocid={`${ocidPrefix}.list`}>
+      {items.map((item, i) => (
+        <DashboardRow
+          key={item.canisterId.toText()}
+          item={item}
+          index={i + 1}
+          ocidPrefix={ocidPrefix}
+        />
+      ))}
+    </div>
   );
 }
 
@@ -305,14 +395,18 @@ export default function Dashboard() {
   const { data: account, isLoading: accountLoading } = useGetMyAccount();
   const { data: balance, isLoading: balanceLoading } = useGetMyBalance();
 
-  const canisters = canistersPage?.items ?? [];
+  const { data: recentCanisters, isLoading: recentLoading } =
+    useGetRecentCanisters();
+  const { data: lowestCanisters, isLoading: lowestLoading } =
+    useGetLowestCyclesCanisters();
+
   const totalCanisters = canistersPage?.total ?? 0n;
+  const canisters = canistersPage?.items ?? [];
   // Use BigInt addition to avoid floating-point issues with large cycle counts
   const totalCycles = canisters.reduce(
     (sum, c) => sum + (c.cycleBalance ?? 0n),
     0n,
   );
-  const recentCanisters = canisters.slice(0, 5);
 
   return (
     <div className="flex flex-col gap-5 p-4 lg:p-6 max-w-6xl mx-auto font-mono">
@@ -452,84 +546,77 @@ export default function Dashboard() {
         </div>
       </div>
 
-      {/* Recent Canisters */}
-      <div
-        className="terminal-card terminal-card-full border border-border/60 bg-card"
-        data-ocid="dashboard.recent_canisters_section"
-      >
-        <div className="border-b border-border/40 px-4 py-2 flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <Server className="h-3.5 w-3.5 text-primary" />
-            <h2 className="font-mono text-xs font-semibold text-primary uppercase tracking-[0.2em] retro-glow-sm">
-              RECENT CANISTERS
-            </h2>
+      {/* Two-column grid: Recent + Low Cycles */}
+      <div className="grid gap-5 lg:grid-cols-2">
+        {/* Recent Canisters */}
+        <div
+          className="terminal-card terminal-card-full border border-border/60 bg-card"
+          data-ocid="dashboard.recent_canisters_section"
+        >
+          <div className="border-b border-border/40 px-4 py-2 flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <Server className="h-3.5 w-3.5 text-primary" />
+              <h2 className="font-mono text-xs font-semibold text-primary uppercase tracking-[0.2em] retro-glow-sm">
+                RECENT CANISTERS
+              </h2>
+            </div>
+            <Link
+              to="/canisters"
+              data-ocid="dashboard.view_all_canisters_link"
+              className="flex items-center gap-1 font-mono text-[10px] text-primary hover:text-primary/70 transition-colors uppercase tracking-[0.12em]"
+            >
+              VIEW ALL
+              <ArrowUpRight className="h-3 w-3" />
+            </Link>
           </div>
-          <Link
-            to="/canisters"
-            data-ocid="dashboard.view_all_canisters_link"
-            className="flex items-center gap-1 font-mono text-[10px] text-primary hover:text-primary/70 transition-colors uppercase tracking-[0.12em]"
-          >
-            VIEW ALL
-            <ArrowUpRight className="h-3 w-3" />
-          </Link>
+          <div className="py-1">
+            <DashboardList
+              items={recentCanisters}
+              isLoading={recentLoading}
+              emptyMessage="NO RECENT ACTIVITY"
+              ocidPrefix="recent_canisters"
+              onAddClick={
+                !recentLoading &&
+                (!recentCanisters || recentCanisters.length === 0)
+                  ? () => setAddOpen(true)
+                  : undefined
+              }
+            />
+          </div>
         </div>
-        <div className="px-3 py-1">
-          {canistersLoading ? (
-            <div
-              className="space-y-1 py-1"
-              data-ocid="recent_canisters.loading_state"
+
+        {/* Low Cycles */}
+        <div
+          className="terminal-card terminal-card-full border border-border/60 bg-card"
+          data-ocid="dashboard.low_cycles_section"
+        >
+          <div className="border-b border-border/40 px-4 py-2 flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <TrendingDown className="h-3.5 w-3.5 text-primary" />
+              <h2 className="font-mono text-xs font-semibold text-primary uppercase tracking-[0.2em] retro-glow-sm">
+                LOW CYCLES
+              </h2>
+              <span className="font-mono text-[9px] px-1.5 border border-primary/30 text-primary/60 tracking-[0.1em] uppercase">
+                ALERT
+              </span>
+            </div>
+            <Link
+              to="/canisters"
+              data-ocid="dashboard.low_cycles_view_all_link"
+              className="flex items-center gap-1 font-mono text-[10px] text-primary hover:text-primary/70 transition-colors uppercase tracking-[0.12em]"
             >
-              {[1, 2, 3].map((i) => (
-                <div key={i} className="flex items-center gap-4 px-3 py-2.5">
-                  <Skeleton className="h-7 w-7 shrink-0" />
-                  <div className="flex-1 space-y-1.5">
-                    <Skeleton className="h-3 w-40" />
-                    <Skeleton className="h-2.5 w-56" />
-                  </div>
-                  <Skeleton className="h-4 w-20 hidden sm:block" />
-                </div>
-              ))}
-            </div>
-          ) : recentCanisters.length === 0 ? (
-            <div
-              data-ocid="recent_canisters.empty_state"
-              className="flex flex-col items-center justify-center gap-3 py-10 text-center"
-            >
-              <div className="flex h-12 w-12 items-center justify-center border border-border/50 bg-muted">
-                <Server className="h-5 w-5 text-muted-foreground" />
-              </div>
-              <div>
-                <p className="font-mono text-xs font-medium text-foreground uppercase tracking-[0.15em]">
-                  NO_CANISTERS_FOUND
-                </p>
-                <p className="font-mono text-[10px] text-muted-foreground mt-1 tracking-wider">
-                  ADD YOUR FIRST CANISTER TO START TRACKING CYCLES
-                </p>
-              </div>
-              <Button
-                size="sm"
-                onClick={() => setAddOpen(true)}
-                data-ocid="recent_canisters.add_first_button"
-                className="font-mono text-[10px] tracking-[0.15em] uppercase gap-1.5"
-              >
-                <Plus className="h-3 w-3" />
-                ADD CANISTER
-              </Button>
-            </div>
-          ) : (
-            <div className="space-y-0" data-ocid="recent_canisters.list">
-              {recentCanisters.map((c, i) => (
-                <RecentCanisterRow
-                  key={c.canisterId.toText()}
-                  name={c.customName}
-                  canisterId={c.canisterId.toText()}
-                  cycles={c.cycleBalance ?? 0n}
-                  status={c.status}
-                  index={i + 1}
-                />
-              ))}
-            </div>
-          )}
+              VIEW ALL
+              <ArrowUpRight className="h-3 w-3" />
+            </Link>
+          </div>
+          <div className="py-1">
+            <DashboardList
+              items={lowestCanisters}
+              isLoading={lowestLoading}
+              emptyMessage="NO CANISTERS TRACKED"
+              ocidPrefix="low_cycles"
+            />
+          </div>
         </div>
       </div>
 

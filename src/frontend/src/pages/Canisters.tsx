@@ -1,5 +1,4 @@
-import { createActor } from "@/backend";
-import type { CanisterDetails, CanisterSummary } from "@/backend.d";
+import type { CanisterSummary } from "@/backend.d";
 import { CopyableId } from "@/components/CopyableId";
 import { PaginationControls } from "@/components/PaginationControls";
 import { StatusBadge } from "@/components/StatusBadge";
@@ -15,7 +14,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Skeleton } from "@/components/ui/skeleton";
-import { useGetAppPrincipal, useListCanisters } from "@/hooks/useBackend";
+import { useListCanisters, useSearchCanisters } from "@/hooks/useBackend";
 import {
   useAddCanister,
   useRemoveCanister,
@@ -23,11 +22,45 @@ import {
 } from "@/hooks/useCanisterMutations";
 import { formatCycles, formatTimestamp } from "@/lib/format";
 import { cn } from "@/lib/utils";
-import { useActor } from "@caffeineai/core-infrastructure";
-import { keepPreviousData, useQueries } from "@tanstack/react-query";
+import { CreateCanisterModal } from "@/pages/CreateCanisterModal";
 import { useNavigate } from "@tanstack/react-router";
-import { Box, Pencil, PlusCircle, Search, Trash2, X } from "lucide-react";
+import {
+  Box,
+  Pencil,
+  PlusCircle,
+  Search,
+  Terminal,
+  Trash2,
+  X,
+} from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
+
+// ---------------------------------------------------------------------------
+// Cycle-balance persistence helpers
+// ---------------------------------------------------------------------------
+// The backend may return cycleBalance=0n when an IC management call fails
+// transiently.  We keep a per-canister ref of the last non-zero balance we
+// ever saw and substitute it whenever a 0 would otherwise be displayed.
+// ---------------------------------------------------------------------------
+function useSavedCycleBalances() {
+  // Map of canisterId (string) -> last known non-zero cycle balance
+  const savedRef = useRef<Map<string, bigint>>(new Map());
+
+  // The callback is stable: it only reads/writes the ref, never causes re-renders.
+  const updateAndGet = useRef(
+    (canisterId: string, incoming: bigint): bigint => {
+      if (incoming > 0n) {
+        savedRef.current.set(canisterId, incoming);
+        return incoming;
+      }
+      // incoming is 0 — use saved non-zero value if we have one
+      const saved = savedRef.current.get(canisterId);
+      return saved !== undefined ? saved : 0n;
+    },
+  ).current;
+
+  return { updateAndGet };
+}
 
 const SKELETON_KEYS = ["sk-1", "sk-2", "sk-3", "sk-4", "sk-5"];
 
@@ -324,19 +357,10 @@ function RenameCell({ canister, index }: RenameCellProps) {
 
 // ─── Controller Indicator ──────────────────────────────────────────────────────
 interface CtrlBadgeProps {
-  isControlled: boolean | undefined;
+  isControlled: boolean;
 }
 
 function CtrlBadge({ isControlled }: CtrlBadgeProps) {
-  if (isControlled === undefined) {
-    // Loading / unknown — render a dim placeholder so layout doesn't jump
-    return (
-      <span className="font-mono text-[9px] text-muted-foreground/30 tracking-widest select-none">
-        [?]
-      </span>
-    );
-  }
-
   if (isControlled) {
     return (
       <span
@@ -350,8 +374,7 @@ function CtrlBadge({ isControlled }: CtrlBadgeProps) {
 
   return (
     <span
-      className="font-mono text-[9px] font-bold tracking-widest"
-      style={{ color: "oklch(0.78 0.18 75)" }}
+      className="font-mono text-[9px] font-bold tracking-widest text-muted-foreground"
       title="App controller NOT set — top-ups and controller actions may fail"
     >
       ◇NO-CTRL
@@ -389,16 +412,10 @@ function SkeletonRow() {
 interface CanisterRowProps {
   canister: CanisterSummary;
   index: number;
-  isControlled: boolean | undefined;
   onDelete: (c: CanisterSummary) => void;
 }
 
-function CanisterRow({
-  canister,
-  index,
-  isControlled,
-  onDelete,
-}: CanisterRowProps) {
+function CanisterRow({ canister, index, onDelete }: CanisterRowProps) {
   const navigate = useNavigate();
 
   const handleRowClick = (e: React.MouseEvent) => {
@@ -464,7 +481,7 @@ function CanisterRow({
             status={canister.status}
             blinkDelay={getBlinkDelay(index - 1)}
           />
-          <CtrlBadge isControlled={isControlled} />
+          <CtrlBadge isControlled={canister.isController} />
         </div>
       </td>
 
@@ -505,73 +522,57 @@ export default function CanistersPage() {
   const [page, setPage] = useState(1);
   const [search, setSearch] = useState("");
   const [showAddModal, setShowAddModal] = useState(false);
+  const [showCreateModal, setShowCreateModal] = useState(false);
   const [deleteTarget, setDeleteTarget] = useState<CanisterSummary | null>(
     null,
   );
   const prevSearchRef = useRef(search);
 
-  const { data, isLoading } = useListCanisters(BigInt(page - 1));
-  const { data: appPrincipal } = useGetAppPrincipal();
-  const { actor, isFetching: actorFetching } = useActor(createActor);
+  // Track last-known non-zero cycle balances so a transient backend 0 never
+  // overwrites a previously displayed real value.
+  const { updateAndGet: getGuardedBalance } = useSavedCycleBalances();
 
-  const items = data?.items ?? [];
+  const { data, isLoading } = useListCanisters(BigInt(page - 1));
+
+  // Server-wide search — fetches all pages when a query is active.
+  const isSearchActive = search.trim().length > 0;
+  const { data: searchResults, isLoading: isSearchLoading } =
+    useSearchCanisters(search);
+
+  const rawItems = data?.items ?? [];
   const total = Number(data?.total ?? 0n);
   const pageSize = Number(data?.pageSize ?? 20n);
   const totalPages = Math.max(1, Math.ceil(total / pageSize));
 
-  const filtered = useMemo(() => {
-    if (!search.trim()) return items;
-    const q = search.toLowerCase();
-    return items.filter(
-      (c) =>
-        c.customName.toLowerCase().includes(q) ||
-        c.canisterId.toString().toLowerCase().includes(q),
-    );
-  }, [items, search]);
+  // Apply cycle-balance guard: substitute last non-zero value whenever the
+  // backend returns 0 due to a transient IC management call failure.
+  const items = useMemo(
+    () =>
+      rawItems.map((c) => ({
+        ...c,
+        cycleBalance: getGuardedBalance(
+          c.canisterId.toString(),
+          c.cycleBalance,
+        ),
+      })),
+    [rawItems, getGuardedBalance],
+  );
 
-  // Batch-fetch canister details for controller check — only when list is loaded
-  const detailQueries = useQueries({
-    queries: filtered.map((c) => ({
-      queryKey: ["canisters", "details", c.canisterId.toString()],
-      queryFn: async (): Promise<CanisterDetails | null> => {
-        // No early-return with null — let `enabled` guard silence the query.
-        // Returning null when !actor would mark isControlled=undefined but also
-        // overwrite a previously fetched non-null result on re-fetches.
-        const { Principal } = await import("@icp-sdk/core/principal");
-        return actor!.getCanisterDetails(
-          Principal.fromText(c.canisterId.toString()),
-        );
-      },
-      enabled: !!actor && !actorFetching && filtered.length > 0,
-      staleTime: 60_000,
-      // Keep previous controller data while re-fetching so badge doesn't flicker
-      placeholderData: keepPreviousData,
-    })),
-  });
+  // When search is active, use search results; otherwise use paginated items.
+  // Search results also get the cycle-balance guard applied.
+  const guardedSearchResults = useMemo(
+    () =>
+      (searchResults ?? []).map((c) => ({
+        ...c,
+        cycleBalance: getGuardedBalance(
+          c.canisterId.toString(),
+          c.cycleBalance,
+        ),
+      })),
+    [searchResults, getGuardedBalance],
+  );
 
-  // Build a map of canisterId -> isControlled
-  const controlledMap = useMemo(() => {
-    const map = new Map<string, boolean | undefined>();
-    filtered.forEach((c, i) => {
-      const q = detailQueries[i];
-      // isPending = no cached data yet AND query is disabled/loading
-      // isLoading in RQ v5 means isPending && isFetching — use isPending for "no data"
-      if (!q || q.isPending) {
-        map.set(c.canisterId.toString(), undefined);
-      } else if (!q.data) {
-        // null result or fetch error — treat as unknown
-        map.set(c.canisterId.toString(), undefined);
-      } else {
-        // Normalize both sides to canonical text for reliable comparison.
-        // ctrl.toString() on a Principal gives the same text as Principal.toText().
-        const isCtrl = appPrincipal
-          ? q.data.controllers.some((ctrl) => ctrl.toString() === appPrincipal)
-          : undefined;
-        map.set(c.canisterId.toString(), isCtrl);
-      }
-    });
-    return map;
-  }, [filtered, detailQueries, appPrincipal]);
+  const filtered = isSearchActive ? guardedSearchResults : items;
 
   const handleSearchChange = (value: string) => {
     if (value !== prevSearchRef.current) {
@@ -603,14 +604,25 @@ export default function CanistersPage() {
             </p>
           </div>
 
-          <Button
-            onClick={() => setShowAddModal(true)}
-            className="font-mono text-[10px] tracking-[0.2em] uppercase gap-1.5 shrink-0"
-            data-ocid="canisters.add_button"
-          >
-            <PlusCircle className="h-3.5 w-3.5" />
-            [A] TRACK CANISTER
-          </Button>
+          <div className="flex items-center gap-2 flex-wrap">
+            <Button
+              onClick={() => setShowAddModal(true)}
+              variant="outline"
+              className="font-mono text-[10px] tracking-[0.2em] uppercase gap-1.5 shrink-0"
+              data-ocid="canisters.add_button"
+            >
+              <PlusCircle className="h-3.5 w-3.5" />
+              [A] TRACK CANISTER
+            </Button>
+            <Button
+              onClick={() => setShowCreateModal(true)}
+              className="font-mono text-[10px] tracking-[0.2em] uppercase gap-1.5 shrink-0"
+              data-ocid="canisters.create_button"
+            >
+              <Terminal className="h-3.5 w-3.5" />
+              [C] CREATE CANISTER
+            </Button>
+          </div>
         </div>
 
         {/* Search */}
@@ -638,6 +650,14 @@ export default function CanistersPage() {
 
       {/* Table */}
       <div className="flex-1 overflow-x-auto">
+        {/* Search result count banner */}
+        {isSearchActive && !isSearchLoading && (
+          <div className="px-3 py-1.5 bg-primary/5 border-b border-primary/20 font-mono text-[10px] text-primary/70 tracking-[0.15em] uppercase">
+            {(searchResults ?? []).length} RESULT
+            {(searchResults ?? []).length !== 1 ? "S" : ""} FOR &ldquo;
+            {search.trim()}&rdquo;
+          </div>
+        )}
         <table className="w-full min-w-[640px] text-xs">
           <thead>
             <tr className="border-b border-border/40 bg-muted/20">
@@ -660,7 +680,21 @@ export default function CanistersPage() {
             </tr>
           </thead>
           <tbody>
-            {isLoading ? (
+            {/* Searching indicator — only while search is active and loading */}
+            {isSearchActive && isSearchLoading ? (
+              <tr>
+                <td colSpan={6}>
+                  <div
+                    className="flex items-center justify-center gap-2 py-12 font-mono"
+                    data-ocid="canisters.loading_state"
+                  >
+                    <span className="text-primary retro-glow animate-pulse text-xs tracking-[0.2em] uppercase">
+                      [ SEARCHING ALL PAGES... ]
+                    </span>
+                  </div>
+                </td>
+              </tr>
+            ) : !isSearchActive && isLoading ? (
               SKELETON_KEYS.map((k) => <SkeletonRow key={k} />)
             ) : filtered.length > 0 ? (
               filtered.map((canister, i) => (
@@ -668,16 +702,13 @@ export default function CanistersPage() {
                   key={canister.canisterId.toString()}
                   canister={canister}
                   index={i + 1}
-                  isControlled={controlledMap.get(
-                    canister.canisterId.toString(),
-                  )}
                   onDelete={setDeleteTarget}
                 />
               ))
             ) : (
               <tr>
                 <td colSpan={6}>
-                  {search ? (
+                  {isSearchActive ? (
                     <div
                       className="flex flex-col items-center justify-center py-14 text-center gap-3"
                       data-ocid="canisters.empty_state"
@@ -688,7 +719,8 @@ export default function CanistersPage() {
                           NO_RESULTS: &ldquo;{search}&rdquo;
                         </p>
                         <p className="font-mono text-[10px] text-muted-foreground mt-1">
-                          TRY A DIFFERENT NAME OR CANISTER ID
+                          NO MATCH FOUND ACROSS ALL {total} CANISTER
+                          {total !== 1 ? "S" : ""}
                         </p>
                       </div>
                       <Button
@@ -734,8 +766,8 @@ export default function CanistersPage() {
         </table>
       </div>
 
-      {/* Pagination */}
-      {!isLoading && total > 0 && !search && (
+      {/* Pagination — hidden during search so results span all pages */}
+      {!isLoading && total > 0 && !isSearchActive && (
         <div className="border-t border-border/40 px-4 py-2 bg-card/30">
           <PaginationControls
             page={page}
@@ -751,6 +783,10 @@ export default function CanistersPage() {
       <AddCanisterModal
         open={showAddModal}
         onClose={() => setShowAddModal(false)}
+      />
+      <CreateCanisterModal
+        open={showCreateModal}
+        onClose={() => setShowCreateModal(false)}
       />
       <DeleteConfirmModal
         canister={deleteTarget}

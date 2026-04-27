@@ -1,62 +1,4 @@
-import { j as jsxRuntimeExports, a as cn, r as reactExports, u as useControllableState, b as useId, P as Presence, d as Primitive, e as composeEventHandlers, f as Portal$1, g as useComposedRefs, h as hideOthers, i as createContextScope, R as ReactRemoveScroll, k as useFocusGuards, F as FocusScope, D as DismissableLayer, l as createSlot, m as createContext2, X } from "./index-BpKfS_dG.js";
-var CanisterStatus = /* @__PURE__ */ ((CanisterStatus2) => {
-  CanisterStatus2["stopped"] = "stopped";
-  CanisterStatus2["stopping"] = "stopping";
-  CanisterStatus2["running"] = "running";
-  return CanisterStatus2;
-})(CanisterStatus || {});
-const STATUS_CONFIG = {
-  [CanisterStatus.running]: {
-    label: "ONLINE",
-    dotClass: "bg-accent animate-blink",
-    badgeClass: "border-accent/60 text-accent bg-accent/10",
-    glowClass: "retro-glow-accent"
-  },
-  [CanisterStatus.stopped]: {
-    label: "OFFLINE",
-    dotClass: "bg-destructive",
-    badgeClass: "border-destructive/60 text-destructive bg-destructive/10",
-    glowClass: ""
-  },
-  [CanisterStatus.stopping]: {
-    label: "HALTING",
-    dotClass: "bg-primary animate-blink",
-    badgeClass: "border-primary/60 text-primary bg-primary/10",
-    glowClass: "retro-glow-sm"
-  }
-};
-function StatusBadge({
-  status,
-  className,
-  blinkDelay
-}) {
-  const config = STATUS_CONFIG[status] ?? STATUS_CONFIG[CanisterStatus.stopped];
-  const needsDelay = status === CanisterStatus.running || status === CanisterStatus.stopping;
-  return /* @__PURE__ */ jsxRuntimeExports.jsxs(
-    "span",
-    {
-      className: cn(
-        "inline-flex items-center gap-1.5 px-2 py-0.5 font-mono text-[10px] font-bold border tracking-[0.2em] uppercase",
-        config.badgeClass,
-        config.glowClass,
-        className
-      ),
-      children: [
-        /* @__PURE__ */ jsxRuntimeExports.jsx(
-          "span",
-          {
-            className: cn("h-1.5 w-1.5 shrink-0", config.dotClass),
-            style: needsDelay && blinkDelay !== void 0 ? { animationDelay: `${blinkDelay}s` } : void 0,
-            "aria-hidden": "true"
-          }
-        ),
-        "[",
-        config.label,
-        "]"
-      ]
-    }
-  );
-}
+import { r as reactExports, u as useControllableState, j as jsxRuntimeExports, a as useId, P as Presence, b as Primitive, d as composeEventHandlers, e as Portal$1, f as useComposedRefs, h as hideOthers, g as createContextScope, R as ReactRemoveScroll, i as useFocusGuards, F as FocusScope, D as DismissableLayer, k as createSlot, l as createContext2, X, m as cn } from "./index-BMS8nT-t.js";
 var DIALOG_NAME = "Dialog";
 var [createDialogContext] = createContextScope(DIALOG_NAME);
 var [DialogProvider, useDialogContext] = createDialogContext(DIALOG_NAME);
@@ -474,7 +416,6 @@ function DialogDescription({
 }
 export {
   Dialog as D,
-  StatusBadge as S,
   DialogContent as a,
   DialogHeader as b,
   DialogTitle as c,

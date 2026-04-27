@@ -17,9 +17,18 @@ export interface CanisterDetails {
   'createdAt' : Timestamp,
   'customName' : string,
   'lastChecked' : Timestamp,
+  'fetchFailed' : boolean,
   'canisterId' : CanisterId,
 }
 export type CanisterId = Principal;
+export interface CanisterInfo {
+  'cachedCycleBalance' : Cycles,
+  'addedAt' : Timestamp,
+  'customName' : string,
+  'isController' : boolean,
+  'lastInteractedAt' : Timestamp,
+  'canisterId' : CanisterId,
+}
 export type CanisterStatus = { 'stopped' : null } |
   { 'stopping' : null } |
   { 'running' : null };
@@ -28,9 +37,31 @@ export interface CanisterSummary {
   'cycleBalance' : Cycles,
   'customName' : string,
   'lastChecked' : Timestamp,
+  'isController' : boolean,
+  'fetchFailed' : boolean,
   'canisterId' : CanisterId,
 }
+export interface CreateCanisterResult {
+  'cyclesSeeded' : Cycles,
+  'canisterId' : CanisterId,
+}
+export interface CreationCostEstimate {
+  'creationFeeIcpE8s' : E8s,
+  'creationCycles' : Cycles,
+  'cyclesPerIcp' : bigint,
+  'estimatedSeedCycles' : Cycles,
+  'transferFeeE8s' : E8s,
+  'seedCyclesIcpE8s' : E8s,
+  'totalIcpRequiredE8s' : E8s,
+}
 export type Cycles = bigint;
+export interface DashboardItem {
+  'cycleBalance' : Cycles,
+  'customName' : string,
+  'isController' : boolean,
+  'lastInteractedAt' : Timestamp,
+  'canisterId' : CanisterId,
+}
 export type E8s = bigint;
 export interface Page {
   'total' : bigint,
@@ -49,6 +80,8 @@ export type Result = { 'ok' : bigint } |
 export type Result_1 = { 'ok' : Cycles } |
   { 'err' : string };
 export type Result_2 = { 'ok' : null } |
+  { 'err' : string };
+export type Result_3 = { 'ok' : CreateCanisterResult } |
   { 'err' : string };
 export type Timestamp = bigint;
 export interface Transaction {
@@ -72,15 +105,21 @@ export type UserId = Principal;
 export interface _SERVICE {
   'addCanister' : ActorMethod<[CanisterId, string], Result_2>,
   'addController' : ActorMethod<[CanisterId, Principal], Result_2>,
+  'createCanister' : ActorMethod<[string, E8s], Result_3>,
   'getAppPrincipal' : ActorMethod<[], Principal>,
   'getCanisterDetails' : ActorMethod<[CanisterId], [] | [CanisterDetails]>,
+  'getCreationCostEstimate' : ActorMethod<[E8s], CreationCostEstimate>,
+  'getIcpXdrConversionRate' : ActorMethod<[], bigint>,
+  'getLowestCyclesCanisters' : ActorMethod<[], Array<DashboardItem>>,
   'getMyAccount' : ActorMethod<[], UserAccount>,
   'getMyBalance' : ActorMethod<[], E8s>,
+  'getRecentCanisters' : ActorMethod<[], Array<DashboardItem>>,
   'getTransactionHistory' : ActorMethod<[bigint], Page_1>,
   'listCanisters' : ActorMethod<[bigint], Page>,
   'removeCanister' : ActorMethod<[CanisterId], Result_2>,
   'removeController' : ActorMethod<[CanisterId, Principal], Result_2>,
   'renameCanister' : ActorMethod<[CanisterId, string], Result_2>,
+  'searchCanisters' : ActorMethod<[string], Array<CanisterInfo>>,
   'topUpCanister' : ActorMethod<[CanisterId, E8s], Result_1>,
   'transferIcp' : ActorMethod<[string, E8s, string], Result>,
 }

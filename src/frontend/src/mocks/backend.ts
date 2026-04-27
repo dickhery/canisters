@@ -1,4 +1,4 @@
-import type { backendInterface, CanisterDetails, CanisterSummary, Page, Page_1, UserAccount } from "../backend";
+import type { backendInterface, CanisterDetails, CanisterInfo, CanisterSummary, CreationCostEstimate, DashboardItem, Page, Page_1, UserAccount } from "../backend";
 import { CanisterStatus } from "../backend";
 import { Principal } from "@icp-sdk/core/principal";
 
@@ -9,14 +9,14 @@ const pid4 = Principal.fromText("r7inp-6aaaa-aaaaa-aaabq-cai");
 const pid5 = Principal.fromText("ryjl3-tyaaa-aaaaa-aaaba-cai");
 
 const sampleCanisters: CanisterSummary[] = [
-  { canisterId: pid1, customName: "Ledger Service", status: CanisterStatus.running, cycleBalance: BigInt("1800000000000"), lastChecked: BigInt(Date.now() * 1_000_000 - 3 * 3600 * 1_000_000_000) },
-  { canisterId: pid2, customName: "Identity Provider", status: CanisterStatus.stopped, cycleBalance: BigInt("950000000000"), lastChecked: BigInt(Date.now() * 1_000_000 - 6 * 3600 * 1_000_000_000) },
-  { canisterId: pid3, customName: "Asset Storage", status: CanisterStatus.stopping, cycleBalance: BigInt("1800000000000"), lastChecked: BigInt(Date.now() * 1_000_000 - 1 * 3600 * 1_000_000_000) },
-  { canisterId: pid4, customName: "Arsoo Sporace", status: CanisterStatus.running, cycleBalance: BigInt("950000000000"), lastChecked: BigInt(Date.now() * 1_000_000 - 12 * 3600 * 1_000_000_000) },
-  { canisterId: pid5, customName: "Orbit Aaolt", status: CanisterStatus.stopped, cycleBalance: BigInt("950000000000"), lastChecked: BigInt(Date.now() * 1_000_000 - 2 * 3600 * 1_000_000_000) },
-  { canisterId: pid1, customName: "Suger Service", status: CanisterStatus.running, cycleBalance: BigInt("950000000000"), lastChecked: BigInt(Date.now() * 1_000_000 - 8 * 3600 * 1_000_000_000) },
-  { canisterId: pid2, customName: "Canister Creator", status: CanisterStatus.stopping, cycleBalance: BigInt("950000000000"), lastChecked: BigInt(Date.now() * 1_000_000 - 15 * 3600 * 1_000_000_000) },
-  { canisterId: pid3, customName: "Backend Core", status: CanisterStatus.running, cycleBalance: BigInt("2100000000000"), lastChecked: BigInt(Date.now() * 1_000_000 - 4 * 3600 * 1_000_000_000) },
+  { canisterId: pid1, customName: "Ledger Service", status: CanisterStatus.running, cycleBalance: BigInt("1800000000000"), lastChecked: BigInt(Date.now() * 1_000_000 - 3 * 3600 * 1_000_000_000), fetchFailed: false, isController: true },
+  { canisterId: pid2, customName: "Identity Provider", status: CanisterStatus.stopped, cycleBalance: BigInt("950000000000"), lastChecked: BigInt(Date.now() * 1_000_000 - 6 * 3600 * 1_000_000_000), fetchFailed: false, isController: false },
+  { canisterId: pid3, customName: "Asset Storage", status: CanisterStatus.stopping, cycleBalance: BigInt("1800000000000"), lastChecked: BigInt(Date.now() * 1_000_000 - 1 * 3600 * 1_000_000_000), fetchFailed: false, isController: true },
+  { canisterId: pid4, customName: "Arsoo Sporace", status: CanisterStatus.running, cycleBalance: BigInt("950000000000"), lastChecked: BigInt(Date.now() * 1_000_000 - 12 * 3600 * 1_000_000_000), fetchFailed: false, isController: false },
+  { canisterId: pid5, customName: "Orbit Aaolt", status: CanisterStatus.stopped, cycleBalance: BigInt("950000000000"), lastChecked: BigInt(Date.now() * 1_000_000 - 2 * 3600 * 1_000_000_000), fetchFailed: false, isController: true },
+  { canisterId: pid1, customName: "Suger Service", status: CanisterStatus.running, cycleBalance: BigInt("950000000000"), lastChecked: BigInt(Date.now() * 1_000_000 - 8 * 3600 * 1_000_000_000), fetchFailed: false, isController: true },
+  { canisterId: pid2, customName: "Canister Creator", status: CanisterStatus.stopping, cycleBalance: BigInt("950000000000"), lastChecked: BigInt(Date.now() * 1_000_000 - 15 * 3600 * 1_000_000_000), fetchFailed: false, isController: false },
+  { canisterId: pid3, customName: "Backend Core", status: CanisterStatus.running, cycleBalance: BigInt("2100000000000"), lastChecked: BigInt(Date.now() * 1_000_000 - 4 * 3600 * 1_000_000_000), fetchFailed: false, isController: true },
 ];
 
 const sampleDetails: CanisterDetails = {
@@ -27,6 +27,7 @@ const sampleDetails: CanisterDetails = {
   controllers: [pid1, pid2],
   createdAt: BigInt(Date.now() * 1_000_000 - 30 * 24 * 3600 * 1_000_000_000),
   lastChecked: BigInt(Date.now() * 1_000_000 - 3 * 3600 * 1_000_000_000),
+  fetchFailed: false,
 };
 
 const sampleAccount: UserAccount = {
@@ -92,4 +93,53 @@ export const mockBackend: backendInterface = {
   renameCanister: async (_canisterId, _newName) => ({ __kind__: "ok", ok: null }),
   topUpCanister: async (_canisterId, _icpAmountE8s) => ({ __kind__: "ok", ok: BigInt("500000000000") }),
   transferIcp: async (_toAccountId, _amountE8s, _memo) => ({ __kind__: "ok", ok: BigInt(42) }),
+  createCanister: async (_name, _seedCyclesIcpE8s) => ({
+    __kind__: "ok",
+    ok: { canisterId: pid1, cyclesSeeded: BigInt("0") },
+  }),
+  getCreationCostEstimate: async (seedCyclesIcpE8s): Promise<CreationCostEstimate> => {
+    // Mock a realistic live rate: ~5T cycles/ICP (representative of current XDR rates)
+    const cyclesPerIcp = BigInt("5_000_000_000_000".replace(/_/g, ""));
+    const estimatedSeedCycles = (seedCyclesIcpE8s * cyclesPerIcp) / BigInt("100000000");
+    return {
+      creationFeeIcpE8s: BigInt("100000000"),
+      transferFeeE8s: BigInt("10000"),
+      totalIcpRequiredE8s: BigInt("100010000") + seedCyclesIcpE8s,
+      seedCyclesIcpE8s: seedCyclesIcpE8s,
+      creationCycles: BigInt("500000000000"),
+      cyclesPerIcp,
+      estimatedSeedCycles,
+    };
+  },
+  getIcpXdrConversionRate: async (): Promise<bigint> => {
+    // Mock a realistic live rate: ~5T cycles/ICP
+    return BigInt("5000000000000");
+  },
+  getRecentCanisters: async (): Promise<DashboardItem[]> => [
+    { canisterId: pid1, customName: "Ledger Service", cycleBalance: BigInt("1800000000000"), isController: true, lastInteractedAt: BigInt(Date.now() * 1_000_000 - 1 * 3600 * 1_000_000_000) },
+    { canisterId: pid2, customName: "Identity Provider", cycleBalance: BigInt("950000000000"), isController: false, lastInteractedAt: BigInt(Date.now() * 1_000_000 - 3 * 3600 * 1_000_000_000) },
+    { canisterId: pid3, customName: "Asset Storage", cycleBalance: BigInt("1800000000000"), isController: true, lastInteractedAt: BigInt(Date.now() * 1_000_000 - 6 * 3600 * 1_000_000_000) },
+    { canisterId: pid4, customName: "Arsoo Sporace", cycleBalance: BigInt("950000000000"), isController: false, lastInteractedAt: BigInt(Date.now() * 1_000_000 - 12 * 3600 * 1_000_000_000) },
+    { canisterId: pid5, customName: "Orbit Aaolt", cycleBalance: BigInt("950000000000"), isController: true, lastInteractedAt: BigInt(Date.now() * 1_000_000 - 24 * 3600 * 1_000_000_000) },
+  ],
+  getLowestCyclesCanisters: async (): Promise<DashboardItem[]> => [
+    { canisterId: pid5, customName: "Orbit Aaolt", cycleBalance: BigInt("120000000000"), isController: true, lastInteractedAt: BigInt(Date.now() * 1_000_000 - 2 * 24 * 3600 * 1_000_000_000) },
+    { canisterId: pid2, customName: "Identity Provider", cycleBalance: BigInt("250000000000"), isController: false, lastInteractedAt: BigInt(Date.now() * 1_000_000 - 6 * 3600 * 1_000_000_000) },
+    { canisterId: pid4, customName: "Arsoo Sporace", cycleBalance: BigInt("480000000000"), isController: false, lastInteractedAt: BigInt(Date.now() * 1_000_000 - 12 * 3600 * 1_000_000_000) },
+    { canisterId: pid1, customName: "Ledger Service", cycleBalance: BigInt("950000000000"), isController: true, lastInteractedAt: BigInt(Date.now() * 1_000_000 - 3 * 3600 * 1_000_000_000) },
+    { canisterId: pid3, customName: "Asset Storage", cycleBalance: BigInt("1200000000000"), isController: true, lastInteractedAt: BigInt(Date.now() * 1_000_000 - 1 * 3600 * 1_000_000_000) },
+  ],
+  searchCanisters: async (queryText: string): Promise<CanisterInfo[]> => {
+    const q = queryText.toLowerCase();
+    return sampleCanisters
+      .filter((c) => c.customName.toLowerCase().includes(q) || c.canisterId.toText().toLowerCase().includes(q))
+      .map((c) => ({
+        canisterId: c.canisterId,
+        customName: c.customName,
+        cachedCycleBalance: c.cycleBalance,
+        addedAt: c.lastChecked,
+        lastInteractedAt: c.lastChecked,
+        isController: c.isController,
+      }));
+  },
 };

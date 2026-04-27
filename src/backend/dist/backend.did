@@ -23,6 +23,11 @@ type Transaction =
    userId: UserId;
  };
 type Timestamp = int;
+type Result_3 = 
+ variant {
+   err: text;
+   ok: CreateCanisterResult;
+ };
 type Result_2 = 
  variant {
    err: text;
@@ -53,12 +58,37 @@ type Page =
    total: nat;
  };
 type E8s = nat64;
+type DashboardItem = 
+ record {
+   canisterId: CanisterId;
+   customName: text;
+   cycleBalance: Cycles;
+   isController: bool;
+   lastInteractedAt: Timestamp;
+ };
 type Cycles = nat;
+type CreationCostEstimate = 
+ record {
+   creationCycles: Cycles;
+   creationFeeIcpE8s: E8s;
+   cyclesPerIcp: nat;
+   estimatedSeedCycles: Cycles;
+   seedCyclesIcpE8s: E8s;
+   totalIcpRequiredE8s: E8s;
+   transferFeeE8s: E8s;
+ };
+type CreateCanisterResult = 
+ record {
+   canisterId: CanisterId;
+   cyclesSeeded: Cycles;
+ };
 type CanisterSummary = 
  record {
    canisterId: CanisterId;
    customName: text;
    cycleBalance: Cycles;
+   fetchFailed: bool;
+   isController: bool;
    lastChecked: Timestamp;
    status: CanisterStatus;
  };
@@ -68,6 +98,15 @@ type CanisterStatus =
    stopped;
    stopping;
  };
+type CanisterInfo = 
+ record {
+   addedAt: Timestamp;
+   cachedCycleBalance: Cycles;
+   canisterId: CanisterId;
+   customName: text;
+   isController: bool;
+   lastInteractedAt: Timestamp;
+ };
 type CanisterId = principal;
 type CanisterDetails = 
  record {
@@ -76,6 +115,7 @@ type CanisterDetails =
    createdAt: Timestamp;
    customName: text;
    cycleBalance: Cycles;
+   fetchFailed: bool;
    lastChecked: Timestamp;
    status: CanisterStatus;
  };
@@ -83,16 +123,22 @@ service : {
   addCanister: (canisterId: CanisterId, customName: text) -> (Result_2);
   addController: (canisterId: CanisterId, controller: principal) ->
    (Result_2);
+  createCanister: (name: text, seedCyclesIcpE8s: E8s) -> (Result_3);
   getAppPrincipal: () -> (principal) query;
   getCanisterDetails: (canisterId: CanisterId) -> (opt CanisterDetails);
+  getCreationCostEstimate: (seedCyclesIcpE8s: E8s) -> (CreationCostEstimate);
+  getIcpXdrConversionRate: () -> (nat);
+  getLowestCyclesCanisters: () -> (vec DashboardItem);
   getMyAccount: () -> (UserAccount);
   getMyBalance: () -> (E8s);
+  getRecentCanisters: () -> (vec DashboardItem);
   getTransactionHistory: (page: nat) -> (Page_1);
   listCanisters: (page: nat) -> (Page);
   removeCanister: (canisterId: CanisterId) -> (Result_2);
   removeController: (canisterId: CanisterId, controller: principal) ->
    (Result_2);
   renameCanister: (canisterId: CanisterId, newName: text) -> (Result_2);
+  searchCanisters: (queryText: text) -> (vec CanisterInfo) query;
   topUpCanister: (canisterId: CanisterId, icpAmountE8s: E8s) -> (Result_1);
   transferIcp: (toAccountId: text, amountE8s: E8s, memo: text) -> (Result);
 }

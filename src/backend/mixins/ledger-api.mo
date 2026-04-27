@@ -9,17 +9,19 @@ import CommonTypes "../types/common";
 import LedgerTypes "../types/ledger";
 import CanisterTypes "../types/canister";
 import LedgerLib "../lib/ledger";
+import CanisterLib "../lib/canister";
 
 // ---------------------------------------------------------------------------
 // Ledger / ICP account API mixin
 // State slices: selfPrincipal (app canister's own principal), userAccounts,
-//               txLog, nextTxId
+//               txLog, nextTxId, userCanisters (for interaction tracking)
 // ---------------------------------------------------------------------------
 mixin (
   selfPrincipal : Principal,
   userAccounts : Map.Map<CommonTypes.UserId, LedgerTypes.UserAccount>,
   txLog : List.List<LedgerTypes.Transaction>,
   nextTxId : { var value : Nat },
+  userCanisters : Map.Map<CommonTypes.UserId, List.List<CanisterTypes.TrackedCanister>>,
 ) {
   let ICP_LEDGER_ID = Principal.fromText("ryjl3-tyaaa-aaaaa-aaaba-cai");
   let CMC_ID        = Principal.fromText("rkp4c-7iaaa-aaaaa-aaaca-cai");
@@ -159,6 +161,13 @@ mixin (
                 Time.now(),
               );
               nextTxId.value += 1;
+              // Touch interaction and update cached balance for the topped-up canister
+              switch (userCanisters.get(caller)) {
+                case (?canisters) {
+                  CanisterLib.touchInteraction(canisters, canisterId, Time.now());
+                };
+                case null {};
+              };
               #ok(cyclesAdded)
             };
           }

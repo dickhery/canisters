@@ -1,5 +1,5 @@
 import { createActor } from "@/backend";
-import type { E8s } from "@/backend.d";
+import type { CreateCanisterResult, E8s } from "@/backend.d";
 import { useActor } from "@caffeineai/core-infrastructure";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
@@ -27,6 +27,7 @@ export function useAddCanister() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["canisters"] });
+      queryClient.invalidateQueries({ queryKey: ["dashboard"] });
       toast.success("Canister added successfully");
     },
     onError: (err: Error) => {
@@ -49,6 +50,7 @@ export function useRemoveCanister() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["canisters"] });
+      queryClient.invalidateQueries({ queryKey: ["dashboard"] });
       toast.success("Canister removed");
     },
     onError: (err: Error) => {
@@ -83,6 +85,7 @@ export function useRenameCanister() {
       queryClient.invalidateQueries({
         queryKey: ["canisters", "details", variables.canisterId],
       });
+      queryClient.invalidateQueries({ queryKey: ["dashboard"] });
       toast.success("Canister renamed");
     },
     onError: (err: Error) => {
@@ -116,6 +119,7 @@ export function useAddController() {
       queryClient.invalidateQueries({
         queryKey: ["canisters", "details", variables.canisterId],
       });
+      queryClient.invalidateQueries({ queryKey: ["dashboard"] });
       toast.success("Controller added");
     },
     onError: (err: Error) => {
@@ -149,6 +153,7 @@ export function useRemoveController() {
       queryClient.invalidateQueries({
         queryKey: ["canisters", "details", variables.canisterId],
       });
+      queryClient.invalidateQueries({ queryKey: ["dashboard"] });
       toast.success("Controller removed");
     },
     onError: (err: Error) => {
@@ -185,10 +190,43 @@ export function useTopUpCanister() {
       });
       queryClient.invalidateQueries({ queryKey: ["account", "balance"] });
       queryClient.invalidateQueries({ queryKey: ["transactions"] });
+      queryClient.invalidateQueries({ queryKey: ["dashboard"] });
       toast.success("Canister topped up successfully");
     },
     onError: (err: Error) => {
       toast.error("Top-up failed", { description: err.message });
+    },
+  });
+}
+
+export function useCreateCanister() {
+  const { actor } = useActor(createActor);
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({
+      name,
+      seedCyclesIcpE8s,
+    }: {
+      name: string;
+      seedCyclesIcpE8s: number;
+    }): Promise<CreateCanisterResult> => {
+      if (!actor) throw new Error("Not connected");
+      const result = await actor.createCanister(name, BigInt(seedCyclesIcpE8s));
+      if (result.__kind__ === "err") throw new Error(result.err);
+      return result.ok;
+    },
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: ["canisters"] });
+      queryClient.invalidateQueries({ queryKey: ["account", "balance"] });
+      queryClient.invalidateQueries({ queryKey: ["transactions"] });
+      queryClient.invalidateQueries({ queryKey: ["dashboard"] });
+      toast.success("Canister created!", {
+        description: `ID: ${data.canisterId.toString()}`,
+      });
+    },
+    onError: (err: Error) => {
+      toast.error("Canister creation failed", { description: err.message });
     },
   });
 }

@@ -9,8 +9,9 @@ import LedgerTypes "../types/ledger";
 import CanisterLib "../lib/canister";
 
 // Canister management API mixin
-// State slices injected: userCanisters, userAccounts, txLog, nextTxId
+// State slices injected: selfPrincipal, userCanisters, userAccounts, txLog, nextTxId
 mixin (
+  selfPrincipal : Principal,
   userCanisters : Map.Map<CommonTypes.UserId, List.List<CanisterTypes.TrackedCanister>>,
   userAccounts : Map.Map<CommonTypes.UserId, LedgerTypes.UserAccount>,
   txLog : List.List<LedgerTypes.Transaction>,
@@ -56,8 +57,12 @@ mixin (
     };
   };
 
-  // Fetch live status for a single canister; returns defaults on error
-  private func fetchSummary(info : CanisterTypes.CanisterInfo, now : CommonTypes.Timestamp) : async CanisterTypes.CanisterSummary {
+  // Fetch live status for a single canister; updates cached balance; returns defaults on error
+  private func fetchSummary(
+    canisters : List.List<CanisterTypes.TrackedCanister>,
+    info : CanisterTypes.CanisterInfo,
+    now : CommonTypes.Timestamp,
+  ) : async CanisterTypes.CanisterSummary {
     try {
       let result = await ic.canister_status({ canister_id = info.canisterId });
       let status : CanisterTypes.CanisterStatus = switch (result.status) {
@@ -65,20 +70,31 @@ mixin (
         case (#stopped) #stopped;
         case (#stopping) #stopping;
       };
+      // Persist the fetched balance and controllers into TrackedCanister so dashboard queries have fresh data
+      CanisterLib.updateCachedBalance(canisters, info.canisterId, result.cycles);
+      CanisterLib.updateCachedControllers(canisters, info.canisterId, result.settings.controllers);
+      let isController = result.settings.controllers.find(func(p : Principal) : Bool { Principal.equal(p, selfPrincipal) }) != null;
       {
         canisterId = info.canisterId;
         customName = info.customName;
         cycleBalance = result.cycles;
         status;
         lastChecked = now;
+        fetchFailed = false;
+        isController;
       };
     } catch (_) {
+      // Return last cached balance rather than 0 to avoid false "empty" display
+      // For isController, fall back to the isController field already computed in CanisterInfo
+      let isController = info.isController;
       {
         canisterId = info.canisterId;
         customName = info.customName;
-        cycleBalance = 0;
+        cycleBalance = info.cachedCycleBalance;
         status = #running;
         lastChecked = now;
+        fetchFailed = true;
+        isController;
       };
     };
   };
@@ -104,14 +120,14 @@ mixin (
     CanisterLib.removeCanister(canisters, canisterId);
   };
 
-  // Update the custom name for a tracked canister
+  // Update the custom name for a tracked canister (touches lastInteractedAt)
   public shared ({ caller }) func renameCanister(
     canisterId : CanisterTypes.CanisterId,
     newName : Text,
   ) : async CommonTypes.Result<()> {
     if (caller.isAnonymous()) Runtime.trap("Anonymous caller not allowed");
     let canisters = getUserCanisters(caller);
-    CanisterLib.renameCanister(canisters, canisterId, newName);
+    CanisterLib.renameCanister(canisters, canisterId, newName, Time.now());
   };
 
   // Get a paginated list of tracked canisters with live cycle/status data
@@ -121,12 +137,12 @@ mixin (
     if (caller.isAnonymous()) Runtime.trap("Anonymous caller not allowed");
     let pageSize = 20;
     let canisters = getUserCanisters(caller);
-    let infoPage = CanisterLib.listCanisters(canisters, page, pageSize);
+    let infoPage = CanisterLib.listCanisters(canisters, page, pageSize, selfPrincipal);
     let now = Time.now();
     // Fetch live status sequentially for each canister in the page
     let summaries = List.empty<CanisterTypes.CanisterSummary>();
     for (info in infoPage.items.values()) {
-      let summary = await fetchSummary(info, now);
+      let summary = await fetchSummary(canisters, info, now);
       summaries.add(summary);
     };
     {
@@ -137,7 +153,7 @@ mixin (
     };
   };
 
-  // Get full details for a single canister (live IC query)
+  // Get full details for a single canister (live IC query); touches lastInteractedAt
   public shared ({ caller }) func getCanisterDetails(
     canisterId : CanisterTypes.CanisterId,
   ) : async ?CanisterTypes.CanisterDetails {
@@ -147,6 +163,8 @@ mixin (
       case null null;
       case (?tracked) {
         let now = Time.now();
+        // Mark as interacted (detail page view)
+        CanisterLib.touchInteraction(canisters, canisterId, now);
         try {
           let result = await ic.canister_status({ canister_id = canisterId });
           let status : CanisterTypes.CanisterStatus = switch (result.status) {
@@ -154,6 +172,9 @@ mixin (
             case (#stopped) #stopped;
             case (#stopping) #stopping;
           };
+          // Update cached balance and controllers
+          CanisterLib.updateCachedBalance(canisters, canisterId, result.cycles);
+          CanisterLib.updateCachedControllers(canisters, canisterId, result.settings.controllers);
           ?{
             canisterId;
             customName = tracked.customName;
@@ -162,16 +183,18 @@ mixin (
             controllers = result.settings.controllers;
             createdAt = tracked.addedAt;
             lastChecked = now;
+            fetchFailed = false;
           };
         } catch (_) {
           ?{
             canisterId;
             customName = tracked.customName;
-            cycleBalance = 0;
+            cycleBalance = tracked.cachedCycleBalance;
             status = #running;
             controllers = [];
             createdAt = tracked.addedAt;
             lastChecked = now;
+            fetchFailed = true;
           };
         };
       };
@@ -180,7 +203,7 @@ mixin (
 
   // --- Controller management ---
 
-  // Add a controller principal to a canister via IC management canister
+  // Add a controller principal to a canister via IC management canister; touches lastInteractedAt
   public shared ({ caller }) func addController(
     canisterId : CanisterTypes.CanisterId,
     controller : Principal,
@@ -203,6 +226,9 @@ mixin (
               compute_allocation = null;
             };
           });
+          // Touch interaction after successful controller add
+          let canisters = getUserCanisters(caller);
+          CanisterLib.touchInteraction(canisters, canisterId, Time.now());
           #ok(());
         };
       };
@@ -211,7 +237,7 @@ mixin (
     };
   };
 
-  // Remove a controller principal from a canister via IC management canister
+  // Remove a controller principal from a canister via IC management canister; touches lastInteractedAt
   public shared ({ caller }) func removeController(
     canisterId : CanisterTypes.CanisterId,
     controller : Principal,
@@ -236,9 +262,35 @@ mixin (
           compute_allocation = null;
         };
       });
+      // Touch interaction after successful controller removal
+      let canisters = getUserCanisters(caller);
+      CanisterLib.touchInteraction(canisters, canisterId, Time.now());
       #ok(());
     } catch (_) {
       #err("Failed to update controllers");
     };
+  };
+
+  // --- Dashboard queries ---
+
+  // Search ALL tracked canisters by name or canister ID (case-insensitive); returns flat array of CanisterInfo
+  public shared query ({ caller }) func searchCanisters(queryText : Text) : async [CanisterTypes.CanisterInfo] {
+    if (caller.isAnonymous()) Runtime.trap("Anonymous caller not allowed");
+    let canisters = getUserCanisters(caller);
+    CanisterLib.searchCanisters(canisters, queryText, selfPrincipal);
+  };
+
+  // Return up to 5 most recently interacted canisters for the dashboard
+  public shared ({ caller }) func getRecentCanisters() : async [CanisterTypes.DashboardItem] {
+    if (caller.isAnonymous()) Runtime.trap("Anonymous caller not allowed");
+    let canisters = getUserCanisters(caller);
+    CanisterLib.getRecentCanisters(canisters, selfPrincipal);
+  };
+
+  // Return up to 5 canisters with the lowest cached cycle balance for the dashboard
+  public shared ({ caller }) func getLowestCyclesCanisters() : async [CanisterTypes.DashboardItem] {
+    if (caller.isAnonymous()) Runtime.trap("Anonymous caller not allowed");
+    let canisters = getUserCanisters(caller);
+    CanisterLib.getLowestCyclesCanisters(canisters, selfPrincipal);
   };
 };

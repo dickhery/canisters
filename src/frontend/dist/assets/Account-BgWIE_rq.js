@@ -1,8 +1,8 @@
-import { c as createLucideIcon, r as reactExports, j as jsxRuntimeExports, W as Wallet, E as formatIcp, C as CopyableId, G as truncateAccountId, B as Button, T as TooltipProvider, a as cn, H as Tooltip, I as TooltipTrigger, J as formatRelativeTime, K as TooltipContent, x as formatTimestamp } from "./index-BpKfS_dG.js";
-import { P as PaginationControls } from "./PaginationControls-D2IYkIAi.js";
-import { t as useGetMyAccount, v as useGetMyBalance, q as useGetTransactionHistory, S as Skeleton, w as useTransferIcp, L as Label, I as Input } from "./index-DXMaWJol.js";
-import { A as ArrowUpRight } from "./arrow-up-right-BHbqFo_-.js";
-import { Z as Zap } from "./zap-BWf0sLQS.js";
+import { c as createLucideIcon, r as reactExports, j as jsxRuntimeExports, W as Wallet, n as formatIcp, C as CopyableId, w as truncateAccountId, B as Button, x as TooltipProvider, m as cn, y as Tooltip, z as TooltipTrigger, A as formatRelativeTime, E as TooltipContent, q as formatTimestamp } from "./index-BMS8nT-t.js";
+import { P as PaginationControls } from "./PaginationControls-DyF9oby2.js";
+import { o as useGetMyAccount, a as useGetMyBalance, m as useGetTransactionHistory, S as Skeleton, p as useTransferIcp, L as Label, I as Input } from "./index-STxetVaD.js";
+import { A as ArrowUpRight } from "./arrow-up-right-B3q-74Sw.js";
+import { Z as Zap } from "./zap-Bz0PJ0tH.js";
 /**
  * @license lucide-react v0.511.0 - ISC
  *

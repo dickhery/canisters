@@ -1,9 +1,9 @@
-import { c as createLucideIcon, y as useParams, r as reactExports, j as jsxRuntimeExports, L as Link, B as Button, C as CopyableId, w as formatCycles, x as formatTimestamp, z as truncatePrincipal, A as Check, X, E as formatIcp } from "./index-BpKfS_dG.js";
-import { S as StatusBadge, D as Dialog, a as DialogContent, b as DialogHeader, c as DialogTitle, e as DialogFooter } from "./dialog-CBVsfKDh.js";
-import { h as useGetAppPrincipal, n as useGetCanisterDetails, S as Skeleton, o as useTopUpCanister, L as Label, I as Input, p as useRemoveController, q as useGetTransactionHistory, l as useRenameCanister, r as useAddController } from "./index-DXMaWJol.js";
-import { Z as Zap } from "./zap-BWf0sLQS.js";
-import { P as Plus } from "./plus-D9BHPCE0.js";
-import { T as Trash2, P as Pencil } from "./trash-2-Bp3065G-.js";
+import { c as createLucideIcon, s as useParams, r as reactExports, j as jsxRuntimeExports, L as Link, B as Button, C as CopyableId, o as formatCycles, q as formatTimestamp, t as truncatePrincipal, v as Check, X, n as formatIcp } from "./index-BMS8nT-t.js";
+import { S as StatusBadge, T as Trash2, P as Pencil } from "./StatusBadge-2KNQNXj9.js";
+import { D as Dialog, a as DialogContent, b as DialogHeader, c as DialogTitle, e as DialogFooter } from "./dialog-Dxty3jP1.js";
+import { h as useGetAppPrincipal, i as useGetCanisterDetails, S as Skeleton, j as useTopUpCanister, k as useGetIcpXdrConversionRate, L as Label, I as Input, l as useRemoveController, m as useGetTransactionHistory, g as useRenameCanister, n as useAddController } from "./index-STxetVaD.js";
+import { Z as Zap } from "./zap-Bz0PJ0tH.js";
+import { P as Plus } from "./plus-DyCkzdsX.js";
 /**
  * @license lucide-react v0.511.0 - ISC
  *
@@ -74,9 +74,9 @@ const __iconNode = [
   ["path", { d: "M12 17h.01", key: "p32p05" }]
 ];
 const TriangleAlert = createLucideIcon("triangle-alert", __iconNode);
-const ICP_TO_CYCLES_RATE = 13e12;
-function icpToEstimatedCycles(icpAmount) {
-  return BigInt(Math.floor(icpAmount * ICP_TO_CYCLES_RATE));
+const FALLBACK_CYCLES_PER_ICP = 1e13;
+function icpToEstimatedCycles(icpAmount, cyclesPerIcp) {
+  return BigInt(Math.floor(icpAmount * cyclesPerIcp));
 }
 function DetailSkeleton() {
   return /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "space-y-4 font-mono", children: [
@@ -304,8 +304,11 @@ function TopUpSection({
 }) {
   const [icpInput, setIcpInput] = reactExports.useState("");
   const topUp = useTopUpCanister();
+  const { data: liveRate, isLoading: rateLoading } = useGetIcpXdrConversionRate();
+  const cyclesPerIcp = liveRate && liveRate > 0n ? Number(liveRate) : FALLBACK_CYCLES_PER_ICP;
+  const usingFallbackRate = !rateLoading && (!liveRate || liveRate === 0n);
   const icpAmount = Number.parseFloat(icpInput) || 0;
-  const estimatedCycles = icpAmount > 0 ? icpToEstimatedCycles(icpAmount) : 0n;
+  const estimatedCycles = icpAmount > 0 ? icpToEstimatedCycles(icpAmount, cyclesPerIcp) : 0n;
   const e8s = BigInt(Math.floor(icpAmount * 1e8));
   const handleTopUp = (e) => {
     e.preventDefault();
@@ -329,7 +332,7 @@ function TopUpSection({
           /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "mb-4 p-3 border border-primary/30 bg-primary/5 retro-box-glow", children: [
             /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "font-mono text-[9px] text-muted-foreground uppercase tracking-[0.2em] mb-1", children: "─── CURRENT BALANCE ───" }),
             /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "font-mono text-3xl font-bold text-primary tabular-nums retro-glow", children: formatCycles(currentCycles) }),
-            /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "font-mono text-[10px] text-muted-foreground tracking-[0.12em] mt-0.5", children: "CYCLES" })
+            /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "font-mono text-[10px] text-muted-foreground tracking-[0.12em] mt-0.5", children: "CYCLES REMAINING" })
           ] }),
           /* @__PURE__ */ jsxRuntimeExports.jsxs("form", { onSubmit: handleTopUp, className: "space-y-4 font-mono", children: [
             /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "space-y-1.5", children: [
@@ -357,7 +360,8 @@ function TopUpSection({
                   }
                 ),
                 /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "absolute right-3 top-1/2 -translate-y-1/2 font-mono text-xs font-medium text-muted-foreground", children: "ICP" })
-              ] })
+              ] }),
+              /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "font-mono text-[9px] text-muted-foreground/50 uppercase tracking-wider", children: rateLoading ? "FETCHING LIVE RATE…" : usingFallbackRate ? `RATE: ~${(FALLBACK_CYCLES_PER_ICP / 1e12).toFixed(1)}T CYCLES/ICP (EST)` : `RATE: ${(cyclesPerIcp / 1e12).toFixed(2)}T CYCLES/ICP (LIVE)` })
             ] }),
             estimatedCycles > 0n && /* @__PURE__ */ jsxRuntimeExports.jsxs(
               "div",

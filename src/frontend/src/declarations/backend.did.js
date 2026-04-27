@@ -10,12 +10,21 @@ import { IDL } from '@icp-sdk/core/candid';
 
 export const CanisterId = IDL.Principal;
 export const Result_2 = IDL.Variant({ 'ok' : IDL.Null, 'err' : IDL.Text });
+export const E8s = IDL.Nat64;
+export const Cycles = IDL.Nat;
+export const CreateCanisterResult = IDL.Record({
+  'cyclesSeeded' : Cycles,
+  'canisterId' : CanisterId,
+});
+export const Result_3 = IDL.Variant({
+  'ok' : CreateCanisterResult,
+  'err' : IDL.Text,
+});
 export const CanisterStatus = IDL.Variant({
   'stopped' : IDL.Null,
   'stopping' : IDL.Null,
   'running' : IDL.Null,
 });
-export const Cycles = IDL.Nat;
 export const Timestamp = IDL.Int;
 export const CanisterDetails = IDL.Record({
   'status' : CanisterStatus,
@@ -24,6 +33,23 @@ export const CanisterDetails = IDL.Record({
   'createdAt' : Timestamp,
   'customName' : IDL.Text,
   'lastChecked' : Timestamp,
+  'fetchFailed' : IDL.Bool,
+  'canisterId' : CanisterId,
+});
+export const CreationCostEstimate = IDL.Record({
+  'creationFeeIcpE8s' : E8s,
+  'creationCycles' : Cycles,
+  'cyclesPerIcp' : IDL.Nat,
+  'estimatedSeedCycles' : Cycles,
+  'transferFeeE8s' : E8s,
+  'seedCyclesIcpE8s' : E8s,
+  'totalIcpRequiredE8s' : E8s,
+});
+export const DashboardItem = IDL.Record({
+  'cycleBalance' : Cycles,
+  'customName' : IDL.Text,
+  'isController' : IDL.Bool,
+  'lastInteractedAt' : Timestamp,
   'canisterId' : CanisterId,
 });
 export const UserId = IDL.Principal;
@@ -32,7 +58,6 @@ export const UserAccount = IDL.Record({
   'userId' : UserId,
   'subaccount' : IDL.Vec(IDL.Nat8),
 });
-export const E8s = IDL.Nat64;
 export const TxKind = IDL.Variant({
   'topUp' : IDL.Record({
     'cyclesAdded' : Cycles,
@@ -59,6 +84,8 @@ export const CanisterSummary = IDL.Record({
   'cycleBalance' : Cycles,
   'customName' : IDL.Text,
   'lastChecked' : Timestamp,
+  'isController' : IDL.Bool,
+  'fetchFailed' : IDL.Bool,
   'canisterId' : CanisterId,
 });
 export const Page = IDL.Record({
@@ -67,21 +94,35 @@ export const Page = IDL.Record({
   'pageSize' : IDL.Nat,
   'items' : IDL.Vec(CanisterSummary),
 });
+export const CanisterInfo = IDL.Record({
+  'cachedCycleBalance' : Cycles,
+  'addedAt' : Timestamp,
+  'customName' : IDL.Text,
+  'isController' : IDL.Bool,
+  'lastInteractedAt' : Timestamp,
+  'canisterId' : CanisterId,
+});
 export const Result_1 = IDL.Variant({ 'ok' : Cycles, 'err' : IDL.Text });
 export const Result = IDL.Variant({ 'ok' : IDL.Nat64, 'err' : IDL.Text });
 
 export const idlService = IDL.Service({
   'addCanister' : IDL.Func([CanisterId, IDL.Text], [Result_2], []),
   'addController' : IDL.Func([CanisterId, IDL.Principal], [Result_2], []),
+  'createCanister' : IDL.Func([IDL.Text, E8s], [Result_3], []),
   'getAppPrincipal' : IDL.Func([], [IDL.Principal], ['query']),
   'getCanisterDetails' : IDL.Func([CanisterId], [IDL.Opt(CanisterDetails)], []),
+  'getCreationCostEstimate' : IDL.Func([E8s], [CreationCostEstimate], []),
+  'getIcpXdrConversionRate' : IDL.Func([], [IDL.Nat], []),
+  'getLowestCyclesCanisters' : IDL.Func([], [IDL.Vec(DashboardItem)], []),
   'getMyAccount' : IDL.Func([], [UserAccount], []),
   'getMyBalance' : IDL.Func([], [E8s], []),
+  'getRecentCanisters' : IDL.Func([], [IDL.Vec(DashboardItem)], []),
   'getTransactionHistory' : IDL.Func([IDL.Nat], [Page_1], []),
   'listCanisters' : IDL.Func([IDL.Nat], [Page], []),
   'removeCanister' : IDL.Func([CanisterId], [Result_2], []),
   'removeController' : IDL.Func([CanisterId, IDL.Principal], [Result_2], []),
   'renameCanister' : IDL.Func([CanisterId, IDL.Text], [Result_2], []),
+  'searchCanisters' : IDL.Func([IDL.Text], [IDL.Vec(CanisterInfo)], ['query']),
   'topUpCanister' : IDL.Func([CanisterId, E8s], [Result_1], []),
   'transferIcp' : IDL.Func([IDL.Text, E8s, IDL.Text], [Result], []),
 });
@@ -91,12 +132,21 @@ export const idlInitArgs = [];
 export const idlFactory = ({ IDL }) => {
   const CanisterId = IDL.Principal;
   const Result_2 = IDL.Variant({ 'ok' : IDL.Null, 'err' : IDL.Text });
+  const E8s = IDL.Nat64;
+  const Cycles = IDL.Nat;
+  const CreateCanisterResult = IDL.Record({
+    'cyclesSeeded' : Cycles,
+    'canisterId' : CanisterId,
+  });
+  const Result_3 = IDL.Variant({
+    'ok' : CreateCanisterResult,
+    'err' : IDL.Text,
+  });
   const CanisterStatus = IDL.Variant({
     'stopped' : IDL.Null,
     'stopping' : IDL.Null,
     'running' : IDL.Null,
   });
-  const Cycles = IDL.Nat;
   const Timestamp = IDL.Int;
   const CanisterDetails = IDL.Record({
     'status' : CanisterStatus,
@@ -105,6 +155,23 @@ export const idlFactory = ({ IDL }) => {
     'createdAt' : Timestamp,
     'customName' : IDL.Text,
     'lastChecked' : Timestamp,
+    'fetchFailed' : IDL.Bool,
+    'canisterId' : CanisterId,
+  });
+  const CreationCostEstimate = IDL.Record({
+    'creationFeeIcpE8s' : E8s,
+    'creationCycles' : Cycles,
+    'cyclesPerIcp' : IDL.Nat,
+    'estimatedSeedCycles' : Cycles,
+    'transferFeeE8s' : E8s,
+    'seedCyclesIcpE8s' : E8s,
+    'totalIcpRequiredE8s' : E8s,
+  });
+  const DashboardItem = IDL.Record({
+    'cycleBalance' : Cycles,
+    'customName' : IDL.Text,
+    'isController' : IDL.Bool,
+    'lastInteractedAt' : Timestamp,
     'canisterId' : CanisterId,
   });
   const UserId = IDL.Principal;
@@ -113,7 +180,6 @@ export const idlFactory = ({ IDL }) => {
     'userId' : UserId,
     'subaccount' : IDL.Vec(IDL.Nat8),
   });
-  const E8s = IDL.Nat64;
   const TxKind = IDL.Variant({
     'topUp' : IDL.Record({
       'cyclesAdded' : Cycles,
@@ -140,6 +206,8 @@ export const idlFactory = ({ IDL }) => {
     'cycleBalance' : Cycles,
     'customName' : IDL.Text,
     'lastChecked' : Timestamp,
+    'isController' : IDL.Bool,
+    'fetchFailed' : IDL.Bool,
     'canisterId' : CanisterId,
   });
   const Page = IDL.Record({
@@ -148,25 +216,43 @@ export const idlFactory = ({ IDL }) => {
     'pageSize' : IDL.Nat,
     'items' : IDL.Vec(CanisterSummary),
   });
+  const CanisterInfo = IDL.Record({
+    'cachedCycleBalance' : Cycles,
+    'addedAt' : Timestamp,
+    'customName' : IDL.Text,
+    'isController' : IDL.Bool,
+    'lastInteractedAt' : Timestamp,
+    'canisterId' : CanisterId,
+  });
   const Result_1 = IDL.Variant({ 'ok' : Cycles, 'err' : IDL.Text });
   const Result = IDL.Variant({ 'ok' : IDL.Nat64, 'err' : IDL.Text });
   
   return IDL.Service({
     'addCanister' : IDL.Func([CanisterId, IDL.Text], [Result_2], []),
     'addController' : IDL.Func([CanisterId, IDL.Principal], [Result_2], []),
+    'createCanister' : IDL.Func([IDL.Text, E8s], [Result_3], []),
     'getAppPrincipal' : IDL.Func([], [IDL.Principal], ['query']),
     'getCanisterDetails' : IDL.Func(
         [CanisterId],
         [IDL.Opt(CanisterDetails)],
         [],
       ),
+    'getCreationCostEstimate' : IDL.Func([E8s], [CreationCostEstimate], []),
+    'getIcpXdrConversionRate' : IDL.Func([], [IDL.Nat], []),
+    'getLowestCyclesCanisters' : IDL.Func([], [IDL.Vec(DashboardItem)], []),
     'getMyAccount' : IDL.Func([], [UserAccount], []),
     'getMyBalance' : IDL.Func([], [E8s], []),
+    'getRecentCanisters' : IDL.Func([], [IDL.Vec(DashboardItem)], []),
     'getTransactionHistory' : IDL.Func([IDL.Nat], [Page_1], []),
     'listCanisters' : IDL.Func([IDL.Nat], [Page], []),
     'removeCanister' : IDL.Func([CanisterId], [Result_2], []),
     'removeController' : IDL.Func([CanisterId, IDL.Principal], [Result_2], []),
     'renameCanister' : IDL.Func([CanisterId, IDL.Text], [Result_2], []),
+    'searchCanisters' : IDL.Func(
+        [IDL.Text],
+        [IDL.Vec(CanisterInfo)],
+        ['query'],
+      ),
     'topUpCanister' : IDL.Func([CanisterId, E8s], [Result_1], []),
     'transferIcp' : IDL.Func([IDL.Text, E8s, IDL.Text], [Result], []),
   });

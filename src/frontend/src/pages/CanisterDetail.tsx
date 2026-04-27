@@ -15,6 +15,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import {
   useGetAppPrincipal,
   useGetCanisterDetails,
+  useGetIcpXdrConversionRate,
   useGetTransactionHistory,
 } from "@/hooks/useBackend";
 import {
@@ -46,10 +47,11 @@ import {
 import { useEffect, useMemo, useRef, useState } from "react";
 
 // ─── ICP <-> Cycles estimation ───────────────────────────────────────────────
-const ICP_TO_CYCLES_RATE = 13_000_000_000_000;
+// Fallback rate: 10T cycles/ICP — conservative floor used when live rate unavailable
+const FALLBACK_CYCLES_PER_ICP = 10_000_000_000_000;
 
-function icpToEstimatedCycles(icpAmount: number): bigint {
-  return BigInt(Math.floor(icpAmount * ICP_TO_CYCLES_RATE));
+function icpToEstimatedCycles(icpAmount: number, cyclesPerIcp: number): bigint {
+  return BigInt(Math.floor(icpAmount * cyclesPerIcp));
 }
 
 // ─── Loading skeleton ─────────────────────────────────────────────────────────
@@ -306,9 +308,17 @@ function TopUpSection({
 }) {
   const [icpInput, setIcpInput] = useState("");
   const topUp = useTopUpCanister();
+  const { data: liveRate, isLoading: rateLoading } =
+    useGetIcpXdrConversionRate();
+
+  // Use live rate if available; fall back to conservative constant
+  const cyclesPerIcp =
+    liveRate && liveRate > 0n ? Number(liveRate) : FALLBACK_CYCLES_PER_ICP;
+  const usingFallbackRate = !rateLoading && (!liveRate || liveRate === 0n);
 
   const icpAmount = Number.parseFloat(icpInput) || 0;
-  const estimatedCycles = icpAmount > 0 ? icpToEstimatedCycles(icpAmount) : 0n;
+  const estimatedCycles =
+    icpAmount > 0 ? icpToEstimatedCycles(icpAmount, cyclesPerIcp) : 0n;
   const e8s = BigInt(Math.floor(icpAmount * 100_000_000));
 
   const handleTopUp = (e: React.FormEvent) => {
@@ -341,7 +351,7 @@ function TopUpSection({
             {formatCycles(currentCycles)}
           </p>
           <p className="font-mono text-[10px] text-muted-foreground tracking-[0.12em] mt-0.5">
-            CYCLES
+            CYCLES REMAINING
           </p>
         </div>
 
@@ -369,6 +379,14 @@ function TopUpSection({
                 ICP
               </span>
             </div>
+            {/* Live conversion rate display */}
+            <p className="font-mono text-[9px] text-muted-foreground/50 uppercase tracking-wider">
+              {rateLoading
+                ? "FETCHING LIVE RATE…"
+                : usingFallbackRate
+                  ? `RATE: ~${(FALLBACK_CYCLES_PER_ICP / 1e12).toFixed(1)}T CYCLES/ICP (EST)`
+                  : `RATE: ${(cyclesPerIcp / 1e12).toFixed(2)}T CYCLES/ICP (LIVE)`}
+            </p>
           </div>
           {estimatedCycles > 0n && (
             <div

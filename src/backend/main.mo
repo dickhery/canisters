@@ -6,6 +6,11 @@ import CanisterTypes "types/canister";
 import LedgerTypes "types/ledger";
 import CanisterApi "mixins/canister-api";
 import LedgerApi "mixins/ledger-api";
+import CanisterCreationApi "mixins/canister-creation-api";
+
+
+
+
 
 actor self {
   // --- Shared state ---
@@ -26,8 +31,9 @@ actor self {
   let selfPrincipal = Principal.fromActor(self);
 
   // --- Mixin composition ---
-  include CanisterApi(userCanisters, userAccounts, txLog, nextTxId);
-  include LedgerApi(selfPrincipal, userAccounts, txLog, nextTxId);
+  include CanisterApi(selfPrincipal, userCanisters, userAccounts, txLog, nextTxId);
+  include LedgerApi(selfPrincipal, userAccounts, txLog, nextTxId, userCanisters);
+  include CanisterCreationApi(selfPrincipal, userCanisters, userAccounts, txLog, nextTxId);
 
   // Expose the app's own principal so the frontend can display it as the
   // "App Controller PID" and allow users to add it as a controller.

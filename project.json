@@ -1,23 +1,25 @@
 {
-  "overview": "CANISTERS is a retro terminal-style ICP canister management dashboard. Track cycle balances, manage controllers, and top up canisters from your ICP account — all wrapped in a full CRT phosphor-green aesthetic.",
+  "overview": "CANISTERS is a retro-themed ICP canister management dashboard with a CRT monitor aesthetic. Users can log in with Internet Identity to track, create, and manage their canisters — monitoring cycle balances, managing controllers, and topping up from an in-app ICP account.",
   "features": [
-    "Retro CRT terminal theme with phosphor green, scanlines, and glow effects",
-    "Track and monitor ICP canisters with live cycle balance display",
+    "Internet Identity login with retro boot-sequence splash screen",
+    "Track and manage ICP canisters with cycle balance monitoring",
+    "Create new canisters in-app with upfront cost estimation and initial cycles seeding",
     "Top up canister cycles by converting ICP from your in-app account",
-    "Manage canister controllers — add, remove, and view the app controller PID",
-    "View transaction history for all top-ups and ICP transfers",
-    "Internet Identity authentication with Principal ID and ICP Account ID display"
+    "Dashboard showing recent activity and lowest-balance canisters",
+    "Controller management: add/remove controllers with app controller badge",
+    "Retro CRT monitor UI: phosphor green text, scanlines, CRT glow, flicker effects",
+    "Paginated canister list with real-time search and ◆CTRL/◇NO-CTRL badges",
+    "Transaction history for ICP transfers and cycle top-ups"
   ],
-  "category": "developer-tools",
+  "category": "productivity",
   "tags": [
     "icp",
-    "internet-computer",
-    "canisters",
+    "canister",
+    "dashboard",
     "cycles",
-    "canister-management",
+    "internet-computer",
     "retro",
-    "terminal",
-    "developer-tools"
+    "management"
   ],
-  "last_updated": "2026-04-26T10:34:48.064Z"
+  "last_updated": "2026-04-26T21:51:59.843Z"
 }

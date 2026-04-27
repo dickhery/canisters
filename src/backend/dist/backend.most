@@ -26,8 +26,11 @@ type Timestamp__884806187 = Timestamp__301639476;
 type TrackedCanister__955140980 =
   {
     addedAt : Timestamp__647675121;
+    var cachedControllers : [Principal];
+    var cachedCycleBalance : Cycles__410059581;
     canisterId : CanisterId__276104819;
-    var customName : Text
+    var customName : Text;
+    var lastInteractedAt : Timestamp__647675121
   };
 type Transaction__554140998 =
   {
@@ -49,8 +52,35 @@ type UserId__158757552 = Principal;
 type UserId__503354635 = UserId__158757552;
 actor {
   stable CMC_ID : Principal;
+  stable CREATION_CMC_ID : Principal;
+  stable CREATION_ICP_LEDGER_ID : Principal;
   stable ICP_FEE_E8S : Nat64;
   stable ICP_LEDGER_ID : Principal;
+  stable cmcActor :
+    actor {
+      get_icp_xdr_conversion_rate :
+        shared () ->
+          async
+            {
+              certificate : Blob;
+              data :
+                {timestamp_seconds : Nat64; xdr_permyriad_per_icp : Nat64}
+            };
+      notify_top_up :
+        shared {block_index : Nat64; canister_id : Principal} ->
+          async
+            {
+              #Err :
+                {
+                  #InvalidTransaction : Text;
+                  #Other : {error_code : Nat64; error_message : Text};
+                  #Processing;
+                  #Refunded : {block_index : ?Nat64; reason : Text};
+                  #TransactionTooOld : Nat64
+                };
+              #Ok : Nat
+            }
+    };
   stable ic :
     actor {
       canister_status :
@@ -81,6 +111,20 @@ actor {
                    }
                } ->
           async ()
+    };
+  stable icMgmt :
+    actor {
+      create_canister :
+        shared {
+                 settings :
+                   ?{
+                      compute_allocation : ?Nat;
+                      controllers : ?[Principal];
+                      freezing_threshold : ?Nat;
+                      memory_allocation : ?Nat
+                    }
+               } ->
+          async {canister_id : Principal}
     };
   stable nextTxId : {var value : Nat};
   stable selfPrincipal : Principal;
