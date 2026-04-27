@@ -1,9 +1,20 @@
-import { c as createLucideIcon, s as useParams, r as reactExports, j as jsxRuntimeExports, L as Link, B as Button, C as CopyableId, o as formatCycles, q as formatTimestamp, t as truncatePrincipal, v as Check, X, n as formatIcp } from "./index-BMS8nT-t.js";
-import { S as StatusBadge, T as Trash2, P as Pencil } from "./StatusBadge-2KNQNXj9.js";
-import { D as Dialog, a as DialogContent, b as DialogHeader, c as DialogTitle, e as DialogFooter } from "./dialog-Dxty3jP1.js";
-import { h as useGetAppPrincipal, i as useGetCanisterDetails, S as Skeleton, j as useTopUpCanister, k as useGetIcpXdrConversionRate, L as Label, I as Input, l as useRemoveController, m as useGetTransactionHistory, g as useRenameCanister, n as useAddController } from "./index-STxetVaD.js";
-import { Z as Zap } from "./zap-Bz0PJ0tH.js";
-import { P as Plus } from "./plus-DyCkzdsX.js";
+import { c as createLucideIcon, z as useParams, A as useQueryClient, r as reactExports, j as jsxRuntimeExports, L as Link, B as Button, C as CopyableId, o as formatCycles, q as formatTimestamp, E as truncatePrincipal, G as Check, X, n as formatIcp } from "./index-BDHQLcS7.js";
+import { S as StatusBadge, T as Trash2, P as Pencil } from "./StatusBadge-DAliPmHS.js";
+import { D as Dialog, a as DialogContent, b as DialogHeader, c as DialogTitle, e as DialogFooter } from "./dialog-g0aT-ydF.js";
+import { k as useGetAppPrincipal, l as useGetCanisterDetails, S as Skeleton, m as useTopUpCanister, n as useGetIcpXdrConversionRate, L as Label, I as Input, o as useTransferCycles, p as useRemoveController, i as useGetTransactionHistory, g as useRenameCanister, q as useAddController } from "./index-o6Tr2rW7.js";
+import { Z as Zap } from "./zap-DTiv5b0y.js";
+import { P as Plus } from "./plus-mvrwVDkf.js";
+/**
+ * @license lucide-react v0.511.0 - ISC
+ *
+ * This source code is licensed under the ISC license.
+ * See the LICENSE file in the root directory of this source tree.
+ */
+const __iconNode$5 = [
+  ["path", { d: "m12 19-7-7 7-7", key: "1l729n" }],
+  ["path", { d: "M19 12H5", key: "x3x0zl" }]
+];
+const ArrowLeft = createLucideIcon("arrow-left", __iconNode$5);
 /**
  * @license lucide-react v0.511.0 - ISC
  *
@@ -11,10 +22,12 @@ import { P as Plus } from "./plus-DyCkzdsX.js";
  * See the LICENSE file in the root directory of this source tree.
  */
 const __iconNode$4 = [
-  ["path", { d: "m12 19-7-7 7-7", key: "1l729n" }],
-  ["path", { d: "M19 12H5", key: "x3x0zl" }]
+  ["path", { d: "m16 3 4 4-4 4", key: "1x1c3m" }],
+  ["path", { d: "M20 7H4", key: "zbl0bi" }],
+  ["path", { d: "m8 21-4-4 4-4", key: "h9nckh" }],
+  ["path", { d: "M4 17h16", key: "g4d7ey" }]
 ];
-const ArrowLeft = createLucideIcon("arrow-left", __iconNode$4);
+const ArrowRightLeft = createLucideIcon("arrow-right-left", __iconNode$4);
 /**
  * @license lucide-react v0.511.0 - ISC
  *
@@ -396,6 +409,124 @@ function TopUpSection({
     }
   );
 }
+function TransferCyclesSection({ canisterId }) {
+  const [targetId, setTargetId] = reactExports.useState("");
+  const [cyclesInput, setCyclesInput] = reactExports.useState("");
+  const transfer = useTransferCycles();
+  const cyclesAmount = BigInt(
+    Math.floor(Number.parseFloat(cyclesInput.replace(/_/g, "")) || 0)
+  );
+  const isDisabled = !targetId.trim() || cyclesAmount <= 0n || transfer.isPending;
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    if (isDisabled) return;
+    transfer.mutate(
+      {
+        fromCanisterId: canisterId,
+        toCanisterId: targetId.trim(),
+        amount: cyclesAmount
+      },
+      {
+        onSuccess: () => {
+          setTargetId("");
+          setCyclesInput("");
+        }
+      }
+    );
+  };
+  return /* @__PURE__ */ jsxRuntimeExports.jsxs(
+    "div",
+    {
+      className: "terminal-card border border-border/50 bg-card",
+      "data-ocid": "canister_detail.transfer_cycles_section",
+      children: [
+        /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "border-b border-border/40 px-4 py-2 flex items-center gap-2", children: [
+          /* @__PURE__ */ jsxRuntimeExports.jsx(ArrowRightLeft, { className: "h-3.5 w-3.5 text-primary" }),
+          /* @__PURE__ */ jsxRuntimeExports.jsx("h2", { className: "font-mono text-xs font-semibold text-primary uppercase tracking-[0.2em] retro-glow-sm", children: "TRANSFER CYCLES" })
+        ] }),
+        /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "p-4", children: [
+          /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "mb-4 border border-primary/20 bg-primary/5 px-3 py-2.5 font-mono", children: /* @__PURE__ */ jsxRuntimeExports.jsxs("p", { className: "font-mono text-[9px] text-muted-foreground uppercase tracking-[0.15em] leading-relaxed", children: [
+            "─── MOVE EXCESS CYCLES ──────────────────────────────",
+            /* @__PURE__ */ jsxRuntimeExports.jsx("br", {}),
+            "TRANSFER CYCLES FROM THIS CANISTER TO ANY DESTINATION CANISTER ID. ONLY AVAILABLE WHEN THIS APP IS A CONTROLLER."
+          ] }) }),
+          /* @__PURE__ */ jsxRuntimeExports.jsxs("form", { onSubmit: handleSubmit, className: "space-y-4 font-mono", children: [
+            /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "space-y-1.5", children: [
+              /* @__PURE__ */ jsxRuntimeExports.jsx(
+                "label",
+                {
+                  htmlFor: "transfer-target-id",
+                  className: "font-mono text-[10px] text-muted-foreground uppercase tracking-[0.2em]",
+                  children: "TARGET_CANISTER_ID:"
+                }
+              ),
+              /* @__PURE__ */ jsxRuntimeExports.jsx(
+                Input,
+                {
+                  id: "transfer-target-id",
+                  "data-ocid": "canister_detail.transfer_target_input",
+                  placeholder: "aaaaa-aa...",
+                  value: targetId,
+                  onChange: (e) => setTargetId(e.target.value),
+                  className: "font-mono text-xs bg-background border-border/50 focus:border-primary",
+                  autoComplete: "off",
+                  spellCheck: false,
+                  disabled: transfer.isPending
+                }
+              )
+            ] }),
+            /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "space-y-1.5", children: [
+              /* @__PURE__ */ jsxRuntimeExports.jsx(
+                "label",
+                {
+                  htmlFor: "transfer-cycles-amount",
+                  className: "font-mono text-[10px] text-muted-foreground uppercase tracking-[0.2em]",
+                  children: "CYCLES_AMOUNT:"
+                }
+              ),
+              /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "relative", children: [
+                /* @__PURE__ */ jsxRuntimeExports.jsx(
+                  Input,
+                  {
+                    id: "transfer-cycles-amount",
+                    "data-ocid": "canister_detail.transfer_cycles_input",
+                    type: "number",
+                    placeholder: "100000000000",
+                    min: "0",
+                    step: "1",
+                    value: cyclesInput,
+                    onChange: (e) => setCyclesInput(e.target.value),
+                    className: "font-mono pr-16 bg-background border-border/50 focus:border-primary",
+                    disabled: transfer.isPending
+                  }
+                ),
+                /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "absolute right-3 top-1/2 -translate-y-1/2 font-mono text-[10px] font-medium text-muted-foreground uppercase tracking-wider", children: "CYC" })
+              ] }),
+              cyclesAmount > 0n && /* @__PURE__ */ jsxRuntimeExports.jsxs("p", { className: "font-mono text-[9px] text-primary/70 tracking-wider", children: [
+                "≈ ",
+                formatCycles(cyclesAmount),
+                " TO SEND"
+              ] })
+            ] }),
+            /* @__PURE__ */ jsxRuntimeExports.jsxs(
+              Button,
+              {
+                type: "submit",
+                "data-ocid": "canister_detail.transfer_cycles_submit_button",
+                className: "w-full font-mono text-xs tracking-[0.15em] uppercase gap-1.5",
+                disabled: isDisabled,
+                children: [
+                  transfer.isPending ? /* @__PURE__ */ jsxRuntimeExports.jsx(RefreshCw, { className: "h-3.5 w-3.5 animate-spin" }) : /* @__PURE__ */ jsxRuntimeExports.jsx(ArrowRightLeft, { className: "h-3.5 w-3.5" }),
+                  transfer.isPending ? "TRANSFERRING…" : "[ENTER] SEND CYCLES"
+                ]
+              }
+            )
+          ] })
+        ] })
+      ]
+    }
+  );
+}
 function AppControllerBanner({ appPrincipal }) {
   if (!appPrincipal) return null;
   return /* @__PURE__ */ jsxRuntimeExports.jsx(
@@ -697,7 +828,8 @@ function HeroStats({ details }) {
 }
 function CanisterDetail() {
   const { canisterId } = useParams({ strict: false });
-  const { data: appPrincipal = "" } = useGetAppPrincipal();
+  const queryClient = useQueryClient();
+  const { data: appPrincipal } = useGetAppPrincipal();
   const {
     data: details,
     isLoading,
@@ -707,6 +839,38 @@ function CanisterDetail() {
     () => ((details == null ? void 0 : details.controllers) ?? []).map((c) => c.toText()),
     [details]
   );
+  const cachedSummaryIsController = reactExports.useMemo(() => {
+    var _a;
+    if (!canisterId) return void 0;
+    const allQueries = queryClient.getQueriesData({
+      queryKey: ["canisters", "list"]
+    });
+    for (const [, page] of allQueries) {
+      const match = (_a = page == null ? void 0 : page.items) == null ? void 0 : _a.find(
+        (c) => c.canisterId.toString() === canisterId
+      );
+      if (match !== void 0) return match.isController;
+    }
+    const searchQueries = queryClient.getQueriesData({
+      queryKey: ["canisters", "search"]
+    });
+    for (const [, results] of searchQueries) {
+      const match = results == null ? void 0 : results.find(
+        (c) => c.canisterId.toString() === canisterId
+      );
+      if (match !== void 0) return match.isController;
+    }
+    return void 0;
+  }, [canisterId, queryClient]);
+  const isController = reactExports.useMemo(() => {
+    if (appPrincipal && controllers.length > 0) {
+      return controllers.includes(appPrincipal);
+    }
+    if (cachedSummaryIsController !== void 0) {
+      return cachedSummaryIsController;
+    }
+    return false;
+  }, [controllers, appPrincipal, cachedSummaryIsController]);
   if (!canisterId) return null;
   return /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "max-w-2xl mx-auto px-4 py-5 space-y-4 font-mono", children: [
     /* @__PURE__ */ jsxRuntimeExports.jsxs(
@@ -730,12 +894,13 @@ function CanisterDetail() {
           currentCycles: details.cycleBalance ?? 0n
         }
       ),
+      isController && /* @__PURE__ */ jsxRuntimeExports.jsx(TransferCyclesSection, { canisterId }),
       /* @__PURE__ */ jsxRuntimeExports.jsx(
         ControllersSection,
         {
           canisterId,
           controllers,
-          appPrincipal
+          appPrincipal: appPrincipal ?? ""
         }
       ),
       /* @__PURE__ */ jsxRuntimeExports.jsx(TransactionHistorySection, { canisterId })

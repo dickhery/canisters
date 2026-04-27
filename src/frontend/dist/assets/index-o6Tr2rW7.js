@@ -7,7 +7,7 @@ var __privateAdd = (obj, member, value) => member.has(obj) ? __typeError("Cannot
 var __privateSet = (obj, member, value, setter) => (__accessCheck(obj, member, "write to private field"), setter ? setter.call(obj, value) : member.set(obj, value), value);
 var __privateMethod = (obj, member, method) => (__accessCheck(obj, member, "access private method"), method);
 var _client, _currentQuery, _currentQueryInitialState, _currentResult, _currentResultState, _currentResultOptions, _currentThenable, _selectError, _selectFn, _selectResult, _lastQueryWithDefinedData, _staleTimeoutId, _refetchIntervalId, _currentRefetchInterval, _trackedProps, _QueryObserver_instances, executeFetch_fn, updateStaleTimeout_fn, computeRefetchInterval_fn, updateRefetchInterval_fn, updateTimers_fn, clearStaleTimeout_fn, clearRefetchInterval_fn, updateQuery_fn, notify_fn, _a, _client2, _currentResult2, _currentMutation, _mutateOptions, _MutationObserver_instances, updateResult_fn, notify_fn2, _b;
-import { H as ProtocolError, I as TimeoutWaitingForResponseErrorCode, J as utf8ToBytes, K as ExternalError, M as MissingRootKeyErrorCode, N as Certificate, O as lookupResultToBuffer, Q as RequestStatusResponseStatus, U as UnknownError, V as RequestStatusDoneNoReplyErrorCode, Y as RejectError, Z as CertifiedRejectErrorCode, _ as UNREACHABLE_ERROR, $ as InputError, a0 as InvalidReadStateRequestErrorCode, a1 as ReadRequestType, a2 as Principal, a3 as IDL, a4 as MissingCanisterIdErrorCode, a5 as HttpAgent, a6 as encode, a7 as QueryResponseStatus, a8 as UncertifiedRejectErrorCode, a9 as isV3ResponseBody, aa as isV2ResponseBody, ab as UncertifiedRejectUpdateErrorCode, ac as UnexpectedErrorCode, ad as decode, ae as Subscribable, af as pendingThenable, ag as resolveEnabled, ah as shallowEqualObjects, ai as resolveStaleTime, aj as noop, ak as environmentManager, al as isValidTimeout, am as timeUntilStale, an as timeoutManager, ao as focusManager, ap as fetchState, aq as replaceData, ar as notifyManager, as as hashKey, at as getDefaultState, r as reactExports, au as shouldThrowError, av as useQueryClient, G as useInternetIdentity, aw as createActorWithConfig, j as jsxRuntimeExports, m as cn, ax as createSlot, ay as Variant, az as Record, aA as Vec, aB as Service, aC as Func, aD as Text, aE as Opt, aF as Principal$1, aG as Null, aH as Nat, aI as Bool, aJ as Int, aK as Nat64, aL as Nat8, aM as keepPreviousData, aN as __vitePreload, aS as ue, aO as JSON_KEY_PRINCIPAL, aP as base32Decode, aQ as base32Encode, aR as getCrc32 } from "./index-BMS8nT-t.js";
+import { I as ProtocolError, J as TimeoutWaitingForResponseErrorCode, K as utf8ToBytes, M as ExternalError, N as MissingRootKeyErrorCode, O as Certificate, Q as lookupResultToBuffer, U as RequestStatusResponseStatus, V as UnknownError, Y as RequestStatusDoneNoReplyErrorCode, Z as RejectError, _ as CertifiedRejectErrorCode, $ as UNREACHABLE_ERROR, a0 as InputError, a1 as InvalidReadStateRequestErrorCode, a2 as ReadRequestType, a3 as Principal, a4 as IDL, a5 as MissingCanisterIdErrorCode, a6 as HttpAgent, a7 as encode, a8 as QueryResponseStatus, a9 as UncertifiedRejectErrorCode, aa as isV3ResponseBody, ab as isV2ResponseBody, ac as UncertifiedRejectUpdateErrorCode, ad as UnexpectedErrorCode, ae as decode, af as Subscribable, ag as pendingThenable, ah as resolveEnabled, ai as shallowEqualObjects, aj as resolveStaleTime, ak as noop, al as environmentManager, am as isValidTimeout, an as timeUntilStale, ao as timeoutManager, ap as focusManager, aq as fetchState, ar as replaceData, as as notifyManager, at as hashKey, au as getDefaultState, r as reactExports, av as shouldThrowError, A as useQueryClient, H as useInternetIdentity, aw as createActorWithConfig, j as jsxRuntimeExports, m as cn, ax as createSlot, ay as Variant, az as Record, aA as Vec, aB as Service, aC as Func, aD as Text, aE as Opt, aF as Principal$1, aG as Null, aH as Nat, aI as Bool, aJ as Int, aK as Nat64, aL as Nat8, aM as keepPreviousData, aN as __vitePreload, aS as ue, o as formatCycles, aO as JSON_KEY_PRINCIPAL, aP as base32Decode, aQ as base32Encode, aR as getCrc32 } from "./index-BDHQLcS7.js";
 const FIVE_MINUTES_IN_MSEC = 5 * 60 * 1e3;
 function defaultStrategy() {
   return chain(conditionalDelay(once(), 1e3), backoff(1e3, 1.2), timeout(FIVE_MINUTES_IN_MSEC));
@@ -1333,14 +1333,14 @@ function Skeleton({ className, ...props }) {
   );
 }
 const CanisterId = Principal$1;
-const Result_2 = Variant({ "ok": Null, "err": Text });
+const Result_3 = Variant({ "ok": Null, "err": Text });
 const E8s = Nat64;
 const Cycles = Nat;
 const CreateCanisterResult = Record({
   "cyclesSeeded": Cycles,
   "canisterId": CanisterId
 });
-const Result_3 = Variant({
+const Result_4 = Variant({
   "ok": CreateCanisterResult,
   "err": Text
 });
@@ -1426,12 +1426,13 @@ const CanisterInfo = Record({
   "lastInteractedAt": Timestamp,
   "canisterId": CanisterId
 });
-const Result_1 = Variant({ "ok": Cycles, "err": Text });
+const Result_2 = Variant({ "ok": Cycles, "err": Text });
+const Result_1 = Variant({ "ok": Nat, "err": Text });
 const Result = Variant({ "ok": Nat64, "err": Text });
 Service({
-  "addCanister": Func([CanisterId, Text], [Result_2], []),
-  "addController": Func([CanisterId, Principal$1], [Result_2], []),
-  "createCanister": Func([Text, E8s], [Result_3], []),
+  "addCanister": Func([CanisterId, Text], [Result_3], []),
+  "addController": Func([CanisterId, Principal$1], [Result_3], []),
+  "createCanister": Func([Text, E8s], [Result_4], []),
   "getAppPrincipal": Func([], [Principal$1], ["query"]),
   "getCanisterDetails": Func([CanisterId], [Opt(CanisterDetails)], []),
   "getCreationCostEstimate": Func([E8s], [CreationCostEstimate], []),
@@ -1442,23 +1443,29 @@ Service({
   "getRecentCanisters": Func([], [Vec(DashboardItem)], []),
   "getTransactionHistory": Func([Nat], [Page_1], []),
   "listCanisters": Func([Nat], [Page], []),
-  "removeCanister": Func([CanisterId], [Result_2], []),
-  "removeController": Func([CanisterId, Principal$1], [Result_2], []),
-  "renameCanister": Func([CanisterId, Text], [Result_2], []),
+  "removeCanister": Func([CanisterId], [Result_3], []),
+  "removeController": Func([CanisterId, Principal$1], [Result_3], []),
+  "renameCanister": Func([CanisterId, Text], [Result_3], []),
   "searchCanisters": Func([Text], [Vec(CanisterInfo)], ["query"]),
-  "topUpCanister": Func([CanisterId, E8s], [Result_1], []),
-  "transferIcp": Func([Text, E8s, Text], [Result], [])
+  "topUpCanister": Func([CanisterId, E8s], [Result_2], []),
+  "transferCycles": Func(
+    [Principal$1, Principal$1, Nat],
+    [Result_1],
+    []
+  ),
+  "transferIcp": Func([Text, E8s, Text], [Result], []),
+  "withdrawCyclesTo": Func([Principal$1, Nat], [], [])
 });
 const idlFactory = ({ IDL: IDL2 }) => {
   const CanisterId2 = IDL2.Principal;
-  const Result_22 = IDL2.Variant({ "ok": IDL2.Null, "err": IDL2.Text });
+  const Result_32 = IDL2.Variant({ "ok": IDL2.Null, "err": IDL2.Text });
   const E8s2 = IDL2.Nat64;
   const Cycles2 = IDL2.Nat;
   const CreateCanisterResult2 = IDL2.Record({
     "cyclesSeeded": Cycles2,
     "canisterId": CanisterId2
   });
-  const Result_32 = IDL2.Variant({
+  const Result_42 = IDL2.Variant({
     "ok": CreateCanisterResult2,
     "err": IDL2.Text
   });
@@ -1544,12 +1551,13 @@ const idlFactory = ({ IDL: IDL2 }) => {
     "lastInteractedAt": Timestamp2,
     "canisterId": CanisterId2
   });
-  const Result_12 = IDL2.Variant({ "ok": Cycles2, "err": IDL2.Text });
+  const Result_22 = IDL2.Variant({ "ok": Cycles2, "err": IDL2.Text });
+  const Result_12 = IDL2.Variant({ "ok": IDL2.Nat, "err": IDL2.Text });
   const Result2 = IDL2.Variant({ "ok": IDL2.Nat64, "err": IDL2.Text });
   return IDL2.Service({
-    "addCanister": IDL2.Func([CanisterId2, IDL2.Text], [Result_22], []),
-    "addController": IDL2.Func([CanisterId2, IDL2.Principal], [Result_22], []),
-    "createCanister": IDL2.Func([IDL2.Text, E8s2], [Result_32], []),
+    "addCanister": IDL2.Func([CanisterId2, IDL2.Text], [Result_32], []),
+    "addController": IDL2.Func([CanisterId2, IDL2.Principal], [Result_32], []),
+    "createCanister": IDL2.Func([IDL2.Text, E8s2], [Result_42], []),
     "getAppPrincipal": IDL2.Func([], [IDL2.Principal], ["query"]),
     "getCanisterDetails": IDL2.Func(
       [CanisterId2],
@@ -1564,16 +1572,22 @@ const idlFactory = ({ IDL: IDL2 }) => {
     "getRecentCanisters": IDL2.Func([], [IDL2.Vec(DashboardItem2)], []),
     "getTransactionHistory": IDL2.Func([IDL2.Nat], [Page_12], []),
     "listCanisters": IDL2.Func([IDL2.Nat], [Page2], []),
-    "removeCanister": IDL2.Func([CanisterId2], [Result_22], []),
-    "removeController": IDL2.Func([CanisterId2, IDL2.Principal], [Result_22], []),
-    "renameCanister": IDL2.Func([CanisterId2, IDL2.Text], [Result_22], []),
+    "removeCanister": IDL2.Func([CanisterId2], [Result_32], []),
+    "removeController": IDL2.Func([CanisterId2, IDL2.Principal], [Result_32], []),
+    "renameCanister": IDL2.Func([CanisterId2, IDL2.Text], [Result_32], []),
     "searchCanisters": IDL2.Func(
       [IDL2.Text],
       [IDL2.Vec(CanisterInfo2)],
       ["query"]
     ),
-    "topUpCanister": IDL2.Func([CanisterId2, E8s2], [Result_12], []),
-    "transferIcp": IDL2.Func([IDL2.Text, E8s2, IDL2.Text], [Result2], [])
+    "topUpCanister": IDL2.Func([CanisterId2, E8s2], [Result_22], []),
+    "transferCycles": IDL2.Func(
+      [IDL2.Principal, IDL2.Principal, IDL2.Nat],
+      [Result_12],
+      []
+    ),
+    "transferIcp": IDL2.Func([IDL2.Text, E8s2, IDL2.Text], [Result2], []),
+    "withdrawCyclesTo": IDL2.Func([IDL2.Principal, IDL2.Nat], [], [])
   });
 };
 class Backend {
@@ -1587,42 +1601,42 @@ class Backend {
     if (this.processError) {
       try {
         const result = await this.actor.addCanister(arg0, arg1);
-        return from_candid_Result_2_n1(this._uploadFile, this._downloadFile, result);
+        return from_candid_Result_3_n1(this._uploadFile, this._downloadFile, result);
       } catch (e) {
         this.processError(e);
         throw new Error("unreachable");
       }
     } else {
       const result = await this.actor.addCanister(arg0, arg1);
-      return from_candid_Result_2_n1(this._uploadFile, this._downloadFile, result);
+      return from_candid_Result_3_n1(this._uploadFile, this._downloadFile, result);
     }
   }
   async addController(arg0, arg1) {
     if (this.processError) {
       try {
         const result = await this.actor.addController(arg0, arg1);
-        return from_candid_Result_2_n1(this._uploadFile, this._downloadFile, result);
+        return from_candid_Result_3_n1(this._uploadFile, this._downloadFile, result);
       } catch (e) {
         this.processError(e);
         throw new Error("unreachable");
       }
     } else {
       const result = await this.actor.addController(arg0, arg1);
-      return from_candid_Result_2_n1(this._uploadFile, this._downloadFile, result);
+      return from_candid_Result_3_n1(this._uploadFile, this._downloadFile, result);
     }
   }
   async createCanister(arg0, arg1) {
     if (this.processError) {
       try {
         const result = await this.actor.createCanister(arg0, arg1);
-        return from_candid_Result_3_n3(this._uploadFile, this._downloadFile, result);
+        return from_candid_Result_4_n3(this._uploadFile, this._downloadFile, result);
       } catch (e) {
         this.processError(e);
         throw new Error("unreachable");
       }
     } else {
       const result = await this.actor.createCanister(arg0, arg1);
-      return from_candid_Result_3_n3(this._uploadFile, this._downloadFile, result);
+      return from_candid_Result_4_n3(this._uploadFile, this._downloadFile, result);
     }
   }
   async getAppPrincipal() {
@@ -1769,42 +1783,42 @@ class Backend {
     if (this.processError) {
       try {
         const result = await this.actor.removeCanister(arg0);
-        return from_candid_Result_2_n1(this._uploadFile, this._downloadFile, result);
+        return from_candid_Result_3_n1(this._uploadFile, this._downloadFile, result);
       } catch (e) {
         this.processError(e);
         throw new Error("unreachable");
       }
     } else {
       const result = await this.actor.removeCanister(arg0);
-      return from_candid_Result_2_n1(this._uploadFile, this._downloadFile, result);
+      return from_candid_Result_3_n1(this._uploadFile, this._downloadFile, result);
     }
   }
   async removeController(arg0, arg1) {
     if (this.processError) {
       try {
         const result = await this.actor.removeController(arg0, arg1);
-        return from_candid_Result_2_n1(this._uploadFile, this._downloadFile, result);
+        return from_candid_Result_3_n1(this._uploadFile, this._downloadFile, result);
       } catch (e) {
         this.processError(e);
         throw new Error("unreachable");
       }
     } else {
       const result = await this.actor.removeController(arg0, arg1);
-      return from_candid_Result_2_n1(this._uploadFile, this._downloadFile, result);
+      return from_candid_Result_3_n1(this._uploadFile, this._downloadFile, result);
     }
   }
   async renameCanister(arg0, arg1) {
     if (this.processError) {
       try {
         const result = await this.actor.renameCanister(arg0, arg1);
-        return from_candid_Result_2_n1(this._uploadFile, this._downloadFile, result);
+        return from_candid_Result_3_n1(this._uploadFile, this._downloadFile, result);
       } catch (e) {
         this.processError(e);
         throw new Error("unreachable");
       }
     } else {
       const result = await this.actor.renameCanister(arg0, arg1);
-      return from_candid_Result_2_n1(this._uploadFile, this._downloadFile, result);
+      return from_candid_Result_3_n1(this._uploadFile, this._downloadFile, result);
     }
   }
   async searchCanisters(arg0) {
@@ -1825,28 +1839,56 @@ class Backend {
     if (this.processError) {
       try {
         const result = await this.actor.topUpCanister(arg0, arg1);
-        return from_candid_Result_1_n22(this._uploadFile, this._downloadFile, result);
+        return from_candid_Result_2_n22(this._uploadFile, this._downloadFile, result);
       } catch (e) {
         this.processError(e);
         throw new Error("unreachable");
       }
     } else {
       const result = await this.actor.topUpCanister(arg0, arg1);
-      return from_candid_Result_1_n22(this._uploadFile, this._downloadFile, result);
+      return from_candid_Result_2_n22(this._uploadFile, this._downloadFile, result);
+    }
+  }
+  async transferCycles(arg0, arg1, arg2) {
+    if (this.processError) {
+      try {
+        const result = await this.actor.transferCycles(arg0, arg1, arg2);
+        return from_candid_Result_1_n24(this._uploadFile, this._downloadFile, result);
+      } catch (e) {
+        this.processError(e);
+        throw new Error("unreachable");
+      }
+    } else {
+      const result = await this.actor.transferCycles(arg0, arg1, arg2);
+      return from_candid_Result_1_n24(this._uploadFile, this._downloadFile, result);
     }
   }
   async transferIcp(arg0, arg1, arg2) {
     if (this.processError) {
       try {
         const result = await this.actor.transferIcp(arg0, arg1, arg2);
-        return from_candid_Result_n24(this._uploadFile, this._downloadFile, result);
+        return from_candid_Result_n26(this._uploadFile, this._downloadFile, result);
       } catch (e) {
         this.processError(e);
         throw new Error("unreachable");
       }
     } else {
       const result = await this.actor.transferIcp(arg0, arg1, arg2);
-      return from_candid_Result_n24(this._uploadFile, this._downloadFile, result);
+      return from_candid_Result_n26(this._uploadFile, this._downloadFile, result);
+    }
+  }
+  async withdrawCyclesTo(arg0, arg1) {
+    if (this.processError) {
+      try {
+        const result = await this.actor.withdrawCyclesTo(arg0, arg1);
+        return result;
+      } catch (e) {
+        this.processError(e);
+        throw new Error("unreachable");
+      }
+    } else {
+      const result = await this.actor.withdrawCyclesTo(arg0, arg1);
+      return result;
     }
   }
 }
@@ -1865,17 +1907,20 @@ function from_candid_Page_1_n10(_uploadFile, _downloadFile, value) {
 function from_candid_Page_n17(_uploadFile, _downloadFile, value) {
   return from_candid_record_n18(_uploadFile, _downloadFile, value);
 }
-function from_candid_Result_1_n22(_uploadFile, _downloadFile, value) {
+function from_candid_Result_1_n24(_uploadFile, _downloadFile, value) {
+  return from_candid_variant_n25(_uploadFile, _downloadFile, value);
+}
+function from_candid_Result_2_n22(_uploadFile, _downloadFile, value) {
   return from_candid_variant_n23(_uploadFile, _downloadFile, value);
 }
-function from_candid_Result_2_n1(_uploadFile, _downloadFile, value) {
+function from_candid_Result_3_n1(_uploadFile, _downloadFile, value) {
   return from_candid_variant_n2(_uploadFile, _downloadFile, value);
 }
-function from_candid_Result_3_n3(_uploadFile, _downloadFile, value) {
+function from_candid_Result_4_n3(_uploadFile, _downloadFile, value) {
   return from_candid_variant_n4(_uploadFile, _downloadFile, value);
 }
-function from_candid_Result_n24(_uploadFile, _downloadFile, value) {
-  return from_candid_variant_n25(_uploadFile, _downloadFile, value);
+function from_candid_Result_n26(_uploadFile, _downloadFile, value) {
+  return from_candid_variant_n27(_uploadFile, _downloadFile, value);
 }
 function from_candid_Transaction_n13(_uploadFile, _downloadFile, value) {
   return from_candid_record_n14(_uploadFile, _downloadFile, value);
@@ -1963,6 +2008,15 @@ function from_candid_variant_n23(_uploadFile, _downloadFile, value) {
   } : value;
 }
 function from_candid_variant_n25(_uploadFile, _downloadFile, value) {
+  return "ok" in value ? {
+    __kind__: "ok",
+    ok: value.ok
+  } : "err" in value ? {
+    __kind__: "err",
+    err: value.err
+  } : value;
+}
+function from_candid_variant_n27(_uploadFile, _downloadFile, value) {
   return "ok" in value ? {
     __kind__: "ok",
     ok: value.ok
@@ -2398,6 +2452,43 @@ function useCreateCanister() {
     }
   });
 }
+function useTransferCycles() {
+  const { actor } = useActor(createActor);
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async ({
+      fromCanisterId,
+      toCanisterId,
+      amount
+    }) => {
+      if (!actor) throw new Error("Not connected");
+      const { Principal: Principal2 } = await __vitePreload(async () => {
+        const { Principal: Principal3 } = await Promise.resolve().then(() => index);
+        return { Principal: Principal3 };
+      }, true ? void 0 : void 0);
+      const result = await actor.transferCycles(
+        Principal2.fromText(fromCanisterId),
+        Principal2.fromText(toCanisterId),
+        amount
+      );
+      if (result.__kind__ === "err") throw new Error(result.err);
+      return result.ok;
+    },
+    onSuccess: (cyclesMoved, variables) => {
+      queryClient.invalidateQueries({ queryKey: ["canisters"] });
+      queryClient.invalidateQueries({
+        queryKey: ["canisters", "details", variables.fromCanisterId]
+      });
+      queryClient.invalidateQueries({ queryKey: ["dashboard"] });
+      ue.success("Cycles transferred", {
+        description: `${formatCycles(cyclesMoved)} sent to ${variables.toCanisterId.slice(0, 10)}…`
+      });
+    },
+    onError: (err) => {
+      ue.error("Cycles transfer failed", { description: err.message });
+    }
+  });
+}
 function useTransferIcp() {
   const { actor } = useActor(createActor);
   const queryClient = useQueryClient();
@@ -2441,16 +2532,17 @@ export {
   useAddCanister as e,
   useRemoveCanister as f,
   useRenameCanister as g,
-  useGetAppPrincipal as h,
-  useGetCanisterDetails as i,
-  useTopUpCanister as j,
-  useGetIcpXdrConversionRate as k,
-  useRemoveController as l,
-  useGetTransactionHistory as m,
-  useAddController as n,
-  useGetMyAccount as o,
-  useTransferIcp as p,
-  useGetRecentCanisters as q,
-  useGetLowestCyclesCanisters as r,
+  useGetMyAccount as h,
+  useGetTransactionHistory as i,
+  useTransferIcp as j,
+  useGetAppPrincipal as k,
+  useGetCanisterDetails as l,
+  useTopUpCanister as m,
+  useGetIcpXdrConversionRate as n,
+  useTransferCycles as o,
+  useRemoveController as p,
+  useAddController as q,
+  useGetRecentCanisters as r,
+  useGetLowestCyclesCanisters as s,
   useGetCreationCostEstimate as u
 };

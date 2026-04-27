@@ -92,6 +92,7 @@ export const mockBackend: backendInterface = {
   removeController: async (_canisterId, _controller) => ({ __kind__: "ok", ok: null }),
   renameCanister: async (_canisterId, _newName) => ({ __kind__: "ok", ok: null }),
   topUpCanister: async (_canisterId, _icpAmountE8s) => ({ __kind__: "ok", ok: BigInt("500000000000") }),
+  transferCycles: async (_fromCanisterId, _toCanisterId, amount) => ({ __kind__: "ok", ok: amount }),
   transferIcp: async (_toAccountId, _amountE8s, _memo) => ({ __kind__: "ok", ok: BigInt(42) }),
   createCanister: async (_name, _seedCyclesIcpE8s) => ({
     __kind__: "ok",
@@ -129,6 +130,7 @@ export const mockBackend: backendInterface = {
     { canisterId: pid1, customName: "Ledger Service", cycleBalance: BigInt("950000000000"), isController: true, lastInteractedAt: BigInt(Date.now() * 1_000_000 - 3 * 3600 * 1_000_000_000) },
     { canisterId: pid3, customName: "Asset Storage", cycleBalance: BigInt("1200000000000"), isController: true, lastInteractedAt: BigInt(Date.now() * 1_000_000 - 1 * 3600 * 1_000_000_000) },
   ],
+  withdrawCyclesTo: async (_destination, _amount): Promise<void> => {},
   searchCanisters: async (queryText: string): Promise<CanisterInfo[]> => {
     const q = queryText.toLowerCase();
     return sampleCanisters

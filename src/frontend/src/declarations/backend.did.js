@@ -9,14 +9,14 @@
 import { IDL } from '@icp-sdk/core/candid';
 
 export const CanisterId = IDL.Principal;
-export const Result_2 = IDL.Variant({ 'ok' : IDL.Null, 'err' : IDL.Text });
+export const Result_3 = IDL.Variant({ 'ok' : IDL.Null, 'err' : IDL.Text });
 export const E8s = IDL.Nat64;
 export const Cycles = IDL.Nat;
 export const CreateCanisterResult = IDL.Record({
   'cyclesSeeded' : Cycles,
   'canisterId' : CanisterId,
 });
-export const Result_3 = IDL.Variant({
+export const Result_4 = IDL.Variant({
   'ok' : CreateCanisterResult,
   'err' : IDL.Text,
 });
@@ -102,13 +102,14 @@ export const CanisterInfo = IDL.Record({
   'lastInteractedAt' : Timestamp,
   'canisterId' : CanisterId,
 });
-export const Result_1 = IDL.Variant({ 'ok' : Cycles, 'err' : IDL.Text });
+export const Result_2 = IDL.Variant({ 'ok' : Cycles, 'err' : IDL.Text });
+export const Result_1 = IDL.Variant({ 'ok' : IDL.Nat, 'err' : IDL.Text });
 export const Result = IDL.Variant({ 'ok' : IDL.Nat64, 'err' : IDL.Text });
 
 export const idlService = IDL.Service({
-  'addCanister' : IDL.Func([CanisterId, IDL.Text], [Result_2], []),
-  'addController' : IDL.Func([CanisterId, IDL.Principal], [Result_2], []),
-  'createCanister' : IDL.Func([IDL.Text, E8s], [Result_3], []),
+  'addCanister' : IDL.Func([CanisterId, IDL.Text], [Result_3], []),
+  'addController' : IDL.Func([CanisterId, IDL.Principal], [Result_3], []),
+  'createCanister' : IDL.Func([IDL.Text, E8s], [Result_4], []),
   'getAppPrincipal' : IDL.Func([], [IDL.Principal], ['query']),
   'getCanisterDetails' : IDL.Func([CanisterId], [IDL.Opt(CanisterDetails)], []),
   'getCreationCostEstimate' : IDL.Func([E8s], [CreationCostEstimate], []),
@@ -119,26 +120,32 @@ export const idlService = IDL.Service({
   'getRecentCanisters' : IDL.Func([], [IDL.Vec(DashboardItem)], []),
   'getTransactionHistory' : IDL.Func([IDL.Nat], [Page_1], []),
   'listCanisters' : IDL.Func([IDL.Nat], [Page], []),
-  'removeCanister' : IDL.Func([CanisterId], [Result_2], []),
-  'removeController' : IDL.Func([CanisterId, IDL.Principal], [Result_2], []),
-  'renameCanister' : IDL.Func([CanisterId, IDL.Text], [Result_2], []),
+  'removeCanister' : IDL.Func([CanisterId], [Result_3], []),
+  'removeController' : IDL.Func([CanisterId, IDL.Principal], [Result_3], []),
+  'renameCanister' : IDL.Func([CanisterId, IDL.Text], [Result_3], []),
   'searchCanisters' : IDL.Func([IDL.Text], [IDL.Vec(CanisterInfo)], ['query']),
-  'topUpCanister' : IDL.Func([CanisterId, E8s], [Result_1], []),
+  'topUpCanister' : IDL.Func([CanisterId, E8s], [Result_2], []),
+  'transferCycles' : IDL.Func(
+      [IDL.Principal, IDL.Principal, IDL.Nat],
+      [Result_1],
+      [],
+    ),
   'transferIcp' : IDL.Func([IDL.Text, E8s, IDL.Text], [Result], []),
+  'withdrawCyclesTo' : IDL.Func([IDL.Principal, IDL.Nat], [], []),
 });
 
 export const idlInitArgs = [];
 
 export const idlFactory = ({ IDL }) => {
   const CanisterId = IDL.Principal;
-  const Result_2 = IDL.Variant({ 'ok' : IDL.Null, 'err' : IDL.Text });
+  const Result_3 = IDL.Variant({ 'ok' : IDL.Null, 'err' : IDL.Text });
   const E8s = IDL.Nat64;
   const Cycles = IDL.Nat;
   const CreateCanisterResult = IDL.Record({
     'cyclesSeeded' : Cycles,
     'canisterId' : CanisterId,
   });
-  const Result_3 = IDL.Variant({
+  const Result_4 = IDL.Variant({
     'ok' : CreateCanisterResult,
     'err' : IDL.Text,
   });
@@ -224,13 +231,14 @@ export const idlFactory = ({ IDL }) => {
     'lastInteractedAt' : Timestamp,
     'canisterId' : CanisterId,
   });
-  const Result_1 = IDL.Variant({ 'ok' : Cycles, 'err' : IDL.Text });
+  const Result_2 = IDL.Variant({ 'ok' : Cycles, 'err' : IDL.Text });
+  const Result_1 = IDL.Variant({ 'ok' : IDL.Nat, 'err' : IDL.Text });
   const Result = IDL.Variant({ 'ok' : IDL.Nat64, 'err' : IDL.Text });
   
   return IDL.Service({
-    'addCanister' : IDL.Func([CanisterId, IDL.Text], [Result_2], []),
-    'addController' : IDL.Func([CanisterId, IDL.Principal], [Result_2], []),
-    'createCanister' : IDL.Func([IDL.Text, E8s], [Result_3], []),
+    'addCanister' : IDL.Func([CanisterId, IDL.Text], [Result_3], []),
+    'addController' : IDL.Func([CanisterId, IDL.Principal], [Result_3], []),
+    'createCanister' : IDL.Func([IDL.Text, E8s], [Result_4], []),
     'getAppPrincipal' : IDL.Func([], [IDL.Principal], ['query']),
     'getCanisterDetails' : IDL.Func(
         [CanisterId],
@@ -245,16 +253,22 @@ export const idlFactory = ({ IDL }) => {
     'getRecentCanisters' : IDL.Func([], [IDL.Vec(DashboardItem)], []),
     'getTransactionHistory' : IDL.Func([IDL.Nat], [Page_1], []),
     'listCanisters' : IDL.Func([IDL.Nat], [Page], []),
-    'removeCanister' : IDL.Func([CanisterId], [Result_2], []),
-    'removeController' : IDL.Func([CanisterId, IDL.Principal], [Result_2], []),
-    'renameCanister' : IDL.Func([CanisterId, IDL.Text], [Result_2], []),
+    'removeCanister' : IDL.Func([CanisterId], [Result_3], []),
+    'removeController' : IDL.Func([CanisterId, IDL.Principal], [Result_3], []),
+    'renameCanister' : IDL.Func([CanisterId, IDL.Text], [Result_3], []),
     'searchCanisters' : IDL.Func(
         [IDL.Text],
         [IDL.Vec(CanisterInfo)],
         ['query'],
       ),
-    'topUpCanister' : IDL.Func([CanisterId, E8s], [Result_1], []),
+    'topUpCanister' : IDL.Func([CanisterId, E8s], [Result_2], []),
+    'transferCycles' : IDL.Func(
+        [IDL.Principal, IDL.Principal, IDL.Nat],
+        [Result_1],
+        [],
+      ),
     'transferIcp' : IDL.Func([IDL.Text, E8s, IDL.Text], [Result], []),
+    'withdrawCyclesTo' : IDL.Func([IDL.Principal, IDL.Nat], [], []),
   });
 };
 

@@ -1,4 +1,8 @@
-import type { CanisterDetails, Transaction } from "@/backend.d";
+import type {
+  CanisterDetails,
+  CanisterSummary,
+  Transaction,
+} from "@/backend.d";
 import { CopyableId } from "@/components/CopyableId";
 import { StatusBadge } from "@/components/StatusBadge";
 import { Button } from "@/components/ui/button";
@@ -23,6 +27,7 @@ import {
   useRemoveController,
   useRenameCanister,
   useTopUpCanister,
+  useTransferCycles,
 } from "@/hooks/useCanisterMutations";
 import {
   formatCycles,
@@ -30,10 +35,12 @@ import {
   formatTimestamp,
   truncatePrincipal,
 } from "@/lib/format";
+import { useQueryClient } from "@tanstack/react-query";
 import { Link, useParams } from "@tanstack/react-router";
 import {
   AlertTriangle,
   ArrowLeft,
+  ArrowRightLeft,
   Check,
   Info,
   Pencil,
@@ -420,6 +427,134 @@ function TopUpSection({
   );
 }
 
+// ─── Transfer cycles section ──────────────────────────────────────────────────
+function TransferCyclesSection({ canisterId }: { canisterId: string }) {
+  const [targetId, setTargetId] = useState("");
+  const [cyclesInput, setCyclesInput] = useState("");
+  const transfer = useTransferCycles();
+
+  const cyclesAmount = BigInt(
+    Math.floor(Number.parseFloat(cyclesInput.replace(/_/g, "")) || 0),
+  );
+  const isDisabled =
+    !targetId.trim() || cyclesAmount <= 0n || transfer.isPending;
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (isDisabled) return;
+    transfer.mutate(
+      {
+        fromCanisterId: canisterId,
+        toCanisterId: targetId.trim(),
+        amount: cyclesAmount,
+      },
+      {
+        onSuccess: () => {
+          setTargetId("");
+          setCyclesInput("");
+        },
+      },
+    );
+  };
+
+  return (
+    <div
+      className="terminal-card border border-border/50 bg-card"
+      data-ocid="canister_detail.transfer_cycles_section"
+    >
+      {/* Header */}
+      <div className="border-b border-border/40 px-4 py-2 flex items-center gap-2">
+        <ArrowRightLeft className="h-3.5 w-3.5 text-primary" />
+        <h2 className="font-mono text-xs font-semibold text-primary uppercase tracking-[0.2em] retro-glow-sm">
+          TRANSFER CYCLES
+        </h2>
+      </div>
+
+      <div className="p-4">
+        {/* Info banner */}
+        <div className="mb-4 border border-primary/20 bg-primary/5 px-3 py-2.5 font-mono">
+          <p className="font-mono text-[9px] text-muted-foreground uppercase tracking-[0.15em] leading-relaxed">
+            ─── MOVE EXCESS CYCLES ──────────────────────────────
+            <br />
+            TRANSFER CYCLES FROM THIS CANISTER TO ANY DESTINATION CANISTER ID.
+            ONLY AVAILABLE WHEN THIS APP IS A CONTROLLER.
+          </p>
+        </div>
+
+        <form onSubmit={handleSubmit} className="space-y-4 font-mono">
+          {/* Target canister ID */}
+          <div className="space-y-1.5">
+            <label
+              htmlFor="transfer-target-id"
+              className="font-mono text-[10px] text-muted-foreground uppercase tracking-[0.2em]"
+            >
+              TARGET_CANISTER_ID:
+            </label>
+            <Input
+              id="transfer-target-id"
+              data-ocid="canister_detail.transfer_target_input"
+              placeholder="aaaaa-aa..."
+              value={targetId}
+              onChange={(e) => setTargetId(e.target.value)}
+              className="font-mono text-xs bg-background border-border/50 focus:border-primary"
+              autoComplete="off"
+              spellCheck={false}
+              disabled={transfer.isPending}
+            />
+          </div>
+
+          {/* Cycles amount */}
+          <div className="space-y-1.5">
+            <label
+              htmlFor="transfer-cycles-amount"
+              className="font-mono text-[10px] text-muted-foreground uppercase tracking-[0.2em]"
+            >
+              CYCLES_AMOUNT:
+            </label>
+            <div className="relative">
+              <Input
+                id="transfer-cycles-amount"
+                data-ocid="canister_detail.transfer_cycles_input"
+                type="number"
+                placeholder="100000000000"
+                min="0"
+                step="1"
+                value={cyclesInput}
+                onChange={(e) => setCyclesInput(e.target.value)}
+                className="font-mono pr-16 bg-background border-border/50 focus:border-primary"
+                disabled={transfer.isPending}
+              />
+              <span className="absolute right-3 top-1/2 -translate-y-1/2 font-mono text-[10px] font-medium text-muted-foreground uppercase tracking-wider">
+                CYC
+              </span>
+            </div>
+            {cyclesAmount > 0n && (
+              <p className="font-mono text-[9px] text-primary/70 tracking-wider">
+                ≈ {formatCycles(cyclesAmount)} TO SEND
+              </p>
+            )}
+          </div>
+
+          {/* Send button */}
+          <Button
+            type="submit"
+            data-ocid="canister_detail.transfer_cycles_submit_button"
+            className="w-full font-mono text-xs tracking-[0.15em] uppercase gap-1.5"
+            disabled={isDisabled}
+          >
+            {transfer.isPending ? (
+              <RefreshCw className="h-3.5 w-3.5 animate-spin" />
+            ) : (
+              <ArrowRightLeft className="h-3.5 w-3.5" />
+            )}
+            {transfer.isPending ? "TRANSFERRING…" : "[ENTER] SEND CYCLES"}
+          </Button>
+        </form>
+      </div>
+    </div>
+  );
+}
+
 // ─── App controller PID banner ────────────────────────────────────────────────
 function AppControllerBanner({ appPrincipal }: { appPrincipal: string }) {
   if (!appPrincipal) return null;
@@ -773,8 +908,9 @@ function HeroStats({ details }: { details: CanisterDetails }) {
 // ─── Main page ────────────────────────────────────────────────────────────────
 export default function CanisterDetail() {
   const { canisterId } = useParams({ strict: false });
+  const queryClient = useQueryClient();
 
-  const { data: appPrincipal = "" } = useGetAppPrincipal();
+  const { data: appPrincipal } = useGetAppPrincipal();
 
   const {
     data: details,
@@ -786,6 +922,50 @@ export default function CanisterDetail() {
     () => (details?.controllers ?? []).map((c) => c.toText()),
     [details],
   );
+
+  // Primary: compute from live controllers array once both are available.
+  // Fallback: use the isController flag from the cached CanisterSummary in the
+  // list query — this is pre-populated by the backend and is accurate from
+  // the moment the page loads, covering the race where appPrincipal hasn't
+  // resolved yet or getCanisterDetails is still loading.
+  const cachedSummaryIsController = useMemo((): boolean | undefined => {
+    if (!canisterId) return undefined;
+    // Search all cached list pages for a CanisterSummary matching this canisterId
+    const allQueries = queryClient.getQueriesData<{
+      items?: CanisterSummary[];
+    }>({
+      queryKey: ["canisters", "list"],
+    });
+    for (const [, page] of allQueries) {
+      const match = page?.items?.find(
+        (c) => c.canisterId.toString() === canisterId,
+      );
+      if (match !== undefined) return match.isController;
+    }
+    // Also check search cache
+    const searchQueries = queryClient.getQueriesData<CanisterSummary[]>({
+      queryKey: ["canisters", "search"],
+    });
+    for (const [, results] of searchQueries) {
+      const match = results?.find(
+        (c) => c.canisterId.toString() === canisterId,
+      );
+      if (match !== undefined) return match.isController;
+    }
+    return undefined;
+  }, [canisterId, queryClient]); // re-run when canisterId or queryClient changes
+
+  const isController = useMemo(() => {
+    // If we have both appPrincipal and controllers from live data, use that
+    if (appPrincipal && controllers.length > 0) {
+      return controllers.includes(appPrincipal);
+    }
+    // Fall back to the cached CanisterSummary flag while data is loading
+    if (cachedSummaryIsController !== undefined) {
+      return cachedSummaryIsController;
+    }
+    return false;
+  }, [controllers, appPrincipal, cachedSummaryIsController]);
 
   if (!canisterId) return null;
 
@@ -815,10 +995,11 @@ export default function CanisterDetail() {
             canisterId={canisterId}
             currentCycles={details.cycleBalance ?? 0n}
           />
+          {isController && <TransferCyclesSection canisterId={canisterId} />}
           <ControllersSection
             canisterId={canisterId}
             controllers={controllers}
-            appPrincipal={appPrincipal}
+            appPrincipal={appPrincipal ?? ""}
           />
           <TransactionHistorySection canisterId={canisterId} />
         </>

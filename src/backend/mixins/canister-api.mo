@@ -1,8 +1,10 @@
 import Map "mo:core/Map";
 import List "mo:core/List";
+import Nat64 "mo:core/Nat64";
 import Principal "mo:core/Principal";
 import Runtime "mo:core/Runtime";
 import Time "mo:core/Time";
+
 import CanisterTypes "../types/canister";
 import CommonTypes "../types/common";
 import LedgerTypes "../types/ledger";
@@ -18,7 +20,7 @@ mixin (
   nextTxId : { var value : Nat },
 ) {
 
-  // IC management canister interface (aaaaa-aa)
+  // IC management canister interface (aaaaa-aa) — status and settings methods
   let ic : actor {
     canister_status : ({ canister_id : Principal }) -> async {
       status : { #running; #stopped; #stopping };
@@ -292,5 +294,98 @@ mixin (
     if (caller.isAnonymous()) Runtime.trap("Anonymous caller not allowed");
     let canisters = getUserCanisters(caller);
     CanisterLib.getLowestCyclesCanisters(canisters, selfPrincipal);
+  };
+
+  // --- Cycles transfer ---
+
+  // Transfer cycles FROM a source canister (fromCanisterId) TO a destination canister.
+  //
+  // Cycles can only leave a canister when THAT canister itself makes an outbound call with
+  // cycles attached. The app canister cannot "pull" cycles out of another canister.
+  //
+  // Strategy (tried in order):
+  //   1. Inter-canister call: invoke `withdrawCyclesTo` on fromCanisterId — this works for any
+  //      canister running this same app code (i.e. canisters created via "Create Canister" in-app).
+  //      The source canister executes `deposit_cycles`, so cycles leave from its own balance.
+  //   2. wallet_send fallback: try the standard ICP wallet interface for wallet-type canisters.
+  //   3. If both fail: return a clear error.
+  //
+  // Validates:
+  //   1. Caller is not anonymous.
+  //   2. amount > 0.
+  //   3. fromCanisterId is in the caller's tracked canisters list.
+  //   4. The app principal (selfPrincipal) is in that canister's cachedControllers (◆CTRL).
+  //   5. Source canister has sufficient cached cycles balance.
+  public shared ({ caller }) func transferCycles(
+    fromCanisterId : Principal,
+    toCanisterId : Principal,
+    amount : Nat,
+  ) : async CommonTypes.Result<Nat> {
+    if (caller.isAnonymous()) return #err("Anonymous caller not allowed");
+    if (amount == 0) return #err("Transfer amount must be greater than 0");
+
+    let canisters = getUserCanisters(caller);
+
+    // Validate fromCanisterId is tracked by the caller
+    switch (CanisterLib.getTracked(canisters, fromCanisterId)) {
+      case null return #err("Canister not found in your tracked list");
+      case (?tracked) {
+        // Validate the app is a controller of fromCanisterId
+        let appIsController = tracked.cachedControllers.find(
+          func(p : Principal) : Bool { Principal.equal(p, selfPrincipal) }
+        ) != null;
+        if (not appIsController) {
+          return #err("The app is not a confirmed controller of this canister (◆CTRL required)");
+        };
+
+        // Validate sufficient cached balance
+        if (tracked.cachedCycleBalance < amount) {
+          return #err("Insufficient cycles balance on source canister");
+        };
+
+        // Helper: update cached state after a successful transfer
+        let commitSuccess = func() : Nat {
+          let newBalance : Nat = if (tracked.cachedCycleBalance > amount) {
+            tracked.cachedCycleBalance - amount
+          } else { 0 };
+          CanisterLib.updateCachedBalance(canisters, fromCanisterId, newBalance);
+          CanisterLib.touchInteraction(canisters, fromCanisterId, Time.now());
+          newBalance;
+        };
+
+        // --- Attempt 1: inter-canister call to withdrawCyclesTo on the source canister ---
+        // This works when the source canister is running this same app code (in-app created).
+        // The source canister is the one calling deposit_cycles, so cycles leave from its balance.
+        let sourceCanister : actor {
+          withdrawCyclesTo : (Principal, Nat) -> async ();
+        } = actor (fromCanisterId.toText());
+
+        try {
+          await sourceCanister.withdrawCyclesTo(toCanisterId, amount);
+          #ok(commitSuccess());
+        } catch (_) {
+          // --- Attempt 2: wallet_send fallback for ICP cycle wallet canisters ---
+          let walletCanister : actor {
+            wallet_send : ({
+              canister : Principal;
+              amount : Nat64;
+            }) -> async { #Ok; #Err : Text };
+          } = actor (fromCanisterId.toText());
+
+          try {
+            let walletResult = await walletCanister.wallet_send({
+              canister = toCanisterId;
+              amount = Nat64.fromNat(amount);
+            });
+            switch (walletResult) {
+              case (#Ok) { #ok(commitSuccess()) };
+              case (#Err(msg)) { #err("Wallet transfer failed: " # msg) };
+            };
+          } catch (_) {
+            #err("Cycles transfer failed. The source canister does not support cycle withdrawal. Only canisters created within this app or ICP cycle wallets can transfer cycles out.");
+          };
+        };
+      };
+    };
   };
 };

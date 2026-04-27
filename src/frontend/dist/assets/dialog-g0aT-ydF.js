@@ -1,4 +1,4 @@
-import { r as reactExports, u as useControllableState, j as jsxRuntimeExports, a as useId, P as Presence, b as Primitive, d as composeEventHandlers, e as Portal$1, f as useComposedRefs, h as hideOthers, g as createContextScope, R as ReactRemoveScroll, i as useFocusGuards, F as FocusScope, D as DismissableLayer, k as createSlot, l as createContext2, X, m as cn } from "./index-BMS8nT-t.js";
+import { r as reactExports, u as useControllableState, j as jsxRuntimeExports, a as useId, P as Presence, b as Primitive, d as composeEventHandlers, e as Portal$1, f as useComposedRefs, h as hideOthers, g as createContextScope, R as ReactRemoveScroll, i as useFocusGuards, F as FocusScope, D as DismissableLayer, k as createSlot, l as createContext2, X, m as cn } from "./index-BDHQLcS7.js";
 var DIALOG_NAME = "Dialog";
 var [createDialogContext] = createContextScope(DIALOG_NAME);
 var [DialogProvider, useDialogContext] = createDialogContext(DIALOG_NAME);

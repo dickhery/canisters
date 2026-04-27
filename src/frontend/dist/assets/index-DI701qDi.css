@@ -1878,6 +1878,9 @@ video {
 .pr-12 {
   padding-right: 3rem;
 }
+.pr-16 {
+  padding-right: 4rem;
+}
 .pr-2 {
   padding-right: 0.5rem;
 }
@@ -2001,6 +2004,9 @@ video {
 }
 .leading-none {
   line-height: 1;
+}
+.leading-relaxed {
+  line-height: 1.625;
 }
 .leading-tight {
   line-height: 1.25;

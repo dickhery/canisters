@@ -100,7 +100,7 @@ export interface CanisterInfo {
 export type Timestamp = bigint;
 export type Result_2 = {
     __kind__: "ok";
-    ok: null;
+    ok: Cycles;
 } | {
     __kind__: "err";
     err: string;
@@ -140,7 +140,7 @@ export interface Page_1 {
 }
 export type Result_1 = {
     __kind__: "ok";
-    ok: Cycles;
+    ok: bigint;
 } | {
     __kind__: "err";
     err: string;
@@ -157,6 +157,13 @@ export interface Transaction {
     timestamp: Timestamp;
     amountE8s: E8s;
 }
+export type Result_4 = {
+    __kind__: "ok";
+    ok: CreateCanisterResult;
+} | {
+    __kind__: "err";
+    err: string;
+};
 export type UserId = Principal;
 export interface DashboardItem {
     cycleBalance: Cycles;
@@ -174,7 +181,7 @@ export type Result = {
 };
 export type Result_3 = {
     __kind__: "ok";
-    ok: CreateCanisterResult;
+    ok: null;
 } | {
     __kind__: "err";
     err: string;
@@ -212,9 +219,9 @@ export enum CanisterStatus {
     running = "running"
 }
 export interface backendInterface {
-    addCanister(canisterId: CanisterId, customName: string): Promise<Result_2>;
-    addController(canisterId: CanisterId, controller: Principal): Promise<Result_2>;
-    createCanister(name: string, seedCyclesIcpE8s: E8s): Promise<Result_3>;
+    addCanister(canisterId: CanisterId, customName: string): Promise<Result_3>;
+    addController(canisterId: CanisterId, controller: Principal): Promise<Result_3>;
+    createCanister(name: string, seedCyclesIcpE8s: E8s): Promise<Result_4>;
     getAppPrincipal(): Promise<Principal>;
     getCanisterDetails(canisterId: CanisterId): Promise<CanisterDetails | null>;
     getCreationCostEstimate(seedCyclesIcpE8s: E8s): Promise<CreationCostEstimate>;
@@ -225,56 +232,58 @@ export interface backendInterface {
     getRecentCanisters(): Promise<Array<DashboardItem>>;
     getTransactionHistory(page: bigint): Promise<Page_1>;
     listCanisters(page: bigint): Promise<Page>;
-    removeCanister(canisterId: CanisterId): Promise<Result_2>;
-    removeController(canisterId: CanisterId, controller: Principal): Promise<Result_2>;
-    renameCanister(canisterId: CanisterId, newName: string): Promise<Result_2>;
+    removeCanister(canisterId: CanisterId): Promise<Result_3>;
+    removeController(canisterId: CanisterId, controller: Principal): Promise<Result_3>;
+    renameCanister(canisterId: CanisterId, newName: string): Promise<Result_3>;
     searchCanisters(queryText: string): Promise<Array<CanisterInfo>>;
-    topUpCanister(canisterId: CanisterId, icpAmountE8s: E8s): Promise<Result_1>;
+    topUpCanister(canisterId: CanisterId, icpAmountE8s: E8s): Promise<Result_2>;
+    transferCycles(fromCanisterId: Principal, toCanisterId: Principal, amount: bigint): Promise<Result_1>;
     transferIcp(toAccountId: string, amountE8s: E8s, memo: string): Promise<Result>;
+    withdrawCyclesTo(destination: Principal, amount: bigint): Promise<void>;
 }
-import type { CanisterDetails as _CanisterDetails, CanisterId as _CanisterId, CanisterStatus as _CanisterStatus, CanisterSummary as _CanisterSummary, CreateCanisterResult as _CreateCanisterResult, Cycles as _Cycles, E8s as _E8s, Page as _Page, Page_1 as _Page_1, Result as _Result, Result_1 as _Result_1, Result_2 as _Result_2, Result_3 as _Result_3, Timestamp as _Timestamp, Transaction as _Transaction, TxKind as _TxKind, UserId as _UserId } from "./declarations/backend.did.d.ts";
+import type { CanisterDetails as _CanisterDetails, CanisterId as _CanisterId, CanisterStatus as _CanisterStatus, CanisterSummary as _CanisterSummary, CreateCanisterResult as _CreateCanisterResult, Cycles as _Cycles, E8s as _E8s, Page as _Page, Page_1 as _Page_1, Result as _Result, Result_1 as _Result_1, Result_2 as _Result_2, Result_3 as _Result_3, Result_4 as _Result_4, Timestamp as _Timestamp, Transaction as _Transaction, TxKind as _TxKind, UserId as _UserId } from "./declarations/backend.did.d.ts";
 export class Backend implements backendInterface {
     constructor(private actor: ActorSubclass<_SERVICE>, private _uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, private _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, private processError?: (error: unknown) => never){}
-    async addCanister(arg0: CanisterId, arg1: string): Promise<Result_2> {
+    async addCanister(arg0: CanisterId, arg1: string): Promise<Result_3> {
         if (this.processError) {
             try {
                 const result = await this.actor.addCanister(arg0, arg1);
-                return from_candid_Result_2_n1(this._uploadFile, this._downloadFile, result);
+                return from_candid_Result_3_n1(this._uploadFile, this._downloadFile, result);
             } catch (e) {
                 this.processError(e);
                 throw new Error("unreachable");
             }
         } else {
             const result = await this.actor.addCanister(arg0, arg1);
-            return from_candid_Result_2_n1(this._uploadFile, this._downloadFile, result);
+            return from_candid_Result_3_n1(this._uploadFile, this._downloadFile, result);
         }
     }
-    async addController(arg0: CanisterId, arg1: Principal): Promise<Result_2> {
+    async addController(arg0: CanisterId, arg1: Principal): Promise<Result_3> {
         if (this.processError) {
             try {
                 const result = await this.actor.addController(arg0, arg1);
-                return from_candid_Result_2_n1(this._uploadFile, this._downloadFile, result);
+                return from_candid_Result_3_n1(this._uploadFile, this._downloadFile, result);
             } catch (e) {
                 this.processError(e);
                 throw new Error("unreachable");
             }
         } else {
             const result = await this.actor.addController(arg0, arg1);
-            return from_candid_Result_2_n1(this._uploadFile, this._downloadFile, result);
+            return from_candid_Result_3_n1(this._uploadFile, this._downloadFile, result);
         }
     }
-    async createCanister(arg0: string, arg1: E8s): Promise<Result_3> {
+    async createCanister(arg0: string, arg1: E8s): Promise<Result_4> {
         if (this.processError) {
             try {
                 const result = await this.actor.createCanister(arg0, arg1);
-                return from_candid_Result_3_n3(this._uploadFile, this._downloadFile, result);
+                return from_candid_Result_4_n3(this._uploadFile, this._downloadFile, result);
             } catch (e) {
                 this.processError(e);
                 throw new Error("unreachable");
             }
         } else {
             const result = await this.actor.createCanister(arg0, arg1);
-            return from_candid_Result_3_n3(this._uploadFile, this._downloadFile, result);
+            return from_candid_Result_4_n3(this._uploadFile, this._downloadFile, result);
         }
     }
     async getAppPrincipal(): Promise<Principal> {
@@ -417,46 +426,46 @@ export class Backend implements backendInterface {
             return from_candid_Page_n17(this._uploadFile, this._downloadFile, result);
         }
     }
-    async removeCanister(arg0: CanisterId): Promise<Result_2> {
+    async removeCanister(arg0: CanisterId): Promise<Result_3> {
         if (this.processError) {
             try {
                 const result = await this.actor.removeCanister(arg0);
-                return from_candid_Result_2_n1(this._uploadFile, this._downloadFile, result);
+                return from_candid_Result_3_n1(this._uploadFile, this._downloadFile, result);
             } catch (e) {
                 this.processError(e);
                 throw new Error("unreachable");
             }
         } else {
             const result = await this.actor.removeCanister(arg0);
-            return from_candid_Result_2_n1(this._uploadFile, this._downloadFile, result);
+            return from_candid_Result_3_n1(this._uploadFile, this._downloadFile, result);
         }
     }
-    async removeController(arg0: CanisterId, arg1: Principal): Promise<Result_2> {
+    async removeController(arg0: CanisterId, arg1: Principal): Promise<Result_3> {
         if (this.processError) {
             try {
                 const result = await this.actor.removeController(arg0, arg1);
-                return from_candid_Result_2_n1(this._uploadFile, this._downloadFile, result);
+                return from_candid_Result_3_n1(this._uploadFile, this._downloadFile, result);
             } catch (e) {
                 this.processError(e);
                 throw new Error("unreachable");
             }
         } else {
             const result = await this.actor.removeController(arg0, arg1);
-            return from_candid_Result_2_n1(this._uploadFile, this._downloadFile, result);
+            return from_candid_Result_3_n1(this._uploadFile, this._downloadFile, result);
         }
     }
-    async renameCanister(arg0: CanisterId, arg1: string): Promise<Result_2> {
+    async renameCanister(arg0: CanisterId, arg1: string): Promise<Result_3> {
         if (this.processError) {
             try {
                 const result = await this.actor.renameCanister(arg0, arg1);
-                return from_candid_Result_2_n1(this._uploadFile, this._downloadFile, result);
+                return from_candid_Result_3_n1(this._uploadFile, this._downloadFile, result);
             } catch (e) {
                 this.processError(e);
                 throw new Error("unreachable");
             }
         } else {
             const result = await this.actor.renameCanister(arg0, arg1);
-            return from_candid_Result_2_n1(this._uploadFile, this._downloadFile, result);
+            return from_candid_Result_3_n1(this._uploadFile, this._downloadFile, result);
         }
     }
     async searchCanisters(arg0: string): Promise<Array<CanisterInfo>> {
@@ -473,32 +482,60 @@ export class Backend implements backendInterface {
             return result;
         }
     }
-    async topUpCanister(arg0: CanisterId, arg1: E8s): Promise<Result_1> {
+    async topUpCanister(arg0: CanisterId, arg1: E8s): Promise<Result_2> {
         if (this.processError) {
             try {
                 const result = await this.actor.topUpCanister(arg0, arg1);
-                return from_candid_Result_1_n22(this._uploadFile, this._downloadFile, result);
+                return from_candid_Result_2_n22(this._uploadFile, this._downloadFile, result);
             } catch (e) {
                 this.processError(e);
                 throw new Error("unreachable");
             }
         } else {
             const result = await this.actor.topUpCanister(arg0, arg1);
-            return from_candid_Result_1_n22(this._uploadFile, this._downloadFile, result);
+            return from_candid_Result_2_n22(this._uploadFile, this._downloadFile, result);
+        }
+    }
+    async transferCycles(arg0: Principal, arg1: Principal, arg2: bigint): Promise<Result_1> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.transferCycles(arg0, arg1, arg2);
+                return from_candid_Result_1_n24(this._uploadFile, this._downloadFile, result);
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.transferCycles(arg0, arg1, arg2);
+            return from_candid_Result_1_n24(this._uploadFile, this._downloadFile, result);
         }
     }
     async transferIcp(arg0: string, arg1: E8s, arg2: string): Promise<Result> {
         if (this.processError) {
             try {
                 const result = await this.actor.transferIcp(arg0, arg1, arg2);
-                return from_candid_Result_n24(this._uploadFile, this._downloadFile, result);
+                return from_candid_Result_n26(this._uploadFile, this._downloadFile, result);
             } catch (e) {
                 this.processError(e);
                 throw new Error("unreachable");
             }
         } else {
             const result = await this.actor.transferIcp(arg0, arg1, arg2);
-            return from_candid_Result_n24(this._uploadFile, this._downloadFile, result);
+            return from_candid_Result_n26(this._uploadFile, this._downloadFile, result);
+        }
+    }
+    async withdrawCyclesTo(arg0: Principal, arg1: bigint): Promise<void> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.withdrawCyclesTo(arg0, arg1);
+                return result;
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.withdrawCyclesTo(arg0, arg1);
+            return result;
         }
     }
 }
@@ -517,17 +554,20 @@ function from_candid_Page_1_n10(_uploadFile: (file: ExternalBlob) => Promise<Uin
 function from_candid_Page_n17(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: _Page): Page {
     return from_candid_record_n18(_uploadFile, _downloadFile, value);
 }
-function from_candid_Result_1_n22(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: _Result_1): Result_1 {
+function from_candid_Result_1_n24(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: _Result_1): Result_1 {
+    return from_candid_variant_n25(_uploadFile, _downloadFile, value);
+}
+function from_candid_Result_2_n22(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: _Result_2): Result_2 {
     return from_candid_variant_n23(_uploadFile, _downloadFile, value);
 }
-function from_candid_Result_2_n1(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: _Result_2): Result_2 {
+function from_candid_Result_3_n1(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: _Result_3): Result_3 {
     return from_candid_variant_n2(_uploadFile, _downloadFile, value);
 }
-function from_candid_Result_3_n3(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: _Result_3): Result_3 {
+function from_candid_Result_4_n3(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: _Result_4): Result_4 {
     return from_candid_variant_n4(_uploadFile, _downloadFile, value);
 }
-function from_candid_Result_n24(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: _Result): Result {
-    return from_candid_variant_n25(_uploadFile, _downloadFile, value);
+function from_candid_Result_n26(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: _Result): Result {
+    return from_candid_variant_n27(_uploadFile, _downloadFile, value);
 }
 function from_candid_Transaction_n13(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: _Transaction): Transaction {
     return from_candid_record_n14(_uploadFile, _downloadFile, value);
@@ -723,6 +763,25 @@ function from_candid_variant_n23(_uploadFile: (file: ExternalBlob) => Promise<Ui
     } : value;
 }
 function from_candid_variant_n25(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: {
+    ok: bigint;
+} | {
+    err: string;
+}): {
+    __kind__: "ok";
+    ok: bigint;
+} | {
+    __kind__: "err";
+    err: string;
+} {
+    return "ok" in value ? {
+        __kind__: "ok",
+        ok: value.ok
+    } : "err" in value ? {
+        __kind__: "err",
+        err: value.err
+    } : value;
+}
+function from_candid_variant_n27(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: {
     ok: bigint;
 } | {
     err: string;

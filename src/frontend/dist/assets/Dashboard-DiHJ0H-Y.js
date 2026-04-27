@@ -1,8 +1,8 @@
-import { c as createLucideIcon, r as reactExports, j as jsxRuntimeExports, n as formatIcp, B as Button, G as useInternetIdentity, S as Server, o as formatCycles, W as Wallet, L as Link, C as CopyableId } from "./index-BMS8nT-t.js";
-import { D as Dialog, a as DialogContent, b as DialogHeader, c as DialogTitle } from "./dialog-Dxty3jP1.js";
-import { a as useGetMyBalance, p as useTransferIcp, L as Label, I as Input, h as useGetAppPrincipal, c as useListCanisters, o as useGetMyAccount, q as useGetRecentCanisters, r as useGetLowestCyclesCanisters, S as Skeleton, e as useAddCanister } from "./index-STxetVaD.js";
-import { P as Plus } from "./plus-DyCkzdsX.js";
-import { A as ArrowUpRight } from "./arrow-up-right-B3q-74Sw.js";
+import { c as createLucideIcon, r as reactExports, j as jsxRuntimeExports, n as formatIcp, B as Button, H as useInternetIdentity, S as Server, o as formatCycles, W as Wallet, L as Link, C as CopyableId } from "./index-BDHQLcS7.js";
+import { D as Dialog, a as DialogContent, b as DialogHeader, c as DialogTitle } from "./dialog-g0aT-ydF.js";
+import { a as useGetMyBalance, j as useTransferIcp, L as Label, I as Input, k as useGetAppPrincipal, c as useListCanisters, h as useGetMyAccount, r as useGetRecentCanisters, s as useGetLowestCyclesCanisters, S as Skeleton, e as useAddCanister } from "./index-o6Tr2rW7.js";
+import { P as Plus } from "./plus-mvrwVDkf.js";
+import { A as ArrowUpRight } from "./arrow-up-right-ravNB_z4.js";
 /**
  * @license lucide-react v0.511.0 - ISC
  *

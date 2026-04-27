@@ -1,5 +1,6 @@
 import { createActor } from "@/backend";
 import type { CreateCanisterResult, E8s } from "@/backend.d";
+import { formatCycles } from "@/lib/format";
 import { useActor } from "@caffeineai/core-infrastructure";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
@@ -227,6 +228,46 @@ export function useCreateCanister() {
     },
     onError: (err: Error) => {
       toast.error("Canister creation failed", { description: err.message });
+    },
+  });
+}
+
+export function useTransferCycles() {
+  const { actor } = useActor(createActor);
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({
+      fromCanisterId,
+      toCanisterId,
+      amount,
+    }: {
+      fromCanisterId: string;
+      toCanisterId: string;
+      amount: bigint;
+    }) => {
+      if (!actor) throw new Error("Not connected");
+      const { Principal } = await import("@icp-sdk/core/principal");
+      const result = await actor.transferCycles(
+        Principal.fromText(fromCanisterId),
+        Principal.fromText(toCanisterId),
+        amount,
+      );
+      if (result.__kind__ === "err") throw new Error(result.err);
+      return result.ok;
+    },
+    onSuccess: (cyclesMoved, variables) => {
+      queryClient.invalidateQueries({ queryKey: ["canisters"] });
+      queryClient.invalidateQueries({
+        queryKey: ["canisters", "details", variables.fromCanisterId],
+      });
+      queryClient.invalidateQueries({ queryKey: ["dashboard"] });
+      toast.success("Cycles transferred", {
+        description: `${formatCycles(cyclesMoved)} sent to ${variables.toCanisterId.slice(0, 10)}…`,
+      });
+    },
+    onError: (err: Error) => {
+      toast.error("Cycles transfer failed", { description: err.message });
     },
   });
 }

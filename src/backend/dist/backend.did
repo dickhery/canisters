@@ -23,20 +23,25 @@ type Transaction =
    userId: UserId;
  };
 type Timestamp = int;
-type Result_3 = 
+type Result_4 = 
  variant {
    err: text;
    ok: CreateCanisterResult;
  };
-type Result_2 = 
+type Result_3 = 
  variant {
    err: text;
    ok;
  };
-type Result_1 = 
+type Result_2 = 
  variant {
    err: text;
    ok: Cycles;
+ };
+type Result_1 = 
+ variant {
+   err: text;
+   ok: nat;
  };
 type Result = 
  variant {
@@ -120,10 +125,10 @@ type CanisterDetails =
    status: CanisterStatus;
  };
 service : {
-  addCanister: (canisterId: CanisterId, customName: text) -> (Result_2);
+  addCanister: (canisterId: CanisterId, customName: text) -> (Result_3);
   addController: (canisterId: CanisterId, controller: principal) ->
-   (Result_2);
-  createCanister: (name: text, seedCyclesIcpE8s: E8s) -> (Result_3);
+   (Result_3);
+  createCanister: (name: text, seedCyclesIcpE8s: E8s) -> (Result_4);
   getAppPrincipal: () -> (principal) query;
   getCanisterDetails: (canisterId: CanisterId) -> (opt CanisterDetails);
   getCreationCostEstimate: (seedCyclesIcpE8s: E8s) -> (CreationCostEstimate);
@@ -134,11 +139,14 @@ service : {
   getRecentCanisters: () -> (vec DashboardItem);
   getTransactionHistory: (page: nat) -> (Page_1);
   listCanisters: (page: nat) -> (Page);
-  removeCanister: (canisterId: CanisterId) -> (Result_2);
+  removeCanister: (canisterId: CanisterId) -> (Result_3);
   removeController: (canisterId: CanisterId, controller: principal) ->
-   (Result_2);
-  renameCanister: (canisterId: CanisterId, newName: text) -> (Result_2);
+   (Result_3);
+  renameCanister: (canisterId: CanisterId, newName: text) -> (Result_3);
   searchCanisters: (queryText: text) -> (vec CanisterInfo) query;
-  topUpCanister: (canisterId: CanisterId, icpAmountE8s: E8s) -> (Result_1);
+  topUpCanister: (canisterId: CanisterId, icpAmountE8s: E8s) -> (Result_2);
+  transferCycles: (fromCanisterId: principal, toCanisterId: principal,
+   amount: nat) -> (Result_1);
   transferIcp: (toAccountId: text, amountE8s: E8s, memo: text) -> (Result);
+  withdrawCyclesTo: (destination: principal, amount: nat) -> ();
 }

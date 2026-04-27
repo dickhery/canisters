@@ -77,11 +77,13 @@ export interface Page_1 {
 }
 export type Result = { 'ok' : bigint } |
   { 'err' : string };
-export type Result_1 = { 'ok' : Cycles } |
+export type Result_1 = { 'ok' : bigint } |
   { 'err' : string };
-export type Result_2 = { 'ok' : null } |
+export type Result_2 = { 'ok' : Cycles } |
   { 'err' : string };
-export type Result_3 = { 'ok' : CreateCanisterResult } |
+export type Result_3 = { 'ok' : null } |
+  { 'err' : string };
+export type Result_4 = { 'ok' : CreateCanisterResult } |
   { 'err' : string };
 export type Timestamp = bigint;
 export interface Transaction {
@@ -103,9 +105,9 @@ export interface UserAccount {
 }
 export type UserId = Principal;
 export interface _SERVICE {
-  'addCanister' : ActorMethod<[CanisterId, string], Result_2>,
-  'addController' : ActorMethod<[CanisterId, Principal], Result_2>,
-  'createCanister' : ActorMethod<[string, E8s], Result_3>,
+  'addCanister' : ActorMethod<[CanisterId, string], Result_3>,
+  'addController' : ActorMethod<[CanisterId, Principal], Result_3>,
+  'createCanister' : ActorMethod<[string, E8s], Result_4>,
   'getAppPrincipal' : ActorMethod<[], Principal>,
   'getCanisterDetails' : ActorMethod<[CanisterId], [] | [CanisterDetails]>,
   'getCreationCostEstimate' : ActorMethod<[E8s], CreationCostEstimate>,
@@ -116,12 +118,14 @@ export interface _SERVICE {
   'getRecentCanisters' : ActorMethod<[], Array<DashboardItem>>,
   'getTransactionHistory' : ActorMethod<[bigint], Page_1>,
   'listCanisters' : ActorMethod<[bigint], Page>,
-  'removeCanister' : ActorMethod<[CanisterId], Result_2>,
-  'removeController' : ActorMethod<[CanisterId, Principal], Result_2>,
-  'renameCanister' : ActorMethod<[CanisterId, string], Result_2>,
+  'removeCanister' : ActorMethod<[CanisterId], Result_3>,
+  'removeController' : ActorMethod<[CanisterId, Principal], Result_3>,
+  'renameCanister' : ActorMethod<[CanisterId, string], Result_3>,
   'searchCanisters' : ActorMethod<[string], Array<CanisterInfo>>,
-  'topUpCanister' : ActorMethod<[CanisterId, E8s], Result_1>,
+  'topUpCanister' : ActorMethod<[CanisterId, E8s], Result_2>,
+  'transferCycles' : ActorMethod<[Principal, Principal, bigint], Result_1>,
   'transferIcp' : ActorMethod<[string, E8s, string], Result>,
+  'withdrawCyclesTo' : ActorMethod<[Principal, bigint], undefined>,
 }
 export declare const idlService: IDL.ServiceClass;
 export declare const idlInitArgs: IDL.Type[];

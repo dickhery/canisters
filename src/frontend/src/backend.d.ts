@@ -18,7 +18,7 @@ export interface CanisterInfo {
 export type Timestamp = bigint;
 export type Result_2 = {
     __kind__: "ok";
-    ok: null;
+    ok: Cycles;
 } | {
     __kind__: "err";
     err: string;
@@ -58,7 +58,7 @@ export interface Page_1 {
 }
 export type Result_1 = {
     __kind__: "ok";
-    ok: Cycles;
+    ok: bigint;
 } | {
     __kind__: "err";
     err: string;
@@ -75,6 +75,13 @@ export interface Transaction {
     timestamp: Timestamp;
     amountE8s: E8s;
 }
+export type Result_4 = {
+    __kind__: "ok";
+    ok: CreateCanisterResult;
+} | {
+    __kind__: "err";
+    err: string;
+};
 export type UserId = Principal;
 export interface DashboardItem {
     cycleBalance: Cycles;
@@ -92,7 +99,7 @@ export type Result = {
 };
 export type Result_3 = {
     __kind__: "ok";
-    ok: CreateCanisterResult;
+    ok: null;
 } | {
     __kind__: "err";
     err: string;
@@ -130,9 +137,9 @@ export enum CanisterStatus {
     running = "running"
 }
 export interface backendInterface {
-    addCanister(canisterId: CanisterId, customName: string): Promise<Result_2>;
-    addController(canisterId: CanisterId, controller: Principal): Promise<Result_2>;
-    createCanister(name: string, seedCyclesIcpE8s: E8s): Promise<Result_3>;
+    addCanister(canisterId: CanisterId, customName: string): Promise<Result_3>;
+    addController(canisterId: CanisterId, controller: Principal): Promise<Result_3>;
+    createCanister(name: string, seedCyclesIcpE8s: E8s): Promise<Result_4>;
     getAppPrincipal(): Promise<Principal>;
     getCanisterDetails(canisterId: CanisterId): Promise<CanisterDetails | null>;
     getCreationCostEstimate(seedCyclesIcpE8s: E8s): Promise<CreationCostEstimate>;
@@ -143,10 +150,12 @@ export interface backendInterface {
     getRecentCanisters(): Promise<Array<DashboardItem>>;
     getTransactionHistory(page: bigint): Promise<Page_1>;
     listCanisters(page: bigint): Promise<Page>;
-    removeCanister(canisterId: CanisterId): Promise<Result_2>;
-    removeController(canisterId: CanisterId, controller: Principal): Promise<Result_2>;
-    renameCanister(canisterId: CanisterId, newName: string): Promise<Result_2>;
+    removeCanister(canisterId: CanisterId): Promise<Result_3>;
+    removeController(canisterId: CanisterId, controller: Principal): Promise<Result_3>;
+    renameCanister(canisterId: CanisterId, newName: string): Promise<Result_3>;
     searchCanisters(queryText: string): Promise<Array<CanisterInfo>>;
-    topUpCanister(canisterId: CanisterId, icpAmountE8s: E8s): Promise<Result_1>;
+    topUpCanister(canisterId: CanisterId, icpAmountE8s: E8s): Promise<Result_2>;
+    transferCycles(fromCanisterId: Principal, toCanisterId: Principal, amount: bigint): Promise<Result_1>;
     transferIcp(toAccountId: string, amountE8s: E8s, memo: string): Promise<Result>;
+    withdrawCyclesTo(destination: Principal, amount: bigint): Promise<void>;
 }
