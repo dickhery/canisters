@@ -137,8 +137,10 @@ service : {
   getMyAccount: () -> (UserAccount);
   getMyBalance: () -> (E8s);
   getRecentCanisters: () -> (vec DashboardItem);
+  getTotalCycles: () -> (nat);
   getTransactionHistory: (page: nat) -> (Page_1);
   listCanisters: (page: nat) -> (Page);
+  migrateCanistersFromPrincipal: (oldPrincipal: principal) -> (Result_1);
   removeCanister: (canisterId: CanisterId) -> (Result_3);
   removeController: (canisterId: CanisterId, controller: principal) ->
    (Result_3);

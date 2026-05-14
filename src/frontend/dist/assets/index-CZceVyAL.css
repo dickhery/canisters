@@ -1580,6 +1580,9 @@ video {
 .border-accent\/60 {
   border-color: oklch(var(--accent) / 0.6);
 }
+.border-amber-500\/30 {
+  border-color: rgb(245 158 11 / 0.3);
+}
 .border-border {
   border-color: oklch(var(--border));
 }
@@ -1642,6 +1645,9 @@ video {
 }
 .bg-accent\/5 {
   background-color: oklch(var(--accent) / 0.05);
+}
+.bg-amber-500\/5 {
+  background-color: rgb(245 158 11 / 0.05);
 }
 .bg-background {
   background-color: oklch(var(--background));
@@ -2020,6 +2026,9 @@ video {
 .tracking-\[0\.15em\] {
   letter-spacing: 0.15em;
 }
+.tracking-\[0\.18em\] {
+  letter-spacing: 0.18em;
+}
 .tracking-\[0\.1em\] {
   letter-spacing: 0.1em;
 }
@@ -2050,6 +2059,13 @@ video {
 }
 .text-accent\/80 {
   color: oklch(var(--accent) / 0.8);
+}
+.text-amber-400 {
+  --tw-text-opacity: 1;
+  color: rgb(251 191 36 / var(--tw-text-opacity, 1));
+}
+.text-amber-400\/90 {
+  color: rgb(251 191 36 / 0.9);
 }
 .text-card-foreground {
   color: oklch(var(--card-foreground));
@@ -2107,6 +2123,9 @@ video {
 }
 .text-primary\/70 {
   color: oklch(var(--primary) / 0.7);
+}
+.text-primary\/80 {
+  color: oklch(var(--primary) / 0.8);
 }
 .text-secondary-foreground {
   color: oklch(var(--secondary-foreground));

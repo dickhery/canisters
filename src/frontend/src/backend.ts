@@ -230,8 +230,10 @@ export interface backendInterface {
     getMyAccount(): Promise<UserAccount>;
     getMyBalance(): Promise<E8s>;
     getRecentCanisters(): Promise<Array<DashboardItem>>;
+    getTotalCycles(): Promise<bigint>;
     getTransactionHistory(page: bigint): Promise<Page_1>;
     listCanisters(page: bigint): Promise<Page>;
+    migrateCanistersFromPrincipal(oldPrincipal: Principal): Promise<Result_1>;
     removeCanister(canisterId: CanisterId): Promise<Result_3>;
     removeController(canisterId: CanisterId, controller: Principal): Promise<Result_3>;
     renameCanister(canisterId: CanisterId, newName: string): Promise<Result_3>;
@@ -398,6 +400,20 @@ export class Backend implements backendInterface {
             return result;
         }
     }
+    async getTotalCycles(): Promise<bigint> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.getTotalCycles();
+                return result;
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.getTotalCycles();
+            return result;
+        }
+    }
     async getTransactionHistory(arg0: bigint): Promise<Page_1> {
         if (this.processError) {
             try {
@@ -424,6 +440,20 @@ export class Backend implements backendInterface {
         } else {
             const result = await this.actor.listCanisters(arg0);
             return from_candid_Page_n17(this._uploadFile, this._downloadFile, result);
+        }
+    }
+    async migrateCanistersFromPrincipal(arg0: Principal): Promise<Result_1> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.migrateCanistersFromPrincipal(arg0);
+                return from_candid_Result_1_n22(this._uploadFile, this._downloadFile, result);
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.migrateCanistersFromPrincipal(arg0);
+            return from_candid_Result_1_n22(this._uploadFile, this._downloadFile, result);
         }
     }
     async removeCanister(arg0: CanisterId): Promise<Result_3> {
@@ -486,28 +516,28 @@ export class Backend implements backendInterface {
         if (this.processError) {
             try {
                 const result = await this.actor.topUpCanister(arg0, arg1);
-                return from_candid_Result_2_n22(this._uploadFile, this._downloadFile, result);
+                return from_candid_Result_2_n24(this._uploadFile, this._downloadFile, result);
             } catch (e) {
                 this.processError(e);
                 throw new Error("unreachable");
             }
         } else {
             const result = await this.actor.topUpCanister(arg0, arg1);
-            return from_candid_Result_2_n22(this._uploadFile, this._downloadFile, result);
+            return from_candid_Result_2_n24(this._uploadFile, this._downloadFile, result);
         }
     }
     async transferCycles(arg0: Principal, arg1: Principal, arg2: bigint): Promise<Result_1> {
         if (this.processError) {
             try {
                 const result = await this.actor.transferCycles(arg0, arg1, arg2);
-                return from_candid_Result_1_n24(this._uploadFile, this._downloadFile, result);
+                return from_candid_Result_1_n22(this._uploadFile, this._downloadFile, result);
             } catch (e) {
                 this.processError(e);
                 throw new Error("unreachable");
             }
         } else {
             const result = await this.actor.transferCycles(arg0, arg1, arg2);
-            return from_candid_Result_1_n24(this._uploadFile, this._downloadFile, result);
+            return from_candid_Result_1_n22(this._uploadFile, this._downloadFile, result);
         }
     }
     async transferIcp(arg0: string, arg1: E8s, arg2: string): Promise<Result> {
@@ -554,11 +584,11 @@ function from_candid_Page_1_n10(_uploadFile: (file: ExternalBlob) => Promise<Uin
 function from_candid_Page_n17(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: _Page): Page {
     return from_candid_record_n18(_uploadFile, _downloadFile, value);
 }
-function from_candid_Result_1_n24(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: _Result_1): Result_1 {
-    return from_candid_variant_n25(_uploadFile, _downloadFile, value);
-}
-function from_candid_Result_2_n22(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: _Result_2): Result_2 {
+function from_candid_Result_1_n22(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: _Result_1): Result_1 {
     return from_candid_variant_n23(_uploadFile, _downloadFile, value);
+}
+function from_candid_Result_2_n24(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: _Result_2): Result_2 {
+    return from_candid_variant_n25(_uploadFile, _downloadFile, value);
 }
 function from_candid_Result_3_n1(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: _Result_3): Result_3 {
     return from_candid_variant_n2(_uploadFile, _downloadFile, value);
@@ -744,12 +774,12 @@ function from_candid_variant_n2(_uploadFile: (file: ExternalBlob) => Promise<Uin
     } : value;
 }
 function from_candid_variant_n23(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: {
-    ok: _Cycles;
+    ok: bigint;
 } | {
     err: string;
 }): {
     __kind__: "ok";
-    ok: Cycles;
+    ok: bigint;
 } | {
     __kind__: "err";
     err: string;
@@ -763,12 +793,12 @@ function from_candid_variant_n23(_uploadFile: (file: ExternalBlob) => Promise<Ui
     } : value;
 }
 function from_candid_variant_n25(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: {
-    ok: bigint;
+    ok: _Cycles;
 } | {
     err: string;
 }): {
     __kind__: "ok";
-    ok: bigint;
+    ok: Cycles;
 } | {
     __kind__: "err";
     err: string;

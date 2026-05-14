@@ -148,8 +148,10 @@ export interface backendInterface {
     getMyAccount(): Promise<UserAccount>;
     getMyBalance(): Promise<E8s>;
     getRecentCanisters(): Promise<Array<DashboardItem>>;
+    getTotalCycles(): Promise<bigint>;
     getTransactionHistory(page: bigint): Promise<Page_1>;
     listCanisters(page: bigint): Promise<Page>;
+    migrateCanistersFromPrincipal(oldPrincipal: Principal): Promise<Result_1>;
     removeCanister(canisterId: CanisterId): Promise<Result_3>;
     removeController(canisterId: CanisterId, controller: Principal): Promise<Result_3>;
     renameCanister(canisterId: CanisterId, newName: string): Promise<Result_3>;

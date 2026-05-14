@@ -1,4 +1,5 @@
-import { c as createLucideIcon, j as jsxRuntimeExports, m as cn } from "./index-BDHQLcS7.js";
+import { c as createLucideIcon, j as jsxRuntimeExports, m as cn } from "./index-CARhM0P_.js";
+import { C as CanisterStatus } from "./index-ZGahKnFm.js";
 /**
  * @license lucide-react v0.511.0 - ISC
  *
@@ -30,12 +31,6 @@ const __iconNode = [
   ["line", { x1: "14", x2: "14", y1: "11", y2: "17", key: "xtxkd" }]
 ];
 const Trash2 = createLucideIcon("trash-2", __iconNode);
-var CanisterStatus = /* @__PURE__ */ ((CanisterStatus2) => {
-  CanisterStatus2["stopped"] = "stopped";
-  CanisterStatus2["stopping"] = "stopping";
-  CanisterStatus2["running"] = "running";
-  return CanisterStatus2;
-})(CanisterStatus || {});
 const STATUS_CONFIG = {
   [CanisterStatus.running]: {
     label: "ONLINE",

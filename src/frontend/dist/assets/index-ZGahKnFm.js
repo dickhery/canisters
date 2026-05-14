@@ -7,7 +7,7 @@ var __privateAdd = (obj, member, value) => member.has(obj) ? __typeError("Cannot
 var __privateSet = (obj, member, value, setter) => (__accessCheck(obj, member, "write to private field"), setter ? setter.call(obj, value) : member.set(obj, value), value);
 var __privateMethod = (obj, member, method) => (__accessCheck(obj, member, "access private method"), method);
 var _client, _currentQuery, _currentQueryInitialState, _currentResult, _currentResultState, _currentResultOptions, _currentThenable, _selectError, _selectFn, _selectResult, _lastQueryWithDefinedData, _staleTimeoutId, _refetchIntervalId, _currentRefetchInterval, _trackedProps, _QueryObserver_instances, executeFetch_fn, updateStaleTimeout_fn, computeRefetchInterval_fn, updateRefetchInterval_fn, updateTimers_fn, clearStaleTimeout_fn, clearRefetchInterval_fn, updateQuery_fn, notify_fn, _a, _client2, _currentResult2, _currentMutation, _mutateOptions, _MutationObserver_instances, updateResult_fn, notify_fn2, _b;
-import { I as ProtocolError, J as TimeoutWaitingForResponseErrorCode, K as utf8ToBytes, M as ExternalError, N as MissingRootKeyErrorCode, O as Certificate, Q as lookupResultToBuffer, U as RequestStatusResponseStatus, V as UnknownError, Y as RequestStatusDoneNoReplyErrorCode, Z as RejectError, _ as CertifiedRejectErrorCode, $ as UNREACHABLE_ERROR, a0 as InputError, a1 as InvalidReadStateRequestErrorCode, a2 as ReadRequestType, a3 as Principal, a4 as IDL, a5 as MissingCanisterIdErrorCode, a6 as HttpAgent, a7 as encode, a8 as QueryResponseStatus, a9 as UncertifiedRejectErrorCode, aa as isV3ResponseBody, ab as isV2ResponseBody, ac as UncertifiedRejectUpdateErrorCode, ad as UnexpectedErrorCode, ae as decode, af as Subscribable, ag as pendingThenable, ah as resolveEnabled, ai as shallowEqualObjects, aj as resolveStaleTime, ak as noop, al as environmentManager, am as isValidTimeout, an as timeUntilStale, ao as timeoutManager, ap as focusManager, aq as fetchState, ar as replaceData, as as notifyManager, at as hashKey, au as getDefaultState, r as reactExports, av as shouldThrowError, A as useQueryClient, H as useInternetIdentity, aw as createActorWithConfig, j as jsxRuntimeExports, m as cn, ax as createSlot, ay as Variant, az as Record, aA as Vec, aB as Service, aC as Func, aD as Text, aE as Opt, aF as Principal$1, aG as Null, aH as Nat, aI as Bool, aJ as Int, aK as Nat64, aL as Nat8, aM as keepPreviousData, aN as __vitePreload, aS as ue, o as formatCycles, aO as JSON_KEY_PRINCIPAL, aP as base32Decode, aQ as base32Encode, aR as getCrc32 } from "./index-BDHQLcS7.js";
+import { J as ProtocolError, K as TimeoutWaitingForResponseErrorCode, M as utf8ToBytes, N as ExternalError, O as MissingRootKeyErrorCode, Q as Certificate, U as lookupResultToBuffer, V as RequestStatusResponseStatus, Y as UnknownError, Z as RequestStatusDoneNoReplyErrorCode, _ as RejectError, $ as CertifiedRejectErrorCode, a0 as UNREACHABLE_ERROR, a1 as InputError, a2 as InvalidReadStateRequestErrorCode, a3 as ReadRequestType, a4 as Principal, a5 as IDL, a6 as MissingCanisterIdErrorCode, a7 as HttpAgent, a8 as encode, a9 as QueryResponseStatus, aa as UncertifiedRejectErrorCode, ab as isV3ResponseBody, ac as isV2ResponseBody, ad as UncertifiedRejectUpdateErrorCode, ae as UnexpectedErrorCode, af as decode, ag as Subscribable, ah as pendingThenable, ai as resolveEnabled, aj as shallowEqualObjects, ak as resolveStaleTime, al as noop, am as environmentManager, an as isValidTimeout, ao as timeUntilStale, ap as timeoutManager, aq as focusManager, ar as fetchState, as as replaceData, at as notifyManager, au as hashKey, av as getDefaultState, r as reactExports, aw as shouldThrowError, t as useQueryClient, I as useInternetIdentity, ax as createActorWithConfig, j as jsxRuntimeExports, m as cn, ay as createSlot, az as Variant, aA as Record, aB as Vec, aC as Service, aD as Func, aE as Text, aF as Opt, aG as Principal$1, aH as Null, aI as Nat, aJ as Bool, aK as Int, aL as Nat64, aM as Nat8, aN as __vitePreload, aO as keepPreviousData, aT as ue, o as formatCycles, aP as JSON_KEY_PRINCIPAL, aQ as base32Decode, aR as base32Encode, aS as getCrc32 } from "./index-CARhM0P_.js";
 const FIVE_MINUTES_IN_MSEC = 5 * 60 * 1e3;
 function defaultStrategy() {
   return chain(conditionalDelay(once(), 1e3), backoff(1e3, 1.2), timeout(FIVE_MINUTES_IN_MSEC));
@@ -1344,14 +1344,14 @@ const Result_4 = Variant({
   "ok": CreateCanisterResult,
   "err": Text
 });
-const CanisterStatus = Variant({
+const CanisterStatus$1 = Variant({
   "stopped": Null,
   "stopping": Null,
   "running": Null
 });
 const Timestamp = Int;
 const CanisterDetails = Record({
-  "status": CanisterStatus,
+  "status": CanisterStatus$1,
   "controllers": Vec(Principal$1),
   "cycleBalance": Cycles,
   "createdAt": Timestamp,
@@ -1404,7 +1404,7 @@ const Page_1 = Record({
   "items": Vec(Transaction)
 });
 const CanisterSummary = Record({
-  "status": CanisterStatus,
+  "status": CanisterStatus$1,
   "cycleBalance": Cycles,
   "customName": Text,
   "lastChecked": Timestamp,
@@ -1418,6 +1418,7 @@ const Page = Record({
   "pageSize": Nat,
   "items": Vec(CanisterSummary)
 });
+const Result_1 = Variant({ "ok": Nat, "err": Text });
 const CanisterInfo = Record({
   "cachedCycleBalance": Cycles,
   "addedAt": Timestamp,
@@ -1427,7 +1428,6 @@ const CanisterInfo = Record({
   "canisterId": CanisterId
 });
 const Result_2 = Variant({ "ok": Cycles, "err": Text });
-const Result_1 = Variant({ "ok": Nat, "err": Text });
 const Result = Variant({ "ok": Nat64, "err": Text });
 Service({
   "addCanister": Func([CanisterId, Text], [Result_3], []),
@@ -1441,8 +1441,10 @@ Service({
   "getMyAccount": Func([], [UserAccount], []),
   "getMyBalance": Func([], [E8s], []),
   "getRecentCanisters": Func([], [Vec(DashboardItem)], []),
+  "getTotalCycles": Func([], [Nat], []),
   "getTransactionHistory": Func([Nat], [Page_1], []),
   "listCanisters": Func([Nat], [Page], []),
+  "migrateCanistersFromPrincipal": Func([Principal$1], [Result_1], []),
   "removeCanister": Func([CanisterId], [Result_3], []),
   "removeController": Func([CanisterId, Principal$1], [Result_3], []),
   "renameCanister": Func([CanisterId, Text], [Result_3], []),
@@ -1543,6 +1545,7 @@ const idlFactory = ({ IDL: IDL2 }) => {
     "pageSize": IDL2.Nat,
     "items": IDL2.Vec(CanisterSummary2)
   });
+  const Result_12 = IDL2.Variant({ "ok": IDL2.Nat, "err": IDL2.Text });
   const CanisterInfo2 = IDL2.Record({
     "cachedCycleBalance": Cycles2,
     "addedAt": Timestamp2,
@@ -1552,7 +1555,6 @@ const idlFactory = ({ IDL: IDL2 }) => {
     "canisterId": CanisterId2
   });
   const Result_22 = IDL2.Variant({ "ok": Cycles2, "err": IDL2.Text });
-  const Result_12 = IDL2.Variant({ "ok": IDL2.Nat, "err": IDL2.Text });
   const Result2 = IDL2.Variant({ "ok": IDL2.Nat64, "err": IDL2.Text });
   return IDL2.Service({
     "addCanister": IDL2.Func([CanisterId2, IDL2.Text], [Result_32], []),
@@ -1570,8 +1572,10 @@ const idlFactory = ({ IDL: IDL2 }) => {
     "getMyAccount": IDL2.Func([], [UserAccount2], []),
     "getMyBalance": IDL2.Func([], [E8s2], []),
     "getRecentCanisters": IDL2.Func([], [IDL2.Vec(DashboardItem2)], []),
+    "getTotalCycles": IDL2.Func([], [IDL2.Nat], []),
     "getTransactionHistory": IDL2.Func([IDL2.Nat], [Page_12], []),
     "listCanisters": IDL2.Func([IDL2.Nat], [Page2], []),
+    "migrateCanistersFromPrincipal": IDL2.Func([IDL2.Principal], [Result_12], []),
     "removeCanister": IDL2.Func([CanisterId2], [Result_32], []),
     "removeController": IDL2.Func([CanisterId2, IDL2.Principal], [Result_32], []),
     "renameCanister": IDL2.Func([CanisterId2, IDL2.Text], [Result_32], []),
@@ -1751,6 +1755,20 @@ class Backend {
       return result;
     }
   }
+  async getTotalCycles() {
+    if (this.processError) {
+      try {
+        const result = await this.actor.getTotalCycles();
+        return result;
+      } catch (e) {
+        this.processError(e);
+        throw new Error("unreachable");
+      }
+    } else {
+      const result = await this.actor.getTotalCycles();
+      return result;
+    }
+  }
   async getTransactionHistory(arg0) {
     if (this.processError) {
       try {
@@ -1777,6 +1795,20 @@ class Backend {
     } else {
       const result = await this.actor.listCanisters(arg0);
       return from_candid_Page_n17(this._uploadFile, this._downloadFile, result);
+    }
+  }
+  async migrateCanistersFromPrincipal(arg0) {
+    if (this.processError) {
+      try {
+        const result = await this.actor.migrateCanistersFromPrincipal(arg0);
+        return from_candid_Result_1_n22(this._uploadFile, this._downloadFile, result);
+      } catch (e) {
+        this.processError(e);
+        throw new Error("unreachable");
+      }
+    } else {
+      const result = await this.actor.migrateCanistersFromPrincipal(arg0);
+      return from_candid_Result_1_n22(this._uploadFile, this._downloadFile, result);
     }
   }
   async removeCanister(arg0) {
@@ -1839,28 +1871,28 @@ class Backend {
     if (this.processError) {
       try {
         const result = await this.actor.topUpCanister(arg0, arg1);
-        return from_candid_Result_2_n22(this._uploadFile, this._downloadFile, result);
+        return from_candid_Result_2_n24(this._uploadFile, this._downloadFile, result);
       } catch (e) {
         this.processError(e);
         throw new Error("unreachable");
       }
     } else {
       const result = await this.actor.topUpCanister(arg0, arg1);
-      return from_candid_Result_2_n22(this._uploadFile, this._downloadFile, result);
+      return from_candid_Result_2_n24(this._uploadFile, this._downloadFile, result);
     }
   }
   async transferCycles(arg0, arg1, arg2) {
     if (this.processError) {
       try {
         const result = await this.actor.transferCycles(arg0, arg1, arg2);
-        return from_candid_Result_1_n24(this._uploadFile, this._downloadFile, result);
+        return from_candid_Result_1_n22(this._uploadFile, this._downloadFile, result);
       } catch (e) {
         this.processError(e);
         throw new Error("unreachable");
       }
     } else {
       const result = await this.actor.transferCycles(arg0, arg1, arg2);
-      return from_candid_Result_1_n24(this._uploadFile, this._downloadFile, result);
+      return from_candid_Result_1_n22(this._uploadFile, this._downloadFile, result);
     }
   }
   async transferIcp(arg0, arg1, arg2) {
@@ -1907,11 +1939,11 @@ function from_candid_Page_1_n10(_uploadFile, _downloadFile, value) {
 function from_candid_Page_n17(_uploadFile, _downloadFile, value) {
   return from_candid_record_n18(_uploadFile, _downloadFile, value);
 }
-function from_candid_Result_1_n24(_uploadFile, _downloadFile, value) {
-  return from_candid_variant_n25(_uploadFile, _downloadFile, value);
-}
-function from_candid_Result_2_n22(_uploadFile, _downloadFile, value) {
+function from_candid_Result_1_n22(_uploadFile, _downloadFile, value) {
   return from_candid_variant_n23(_uploadFile, _downloadFile, value);
+}
+function from_candid_Result_2_n24(_uploadFile, _downloadFile, value) {
+  return from_candid_variant_n25(_uploadFile, _downloadFile, value);
 }
 function from_candid_Result_3_n1(_uploadFile, _downloadFile, value) {
   return from_candid_variant_n2(_uploadFile, _downloadFile, value);
@@ -2057,6 +2089,12 @@ function createActor(canisterId, _uploadFile, _downloadFile, options = {}) {
   });
   return new Backend(actor, _uploadFile, _downloadFile, options.processError);
 }
+var CanisterStatus = /* @__PURE__ */ ((CanisterStatus2) => {
+  CanisterStatus2["stopped"] = "stopped";
+  CanisterStatus2["stopping"] = "stopping";
+  CanisterStatus2["running"] = "running";
+  return CanisterStatus2;
+})(CanisterStatus || {});
 const PAGE_SIZE = 20n;
 function useListCanisters(page) {
   const { actor } = useActor(createActor);
@@ -2204,6 +2242,37 @@ function useGetLowestCyclesCanisters() {
     retryDelay: 3e3
   });
 }
+function useGetTotalCycles() {
+  const { actor } = useActor(createActor);
+  return useQuery({
+    queryKey: ["dashboard", "total-cycles"],
+    queryFn: async () => {
+      if (!actor) return 0n;
+      return actor.getTotalCycles();
+    },
+    enabled: !!actor,
+    staleTime: 3e4,
+    retry: 1,
+    retryDelay: 3e3
+  });
+}
+function useRecoverData() {
+  const { actor } = useActor(createActor);
+  return {
+    actor,
+    migrateFromPrincipal: async (oldPrincipalText) => {
+      if (!actor) throw new Error("Not connected");
+      const { Principal: Principal2 } = await __vitePreload(async () => {
+        const { Principal: Principal3 } = await Promise.resolve().then(() => index);
+        return { Principal: Principal3 };
+      }, true ? void 0 : void 0);
+      const oldPrincipal = Principal2.fromText(oldPrincipalText.trim());
+      const result = await actor.migrateCanistersFromPrincipal(oldPrincipal);
+      if (result.__kind__ === "err") throw new Error(result.err);
+      return { migrated: Number(result.ok) };
+    }
+  };
+}
 function useSearchCanisters(query) {
   const { actor } = useActor(createActor);
   const trimmed = query.trim();
@@ -2211,30 +2280,21 @@ function useSearchCanisters(query) {
     queryKey: ["canisters", "search", trimmed],
     queryFn: async () => {
       if (!actor) return [];
-      const firstPage = await actor.listCanisters(0n);
-      const total = Number(firstPage.total);
-      const pageSize = Number(firstPage.pageSize || 20n);
-      const totalPages = Math.max(1, Math.ceil(total / pageSize));
-      let allItems = [...firstPage.items];
-      if (totalPages > 1) {
-        const pageNums = Array.from(
-          { length: totalPages - 1 },
-          (_, i) => BigInt(i + 1)
-        );
-        const pages = await Promise.all(
-          pageNums.map((p) => actor.listCanisters(p))
-        );
-        for (const page of pages) {
-          allItems = allItems.concat(page.items);
-        }
-      }
-      const q = trimmed.toLowerCase();
-      return allItems.filter(
-        (c) => c.customName.toLowerCase().includes(q) || c.canisterId.toString().toLowerCase().includes(q)
-      );
+      const results = await actor.searchCanisters(trimmed);
+      return results.map((c) => ({
+        canisterId: c.canisterId,
+        customName: c.customName,
+        cycleBalance: c.cachedCycleBalance,
+        isController: c.isController,
+        // CanisterInfo doesn't carry live status — use running as a safe default.
+        // The detail page will show the real status once opened.
+        status: CanisterStatus.running,
+        fetchFailed: false,
+        lastChecked: c.addedAt
+      }));
     },
     enabled: !!actor && trimmed.length > 0,
-    staleTime: 3e4,
+    staleTime: 6e4,
     retry: 1,
     retryDelay: 3e3
   });
@@ -2522,6 +2582,7 @@ const index = /* @__PURE__ */ Object.freeze(/* @__PURE__ */ Object.definePropert
   getCrc32
 }, Symbol.toStringTag, { value: "Module" }));
 export {
+  CanisterStatus as C,
   Input as I,
   Label as L,
   Skeleton as S,
@@ -2532,17 +2593,19 @@ export {
   useAddCanister as e,
   useRemoveCanister as f,
   useRenameCanister as g,
-  useGetMyAccount as h,
-  useGetTransactionHistory as i,
-  useTransferIcp as j,
-  useGetAppPrincipal as k,
-  useGetCanisterDetails as l,
-  useTopUpCanister as m,
-  useGetIcpXdrConversionRate as n,
-  useTransferCycles as o,
-  useRemoveController as p,
-  useAddController as q,
-  useGetRecentCanisters as r,
-  useGetLowestCyclesCanisters as s,
-  useGetCreationCostEstimate as u
+  useGetAppPrincipal as h,
+  useGetCanisterDetails as i,
+  useTopUpCanister as j,
+  useGetIcpXdrConversionRate as k,
+  useTransferCycles as l,
+  useRemoveController as m,
+  useGetTransactionHistory as n,
+  useAddController as o,
+  useGetMyAccount as p,
+  useTransferIcp as q,
+  useRecoverData as r,
+  useGetRecentCanisters as s,
+  useGetLowestCyclesCanisters as t,
+  useGetCreationCostEstimate as u,
+  useGetTotalCycles as v
 };

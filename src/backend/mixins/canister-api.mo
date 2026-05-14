@@ -9,6 +9,7 @@ import CanisterTypes "../types/canister";
 import CommonTypes "../types/common";
 import LedgerTypes "../types/ledger";
 import CanisterLib "../lib/canister";
+import Array "mo:core/Array";
 
 // Canister management API mixin
 // State slices injected: selfPrincipal, userCanisters, userAccounts, txLog, nextTxId
@@ -132,23 +133,34 @@ mixin (
     CanisterLib.renameCanister(canisters, canisterId, newName, Time.now());
   };
 
-  // Get a paginated list of tracked canisters with live cycle/status data
+  // Get a paginated list of tracked canisters using cached data (no live IC calls).
+  // Live data is fetched lazily: on detail-page open and via getTotalCycles.
+  // Returning cached data avoids sequential await chains that can exceed IC message time budgets.
   public shared ({ caller }) func listCanisters(
     page : Nat,
   ) : async CommonTypes.Page<CanisterTypes.CanisterSummary> {
     if (caller.isAnonymous()) Runtime.trap("Anonymous caller not allowed");
     let pageSize = 20;
     let canisters = getUserCanisters(caller);
-    let infoPage = CanisterLib.listCanisters(canisters, page, pageSize, selfPrincipal);
     let now = Time.now();
-    // Fetch live status sequentially for each canister in the page
-    let summaries = List.empty<CanisterTypes.CanisterSummary>();
-    for (info in infoPage.items.values()) {
-      let summary = await fetchSummary(canisters, info, now);
-      summaries.add(summary);
-    };
+    let infoPage = CanisterLib.listCanisters(canisters, page, pageSize, selfPrincipal);
+    let items = infoPage.items;
+    // Build summaries from cached data — no IC calls, no await, no timeout risk.
+    let summaries = items.map(
+      func(info : CanisterTypes.CanisterInfo) : CanisterTypes.CanisterSummary {
+        {
+          canisterId = info.canisterId;
+          customName = info.customName;
+          cycleBalance = info.cachedCycleBalance;
+          status = #running;
+          lastChecked = now;
+          fetchFailed = false;
+          isController = info.isController;
+        }
+      }
+    );
     {
-      items = summaries.toArray();
+      items = summaries;
       total = infoPage.total;
       page = infoPage.page;
       pageSize = infoPage.pageSize;
@@ -294,6 +306,77 @@ mixin (
     if (caller.isAnonymous()) Runtime.trap("Anonymous caller not allowed");
     let canisters = getUserCanisters(caller);
     CanisterLib.getLowestCyclesCanisters(canisters, selfPrincipal);
+  };
+
+  // Return the total cycle balance across ALL tracked canisters for the caller.
+  // This is an update call (not query) because it calls the IC management canister.
+  // Fires all canister_status calls concurrently then sums the results.
+  public shared ({ caller }) func getTotalCycles() : async Nat {
+    if (caller.isAnonymous()) Runtime.trap("Anonymous caller not allowed");
+    let canisters = getUserCanisters(caller);
+    let now = Time.now();
+    let all = canisters.toArray();
+    // Fetch all cycle balances sequentially — async-in-map is not supported in Motoko
+    var total : Nat = 0;
+    for (tracked in all.values()) {
+      try {
+        let result = await ic.canister_status({ canister_id = tracked.canisterId });
+        CanisterLib.updateCachedBalance(canisters, tracked.canisterId, result.cycles);
+        total += result.cycles;
+      } catch (_) {
+        total += tracked.cachedCycleBalance;
+      };
+    };
+    total;
+  };
+
+  // --- Principal migration / data recovery ---
+
+  // Migrate tracked canisters from an old principal to the caller's current principal.
+  // Useful when a user's principal changed due to a derivationOrigin/domain change.
+  // Returns the number of canisters migrated, or an error if the old principal has no data.
+  // Canisters already tracked by the caller are skipped (no duplicates).
+  public shared ({ caller }) func migrateCanistersFromPrincipal(
+    oldPrincipal : Principal,
+  ) : async CommonTypes.Result<Nat> {
+    if (caller.isAnonymous()) return #err("Anonymous caller not allowed");
+    if (Principal.equal(caller, oldPrincipal)) return #err("Old principal must differ from current principal");
+
+    // Look up canisters under the old principal
+    let oldList = switch (userCanisters.get(oldPrincipal)) {
+      case null return #err("No data found for the provided principal ID");
+      case (?list) list;
+    };
+
+    if (oldList.size() == 0) return #err("No canisters found under the provided principal ID");
+
+    let callerList = getUserCanisters(caller);
+    var migrated = 0;
+
+    for (tracked in oldList.values()) {
+      // Skip canisters already tracked by caller
+      let alreadyTracked = switch (callerList.find(
+        func(c : CanisterTypes.TrackedCanister) : Bool {
+          Principal.equal(c.canisterId, tracked.canisterId)
+        }
+      )) {
+        case (?_) true;
+        case null false;
+      };
+      if (not alreadyTracked) {
+        callerList.add({
+          canisterId = tracked.canisterId;
+          var customName = tracked.customName;
+          addedAt = tracked.addedAt;
+          var lastInteractedAt = tracked.lastInteractedAt;
+          var cachedCycleBalance = tracked.cachedCycleBalance;
+          var cachedControllers = tracked.cachedControllers;
+        });
+        migrated += 1;
+      };
+    };
+
+    #ok(migrated);
   };
 
   // --- Cycles transfer ---

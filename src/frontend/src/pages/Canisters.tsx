@@ -521,6 +521,9 @@ function CanisterRow({ canister, index, onDelete }: CanisterRowProps) {
 export default function CanistersPage() {
   const [page, setPage] = useState(1);
   const [search, setSearch] = useState("");
+  // Debounced value: fires the actual backend query only after 300ms of inactivity.
+  // The raw `search` state updates immediately for responsive input display.
+  const [debouncedSearch, setDebouncedSearch] = useState("");
   const [showAddModal, setShowAddModal] = useState(false);
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [deleteTarget, setDeleteTarget] = useState<CanisterSummary | null>(
@@ -528,16 +531,27 @@ export default function CanistersPage() {
   );
   const prevSearchRef = useRef(search);
 
+  // Sync debounced value 300ms after the user stops typing.
+  useEffect(() => {
+    const timer = setTimeout(() => setDebouncedSearch(search.trim()), 300);
+    return () => clearTimeout(timer);
+  }, [search]);
+
   // Track last-known non-zero cycle balances so a transient backend 0 never
   // overwrites a previously displayed real value.
   const { updateAndGet: getGuardedBalance } = useSavedCycleBalances();
 
-  const { data, isLoading } = useListCanisters(BigInt(page - 1));
+  const { data, isLoading, isFetching } = useListCanisters(BigInt(page - 1));
 
-  // Server-wide search — fetches all pages when a query is active.
+  // Server-wide search — single backend call via searchCanisters().
+  // Uses the debounced value so we don't fire on every keystroke.
   const isSearchActive = search.trim().length > 0;
-  const { data: searchResults, isLoading: isSearchLoading } =
-    useSearchCanisters(search);
+  // Show loading while the user is still typing (search ≠ debouncedSearch)
+  // OR while the debounced query is in-flight.
+  const isTyping = search.trim() !== debouncedSearch;
+  const { data: searchResults, isLoading: isQueryLoading } =
+    useSearchCanisters(debouncedSearch);
+  const isSearchLoading = isSearchActive && (isTyping || isQueryLoading);
 
   const rawItems = data?.items ?? [];
   const total = Number(data?.total ?? 0n);
@@ -650,12 +664,34 @@ export default function CanistersPage() {
 
       {/* Table */}
       <div className="flex-1 overflow-x-auto">
+        {/* Page loading indicator */}
+        {!isSearchActive && isLoading && (
+          <div
+            className="px-3 py-1.5 border-b border-primary/20 font-mono text-[10px] tracking-[0.18em] uppercase"
+            data-ocid="canisters.page_loading_state"
+          >
+            <span className="text-primary retro-glow animate-pulse">
+              [ PAGE LOADING... ]
+            </span>
+          </div>
+        )}
+        {/* Page switch loading indicator — shown when navigating between pages */}
+        {!isSearchActive && isFetching && !isLoading && (
+          <div
+            className="px-3 py-1.5 border-b border-primary/20 font-mono text-[10px] tracking-[0.18em] uppercase"
+            data-ocid="canisters.page_switch_loading_state"
+          >
+            <span className="text-primary retro-glow animate-pulse">
+              [ PAGE LOADING... ]
+            </span>
+          </div>
+        )}
         {/* Search result count banner */}
         {isSearchActive && !isSearchLoading && (
           <div className="px-3 py-1.5 bg-primary/5 border-b border-primary/20 font-mono text-[10px] text-primary/70 tracking-[0.15em] uppercase">
             {(searchResults ?? []).length} RESULT
             {(searchResults ?? []).length !== 1 ? "S" : ""} FOR &ldquo;
-            {search.trim()}&rdquo;
+            {debouncedSearch}&rdquo;
           </div>
         )}
         <table className="w-full min-w-[640px] text-xs">
@@ -689,12 +725,12 @@ export default function CanistersPage() {
                     data-ocid="canisters.loading_state"
                   >
                     <span className="text-primary retro-glow animate-pulse text-xs tracking-[0.2em] uppercase">
-                      [ SEARCHING ALL PAGES... ]
+                      [SEARCHING...]
                     </span>
                   </div>
                 </td>
               </tr>
-            ) : !isSearchActive && isLoading ? (
+            ) : !isSearchActive && (isLoading || isFetching) ? (
               SKELETON_KEYS.map((k) => <SkeletonRow key={k} />)
             ) : filtered.length > 0 ? (
               filtered.map((canister, i) => (
@@ -774,6 +810,7 @@ export default function CanistersPage() {
             totalPages={totalPages}
             onPrev={() => setPage((p) => Math.max(1, p - 1))}
             onNext={() => setPage((p) => Math.min(totalPages, p + 1))}
+            isLoading={isFetching}
             data-ocid="canisters.pagination"
           />
         </div>

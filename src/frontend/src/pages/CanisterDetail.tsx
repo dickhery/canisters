@@ -984,6 +984,15 @@ export default function CanisterDetail() {
       {/* Content */}
       {isLoading ? (
         <div data-ocid="canister_detail.loading_state">
+          {/* Controllers loading indicator */}
+          <div
+            className="mb-3 px-3 py-1.5 border border-primary/20 bg-primary/5 font-mono text-[10px] tracking-[0.18em] uppercase"
+            data-ocid="canister_detail.controllers_loading_state"
+          >
+            <span className="text-primary/70 animate-pulse">
+              [ CONTROLLERS LOADING... ]
+            </span>
+          </div>
           <DetailSkeleton />
         </div>
       ) : isError || !details ? (

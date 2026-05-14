@@ -7,6 +7,7 @@ interface PaginationControlsProps {
   totalPages: number;
   onPrev: () => void;
   onNext: () => void;
+  isLoading?: boolean;
   className?: string;
   "data-ocid"?: string;
 }
@@ -16,6 +17,7 @@ export function PaginationControls({
   totalPages,
   onPrev,
   onNext,
+  isLoading = false,
   className,
   "data-ocid": dataOcid,
 }: PaginationControlsProps) {
@@ -34,7 +36,7 @@ export function PaginationControls({
         variant="outline"
         size="sm"
         onClick={onPrev}
-        disabled={!canPrev}
+        disabled={!canPrev || isLoading}
         data-ocid={dataOcid ? `${dataOcid}.pagination_prev` : undefined}
         className="h-7 px-2 font-mono text-[10px] tracking-widest uppercase border-border/50 hover:border-primary/40"
         aria-label="Previous page"
@@ -52,7 +54,7 @@ export function PaginationControls({
         variant="outline"
         size="sm"
         onClick={onNext}
-        disabled={!canNext}
+        disabled={!canNext || isLoading}
         data-ocid={dataOcid ? `${dataOcid}.pagination_next` : undefined}
         className="h-7 px-2 font-mono text-[10px] tracking-widest uppercase border-border/50 hover:border-primary/40"
         aria-label="Next page"

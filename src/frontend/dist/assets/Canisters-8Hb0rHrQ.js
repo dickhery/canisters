@@ -1,8 +1,8 @@
-import { c as createLucideIcon, r as reactExports, j as jsxRuntimeExports, n as formatIcp, o as formatCycles, B as Button, T as Terminal, X, p as useNavigate, C as CopyableId, q as formatTimestamp, m as cn } from "./index-BDHQLcS7.js";
-import { P as PaginationControls } from "./PaginationControls-bYkTdVfp.js";
-import { S as StatusBadge, T as Trash2, P as Pencil } from "./StatusBadge-DAliPmHS.js";
-import { D as Dialog, a as DialogContent, b as DialogHeader, c as DialogTitle, d as DialogDescription, e as DialogFooter } from "./dialog-g0aT-ydF.js";
-import { u as useGetCreationCostEstimate, a as useGetMyBalance, b as useCreateCanister, L as Label, I as Input, c as useListCanisters, d as useSearchCanisters, S as Skeleton, e as useAddCanister, f as useRemoveCanister, g as useRenameCanister } from "./index-o6Tr2rW7.js";
+import { c as createLucideIcon, r as reactExports, j as jsxRuntimeExports, n as formatIcp, o as formatCycles, B as Button, T as Terminal, X, p as useNavigate, C as CopyableId, q as formatTimestamp, m as cn } from "./index-CARhM0P_.js";
+import { P as PaginationControls } from "./PaginationControls-BAMw0_Kj.js";
+import { S as StatusBadge, T as Trash2, P as Pencil } from "./StatusBadge-BFabuyFT.js";
+import { D as Dialog, a as DialogContent, b as DialogHeader, c as DialogTitle, d as DialogDescription, e as DialogFooter } from "./dialog-DJs-COiJ.js";
+import { u as useGetCreationCostEstimate, a as useGetMyBalance, b as useCreateCanister, L as Label, I as Input, c as useListCanisters, d as useSearchCanisters, S as Skeleton, e as useAddCanister, f as useRemoveCanister, g as useRenameCanister } from "./index-ZGahKnFm.js";
 /**
  * @license lucide-react v0.511.0 - ISC
  *
@@ -702,16 +702,23 @@ function CanisterRow({ canister, index, onDelete }) {
 function CanistersPage() {
   const [page, setPage] = reactExports.useState(1);
   const [search, setSearch] = reactExports.useState("");
+  const [debouncedSearch, setDebouncedSearch] = reactExports.useState("");
   const [showAddModal, setShowAddModal] = reactExports.useState(false);
   const [showCreateModal, setShowCreateModal] = reactExports.useState(false);
   const [deleteTarget, setDeleteTarget] = reactExports.useState(
     null
   );
   const prevSearchRef = reactExports.useRef(search);
+  reactExports.useEffect(() => {
+    const timer = setTimeout(() => setDebouncedSearch(search.trim()), 300);
+    return () => clearTimeout(timer);
+  }, [search]);
   const { updateAndGet: getGuardedBalance } = useSavedCycleBalances();
-  const { data, isLoading } = useListCanisters(BigInt(page - 1));
+  const { data, isLoading, isFetching } = useListCanisters(BigInt(page - 1));
   const isSearchActive = search.trim().length > 0;
-  const { data: searchResults, isLoading: isSearchLoading } = useSearchCanisters(search);
+  const isTyping = search.trim() !== debouncedSearch;
+  const { data: searchResults, isLoading: isQueryLoading } = useSearchCanisters(debouncedSearch);
+  const isSearchLoading = isSearchActive && (isTyping || isQueryLoading);
   const rawItems = (data == null ? void 0 : data.items) ?? [];
   const total = Number((data == null ? void 0 : data.total) ?? 0n);
   const pageSize = Number((data == null ? void 0 : data.pageSize) ?? 20n);
@@ -810,12 +817,28 @@ function CanistersPage() {
           ] })
         ] }),
         /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex-1 overflow-x-auto", children: [
+          !isSearchActive && isLoading && /* @__PURE__ */ jsxRuntimeExports.jsx(
+            "div",
+            {
+              className: "px-3 py-1.5 border-b border-primary/20 font-mono text-[10px] tracking-[0.18em] uppercase",
+              "data-ocid": "canisters.page_loading_state",
+              children: /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "text-primary retro-glow animate-pulse", children: "[ PAGE LOADING... ]" })
+            }
+          ),
+          !isSearchActive && isFetching && !isLoading && /* @__PURE__ */ jsxRuntimeExports.jsx(
+            "div",
+            {
+              className: "px-3 py-1.5 border-b border-primary/20 font-mono text-[10px] tracking-[0.18em] uppercase",
+              "data-ocid": "canisters.page_switch_loading_state",
+              children: /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "text-primary retro-glow animate-pulse", children: "[ PAGE LOADING... ]" })
+            }
+          ),
           isSearchActive && !isSearchLoading && /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "px-3 py-1.5 bg-primary/5 border-b border-primary/20 font-mono text-[10px] text-primary/70 tracking-[0.15em] uppercase", children: [
             (searchResults ?? []).length,
             " RESULT",
             (searchResults ?? []).length !== 1 ? "S" : "",
             " FOR “",
-            search.trim(),
+            debouncedSearch,
             "”"
           ] }),
           /* @__PURE__ */ jsxRuntimeExports.jsxs("table", { className: "w-full min-w-[640px] text-xs", children: [
@@ -832,9 +855,9 @@ function CanistersPage() {
               {
                 className: "flex items-center justify-center gap-2 py-12 font-mono",
                 "data-ocid": "canisters.loading_state",
-                children: /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "text-primary retro-glow animate-pulse text-xs tracking-[0.2em] uppercase", children: "[ SEARCHING ALL PAGES... ]" })
+                children: /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "text-primary retro-glow animate-pulse text-xs tracking-[0.2em] uppercase", children: "[SEARCHING...]" })
               }
-            ) }) }) : !isSearchActive && isLoading ? SKELETON_KEYS.map((k) => /* @__PURE__ */ jsxRuntimeExports.jsx(SkeletonRow, {}, k)) : filtered.length > 0 ? filtered.map((canister, i) => /* @__PURE__ */ jsxRuntimeExports.jsx(
+            ) }) }) : !isSearchActive && (isLoading || isFetching) ? SKELETON_KEYS.map((k) => /* @__PURE__ */ jsxRuntimeExports.jsx(SkeletonRow, {}, k)) : filtered.length > 0 ? filtered.map((canister, i) => /* @__PURE__ */ jsxRuntimeExports.jsx(
               CanisterRow,
               {
                 canister,
@@ -909,6 +932,7 @@ function CanistersPage() {
             totalPages,
             onPrev: () => setPage((p) => Math.max(1, p - 1)),
             onNext: () => setPage((p) => Math.min(totalPages, p + 1)),
+            isLoading: isFetching,
             "data-ocid": "canisters.pagination"
           }
         ) }),

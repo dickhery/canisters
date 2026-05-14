@@ -1,8 +1,8 @@
-import { c as createLucideIcon, r as reactExports, j as jsxRuntimeExports, W as Wallet, n as formatIcp, C as CopyableId, t as truncateAccountId, B as Button, s as TooltipProvider, m as cn, v as Tooltip, w as TooltipTrigger, x as formatRelativeTime, y as TooltipContent, q as formatTimestamp } from "./index-BDHQLcS7.js";
-import { P as PaginationControls } from "./PaginationControls-bYkTdVfp.js";
-import { h as useGetMyAccount, a as useGetMyBalance, i as useGetTransactionHistory, S as Skeleton, j as useTransferIcp, L as Label, I as Input } from "./index-o6Tr2rW7.js";
-import { A as ArrowUpRight } from "./arrow-up-right-ravNB_z4.js";
-import { Z as Zap } from "./zap-DTiv5b0y.js";
+import { c as createLucideIcon, r as reactExports, j as jsxRuntimeExports, W as Wallet, n as formatIcp, C as CopyableId, x as truncateAccountId, B as Button, y as ChevronDown, z as TooltipProvider, m as cn, A as Tooltip, E as TooltipTrigger, G as formatRelativeTime, H as TooltipContent, q as formatTimestamp } from "./index-CARhM0P_.js";
+import { P as PaginationControls, C as ChevronRight } from "./PaginationControls-BAMw0_Kj.js";
+import { p as useGetMyAccount, a as useGetMyBalance, n as useGetTransactionHistory, S as Skeleton, q as useTransferIcp, L as Label, I as Input, r as useRecoverData } from "./index-ZGahKnFm.js";
+import { A as ArrowUpRight } from "./arrow-up-right-CGWf-wmI.js";
+import { T as TriangleAlert, Z as Zap } from "./zap-BkYrCvtr.js";
 /**
  * @license lucide-react v0.511.0 - ISC
  *
@@ -86,6 +86,149 @@ const __iconNode = [
   ["path", { d: "M6 12h16", key: "s4cdu5" }]
 ];
 const SendHorizontal = createLucideIcon("send-horizontal", __iconNode);
+function RecoverDataSection() {
+  const [expanded, setExpanded] = reactExports.useState(false);
+  const [oldPrincipal, setOldPrincipal] = reactExports.useState("");
+  const [state, setState] = reactExports.useState("idle");
+  const [migratedCount, setMigratedCount] = reactExports.useState(0);
+  const [errorMsg, setErrorMsg] = reactExports.useState("");
+  const { migrateFromPrincipal, actor } = useRecoverData();
+  const inputRef = reactExports.useRef(null);
+  const isValidPrincipal = oldPrincipal.trim().length > 0 && oldPrincipal.includes("-");
+  const handleMigrate = async () => {
+    if (!isValidPrincipal || state === "pending") return;
+    setState("pending");
+    setErrorMsg("");
+    try {
+      const { migrated } = await migrateFromPrincipal(oldPrincipal);
+      setMigratedCount(migrated);
+      setState("success");
+    } catch (err) {
+      setErrorMsg(
+        err instanceof Error ? err.message : "Unknown error occurred"
+      );
+      setState("error");
+    }
+  };
+  const handleReset = () => {
+    setState("idle");
+    setOldPrincipal("");
+    setErrorMsg("");
+    setMigratedCount(0);
+  };
+  return /* @__PURE__ */ jsxRuntimeExports.jsxs(
+    "div",
+    {
+      "data-ocid": "recover.card",
+      className: "terminal-card border border-primary/20 bg-card",
+      children: [
+        /* @__PURE__ */ jsxRuntimeExports.jsxs(
+          "button",
+          {
+            type: "button",
+            "data-ocid": "recover.toggle",
+            onClick: () => setExpanded((v) => !v),
+            className: "w-full border-b border-primary/20 px-4 py-2.5 flex items-center gap-2 hover:bg-primary/5 transition-colors duration-150 text-left",
+            "aria-expanded": expanded,
+            children: [
+              expanded ? /* @__PURE__ */ jsxRuntimeExports.jsx(ChevronDown, { className: "h-3.5 w-3.5 text-primary/60 shrink-0" }) : /* @__PURE__ */ jsxRuntimeExports.jsx(ChevronRight, { className: "h-3.5 w-3.5 text-primary/60 shrink-0" }),
+              /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "font-mono text-xs font-semibold text-primary/80 uppercase tracking-[0.2em]", children: "> RECOVER DATA FROM OLD PRINCIPAL" }),
+              /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "ml-auto font-mono text-[9px] text-muted-foreground/50 uppercase tracking-widest", children: "[MIGRATION TOOL]" })
+            ]
+          }
+        ),
+        expanded && /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "p-4 space-y-4 font-mono", children: [
+          /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex gap-2.5 border border-amber-500/30 bg-amber-500/5 px-3 py-2.5", children: [
+            /* @__PURE__ */ jsxRuntimeExports.jsx(TriangleAlert, { className: "h-3.5 w-3.5 text-amber-400 shrink-0 mt-0.5" }),
+            /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "space-y-1 text-[10px] text-muted-foreground tracking-[0.08em] leading-relaxed", children: [
+              /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "text-amber-400/90 uppercase font-semibold tracking-[0.15em]", children: "DATA RECOVERY WARNING" }),
+              /* @__PURE__ */ jsxRuntimeExports.jsx("p", { children: "Use this tool if your canisters disappeared after a domain or login change. Enter the principal ID you used previously — your old tracked canisters will be merged into your current account. Duplicates are skipped automatically." })
+            ] })
+          ] }),
+          state === "success" ? /* @__PURE__ */ jsxRuntimeExports.jsxs(
+            "div",
+            {
+              "data-ocid": "recover.success_state",
+              className: "flex flex-col items-center gap-3 py-8 text-center border border-accent/30 bg-accent/5",
+              children: [
+                /* @__PURE__ */ jsxRuntimeExports.jsx(CircleCheck, { className: "h-10 w-10 text-accent" }),
+                /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "font-mono text-sm font-semibold text-foreground uppercase tracking-[0.15em] retro-glow", children: "MIGRATION_COMPLETE" }),
+                /* @__PURE__ */ jsxRuntimeExports.jsxs("p", { className: "font-mono text-xs text-muted-foreground", children: [
+                  migratedCount,
+                  " canister",
+                  migratedCount !== 1 ? "s" : "",
+                  " ",
+                  "migrated to your current account."
+                ] }),
+                /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "font-mono text-[10px] text-primary/70 uppercase tracking-wider", children: "Navigate to Canisters to see your recovered data." }),
+                /* @__PURE__ */ jsxRuntimeExports.jsx(
+                  Button,
+                  {
+                    "data-ocid": "recover.reset_button",
+                    variant: "outline",
+                    size: "sm",
+                    className: "mt-2 font-mono text-xs tracking-[0.12em] uppercase h-8 border-border/60",
+                    onClick: handleReset,
+                    children: "[ESC] CLOSE"
+                  }
+                )
+              ]
+            }
+          ) : /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "space-y-3", children: [
+            /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "space-y-1.5", children: [
+              /* @__PURE__ */ jsxRuntimeExports.jsx(
+                Label,
+                {
+                  htmlFor: "old-principal",
+                  className: "font-mono text-[10px] text-muted-foreground uppercase tracking-[0.2em]",
+                  children: "OLD PRINCIPAL ID"
+                }
+              ),
+              /* @__PURE__ */ jsxRuntimeExports.jsx(
+                Input,
+                {
+                  id: "old-principal",
+                  ref: inputRef,
+                  "data-ocid": "recover.old_principal.input",
+                  placeholder: "xxxx-xxxxx-xxxxx-xxxxx-xxx (principal format)",
+                  value: oldPrincipal,
+                  onChange: (e) => {
+                    setOldPrincipal(e.target.value);
+                    if (state === "error") setState("idle");
+                  },
+                  disabled: state === "pending",
+                  className: "font-mono text-xs h-9 bg-background border-border/60 focus:border-primary"
+                }
+              ),
+              /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "font-mono text-[9px] text-muted-foreground/60 tracking-wider", children: "FIND YOUR OLD PRINCIPAL IN THE SIDEBAR AFTER LOGGING IN ON THE PREVIOUS URL" })
+            ] }),
+            state === "error" && /* @__PURE__ */ jsxRuntimeExports.jsxs(
+              "p",
+              {
+                "data-ocid": "recover.error_state",
+                className: "font-mono text-xs text-destructive bg-destructive/10 border border-destructive/40 px-3 py-1.5 uppercase tracking-[0.12em]",
+                children: [
+                  "ERR: ",
+                  errorMsg
+                ]
+              }
+            ),
+            /* @__PURE__ */ jsxRuntimeExports.jsx(
+              Button,
+              {
+                "data-ocid": "recover.migrate_button",
+                className: "w-full h-9 gap-2 font-mono text-xs tracking-[0.15em] uppercase",
+                disabled: !isValidPrincipal || state === "pending" || !actor,
+                onClick: handleMigrate,
+                children: state === "pending" ? "MIGRATING…" : "[ENTER] MIGRATE DATA"
+              }
+            )
+          ] })
+        ] })
+      ]
+    }
+  );
+}
 const DEFAULT_FORM = { recipient: "", amount: "", memo: "" };
 function SendIcpForm({
   balance,
@@ -400,6 +543,7 @@ function Account() {
             ]
           }
         ),
+        /* @__PURE__ */ jsxRuntimeExports.jsx(RecoverDataSection, {}),
         /* @__PURE__ */ jsxRuntimeExports.jsxs(
           "div",
           {

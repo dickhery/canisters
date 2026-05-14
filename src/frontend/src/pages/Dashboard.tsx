@@ -16,6 +16,7 @@ import {
   useGetMyAccount,
   useGetMyBalance,
   useGetRecentCanisters,
+  useGetTotalCycles,
   useListCanisters,
 } from "@/hooks/useBackend";
 import { useAddCanister } from "@/hooks/useCanisterMutations";
@@ -67,7 +68,9 @@ function StatCard({
             ─── {label} ───
           </p>
           {loading ? (
-            <Skeleton className="h-8 w-28" />
+            <span className="text-sm animate-pulse tracking-[0.15em] text-primary/70 font-mono">
+              [ CALCULATING... ]
+            </span>
           ) : (
             <p
               className={`font-mono text-2xl font-bold tabular-nums tracking-tight retro-glow ${accent}`}
@@ -401,12 +404,10 @@ export default function Dashboard() {
     useGetLowestCyclesCanisters();
 
   const totalCanisters = canistersPage?.total ?? 0n;
-  const canisters = canistersPage?.items ?? [];
-  // Use BigInt addition to avoid floating-point issues with large cycle counts
-  const totalCycles = canisters.reduce(
-    (sum, c) => sum + (c.cycleBalance ?? 0n),
-    0n,
-  );
+
+  const { data: totalCyclesData, isLoading: totalCyclesLoading } =
+    useGetTotalCycles();
+  const totalCycles = totalCyclesData ?? 0n;
 
   return (
     <div className="flex flex-col gap-5 p-4 lg:p-6 max-w-6xl mx-auto font-mono">
@@ -463,10 +464,18 @@ export default function Dashboard() {
         />
         <StatCard
           label="Total Cycles"
-          value={formatCycles(totalCycles)}
+          value={
+            totalCyclesLoading ? (
+              <span className="text-sm animate-pulse tracking-[0.15em] text-primary/70">
+                [ CYCLES LOADING... ]
+              </span>
+            ) : (
+              formatCycles(totalCycles)
+            )
+          }
           icon={TrendingUp}
           accent="text-primary"
-          loading={canistersLoading}
+          loading={false}
           data-ocid="dashboard.stat.total_cycles"
         />
         <StatCard

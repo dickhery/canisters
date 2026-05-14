@@ -4,6 +4,7 @@ import Nat8 "mo:core/Nat8";
 import Nat "mo:core/Nat";
 import Types "../types/ledger";
 import CommonTypes "../types/common";
+import Principal "mo:core/Principal";
 
 module {
   // ---------------------------------------------------------------------------

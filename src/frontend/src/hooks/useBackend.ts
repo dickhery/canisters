@@ -9,6 +9,7 @@ import type {
   Page_1,
   UserAccount,
 } from "@/backend.d";
+import { CanisterStatus } from "@/backend.d";
 import { useActor } from "@caffeineai/core-infrastructure";
 import { keepPreviousData, useQuery } from "@tanstack/react-query";
 
@@ -171,13 +172,47 @@ export function useGetLowestCyclesCanisters() {
   });
 }
 
+export function useGetTotalCycles() {
+  const { actor } = useActor(createActor);
+  return useQuery<bigint>({
+    queryKey: ["dashboard", "total-cycles"],
+    queryFn: async () => {
+      if (!actor) return 0n;
+      return actor.getTotalCycles();
+    },
+    enabled: !!actor,
+    staleTime: 30_000,
+    retry: 1,
+    retryDelay: 3_000,
+  });
+}
+
+export function useRecoverData() {
+  const { actor } = useActor(createActor);
+  return {
+    actor,
+    migrateFromPrincipal: async (
+      oldPrincipalText: string,
+    ): Promise<{ migrated: number }> => {
+      if (!actor) throw new Error("Not connected");
+      const { Principal } = await import("@icp-sdk/core/principal");
+      const oldPrincipal = Principal.fromText(oldPrincipalText.trim());
+      const result = await actor.migrateCanistersFromPrincipal(oldPrincipal);
+      if (result.__kind__ === "err") throw new Error(result.err);
+      return { migrated: Number(result.ok) };
+    },
+  };
+}
+
 /**
- * Fetches ALL tracked canisters across every page and filters them client-side.
- * Enabled only when query.trim().length > 0.
+ * Calls actor.searchCanisters(queryText) directly — a single backend call that
+ * filters all tracked canisters server-side and returns only matches.
  *
- * Strategy: fetch page 0 first to get the total count, then fan out to all
- * remaining pages in parallel, flatten, and filter — all inside one query so
- * React Query caches the full result set under the search key.
+ * The backend returns CanisterInfo[] which lacks a few fields present on
+ * CanisterSummary (status, fetchFailed, lastChecked).  We map them to safe
+ * defaults so the existing CanisterRow component works unchanged.
+ *
+ * Enabled only when query.trim().length > 0.
  */
 export function useSearchCanisters(query: string) {
   const { actor } = useActor(createActor);
@@ -188,37 +223,25 @@ export function useSearchCanisters(query: string) {
     queryFn: async () => {
       if (!actor) return [];
 
-      // 1. Fetch page 0 to get total count and first batch of items.
-      const firstPage = await actor.listCanisters(0n);
-      const total = Number(firstPage.total);
-      const pageSize = Number(firstPage.pageSize || 20n);
-      const totalPages = Math.max(1, Math.ceil(total / pageSize));
+      // Single call — backend filters all pages server-side.
+      const results = await actor.searchCanisters(trimmed);
 
-      let allItems: CanisterSummary[] = [...firstPage.items];
-
-      if (totalPages > 1) {
-        // 2. Fan out remaining pages in parallel.
-        const pageNums = Array.from({ length: totalPages - 1 }, (_, i) =>
-          BigInt(i + 1),
-        );
-        const pages = await Promise.all(
-          pageNums.map((p) => actor.listCanisters(p)),
-        );
-        for (const page of pages) {
-          allItems = allItems.concat(page.items);
-        }
-      }
-
-      // 3. Filter by query against name or canister ID.
-      const q = trimmed.toLowerCase();
-      return allItems.filter(
-        (c) =>
-          c.customName.toLowerCase().includes(q) ||
-          c.canisterId.toString().toLowerCase().includes(q),
-      );
+      // Map CanisterInfo → CanisterSummary with safe defaults for fields that
+      // the search endpoint doesn't return (they're available on detail fetch).
+      return results.map((c) => ({
+        canisterId: c.canisterId,
+        customName: c.customName,
+        cycleBalance: c.cachedCycleBalance,
+        isController: c.isController,
+        // CanisterInfo doesn't carry live status — use running as a safe default.
+        // The detail page will show the real status once opened.
+        status: CanisterStatus.running,
+        fetchFailed: false,
+        lastChecked: c.addedAt,
+      }));
     },
     enabled: !!actor && trimmed.length > 0,
-    staleTime: 30_000,
+    staleTime: 60_000,
     retry: 1,
     retryDelay: 3_000,
   });

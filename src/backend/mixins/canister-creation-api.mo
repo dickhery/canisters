@@ -10,6 +10,7 @@ import CreationTypes "../types/canister-creation";
 import CreationLib "../lib/canister-creation";
 import CanisterLib "../lib/canister";
 import LedgerLib "../lib/ledger";
+import Error "mo:core/Error";
 
 // Canister-creation API mixin.
 // Orchestrates: IC management create_canister → optional CMC seed top-up → auto-track.
@@ -148,7 +149,7 @@ mixin (
       });
       result.canister_id
     } catch (err) {
-      return #err("Failed to create canister: " # Error.message(err))
+      return #err("Failed to create canister: " # err.message())
     };
 
     // Step 2: Optionally seed the new canister with cycles via CMC top-up

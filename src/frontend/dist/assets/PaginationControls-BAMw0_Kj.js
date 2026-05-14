@@ -1,4 +1,4 @@
-import { c as createLucideIcon, j as jsxRuntimeExports, B as Button, m as cn } from "./index-BDHQLcS7.js";
+import { c as createLucideIcon, j as jsxRuntimeExports, B as Button, m as cn } from "./index-CARhM0P_.js";
 /**
  * @license lucide-react v0.511.0 - ISC
  *
@@ -20,6 +20,7 @@ function PaginationControls({
   totalPages,
   onPrev,
   onNext,
+  isLoading = false,
   className,
   "data-ocid": dataOcid
 }) {
@@ -40,7 +41,7 @@ function PaginationControls({
             variant: "outline",
             size: "sm",
             onClick: onPrev,
-            disabled: !canPrev,
+            disabled: !canPrev || isLoading,
             "data-ocid": dataOcid ? `${dataOcid}.pagination_prev` : void 0,
             className: "h-7 px-2 font-mono text-[10px] tracking-widest uppercase border-border/50 hover:border-primary/40",
             "aria-label": "Previous page",
@@ -63,7 +64,7 @@ function PaginationControls({
             variant: "outline",
             size: "sm",
             onClick: onNext,
-            disabled: !canNext,
+            disabled: !canNext || isLoading,
             "data-ocid": dataOcid ? `${dataOcid}.pagination_next` : void 0,
             className: "h-7 px-2 font-mono text-[10px] tracking-widest uppercase border-border/50 hover:border-primary/40",
             "aria-label": "Next page",
@@ -78,5 +79,6 @@ function PaginationControls({
   );
 }
 export {
+  ChevronRight as C,
   PaginationControls as P
 };

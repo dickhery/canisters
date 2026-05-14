@@ -1,20 +1,9 @@
-import { c as createLucideIcon, z as useParams, A as useQueryClient, r as reactExports, j as jsxRuntimeExports, L as Link, B as Button, C as CopyableId, o as formatCycles, q as formatTimestamp, E as truncatePrincipal, G as Check, X, n as formatIcp } from "./index-BDHQLcS7.js";
-import { S as StatusBadge, T as Trash2, P as Pencil } from "./StatusBadge-DAliPmHS.js";
-import { D as Dialog, a as DialogContent, b as DialogHeader, c as DialogTitle, e as DialogFooter } from "./dialog-g0aT-ydF.js";
-import { k as useGetAppPrincipal, l as useGetCanisterDetails, S as Skeleton, m as useTopUpCanister, n as useGetIcpXdrConversionRate, L as Label, I as Input, o as useTransferCycles, p as useRemoveController, i as useGetTransactionHistory, g as useRenameCanister, q as useAddController } from "./index-o6Tr2rW7.js";
-import { Z as Zap } from "./zap-DTiv5b0y.js";
-import { P as Plus } from "./plus-mvrwVDkf.js";
-/**
- * @license lucide-react v0.511.0 - ISC
- *
- * This source code is licensed under the ISC license.
- * See the LICENSE file in the root directory of this source tree.
- */
-const __iconNode$5 = [
-  ["path", { d: "m12 19-7-7 7-7", key: "1l729n" }],
-  ["path", { d: "M19 12H5", key: "x3x0zl" }]
-];
-const ArrowLeft = createLucideIcon("arrow-left", __iconNode$5);
+import { c as createLucideIcon, s as useParams, t as useQueryClient, r as reactExports, j as jsxRuntimeExports, L as Link, B as Button, C as CopyableId, o as formatCycles, q as formatTimestamp, v as truncatePrincipal, w as Check, X, n as formatIcp } from "./index-CARhM0P_.js";
+import { S as StatusBadge, T as Trash2, P as Pencil } from "./StatusBadge-BFabuyFT.js";
+import { D as Dialog, a as DialogContent, b as DialogHeader, c as DialogTitle, e as DialogFooter } from "./dialog-DJs-COiJ.js";
+import { h as useGetAppPrincipal, i as useGetCanisterDetails, S as Skeleton, j as useTopUpCanister, k as useGetIcpXdrConversionRate, L as Label, I as Input, l as useTransferCycles, m as useRemoveController, n as useGetTransactionHistory, g as useRenameCanister, o as useAddController } from "./index-ZGahKnFm.js";
+import { T as TriangleAlert, Z as Zap } from "./zap-BkYrCvtr.js";
+import { P as Plus } from "./plus-CiymDWN9.js";
 /**
  * @license lucide-react v0.511.0 - ISC
  *
@@ -22,12 +11,10 @@ const ArrowLeft = createLucideIcon("arrow-left", __iconNode$5);
  * See the LICENSE file in the root directory of this source tree.
  */
 const __iconNode$4 = [
-  ["path", { d: "m16 3 4 4-4 4", key: "1x1c3m" }],
-  ["path", { d: "M20 7H4", key: "zbl0bi" }],
-  ["path", { d: "m8 21-4-4 4-4", key: "h9nckh" }],
-  ["path", { d: "M4 17h16", key: "g4d7ey" }]
+  ["path", { d: "m12 19-7-7 7-7", key: "1l729n" }],
+  ["path", { d: "M19 12H5", key: "x3x0zl" }]
 ];
-const ArrowRightLeft = createLucideIcon("arrow-right-left", __iconNode$4);
+const ArrowLeft = createLucideIcon("arrow-left", __iconNode$4);
 /**
  * @license lucide-react v0.511.0 - ISC
  *
@@ -35,11 +22,12 @@ const ArrowRightLeft = createLucideIcon("arrow-right-left", __iconNode$4);
  * See the LICENSE file in the root directory of this source tree.
  */
 const __iconNode$3 = [
-  ["circle", { cx: "12", cy: "12", r: "10", key: "1mglay" }],
-  ["path", { d: "M12 16v-4", key: "1dtifu" }],
-  ["path", { d: "M12 8h.01", key: "e9boi3" }]
+  ["path", { d: "m16 3 4 4-4 4", key: "1x1c3m" }],
+  ["path", { d: "M20 7H4", key: "zbl0bi" }],
+  ["path", { d: "m8 21-4-4 4-4", key: "h9nckh" }],
+  ["path", { d: "M4 17h16", key: "g4d7ey" }]
 ];
-const Info = createLucideIcon("info", __iconNode$3);
+const ArrowRightLeft = createLucideIcon("arrow-right-left", __iconNode$3);
 /**
  * @license lucide-react v0.511.0 - ISC
  *
@@ -47,12 +35,11 @@ const Info = createLucideIcon("info", __iconNode$3);
  * See the LICENSE file in the root directory of this source tree.
  */
 const __iconNode$2 = [
-  ["path", { d: "M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8", key: "v9h5vc" }],
-  ["path", { d: "M21 3v5h-5", key: "1q7to0" }],
-  ["path", { d: "M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16", key: "3uifl3" }],
-  ["path", { d: "M8 16H3v5", key: "1cv678" }]
+  ["circle", { cx: "12", cy: "12", r: "10", key: "1mglay" }],
+  ["path", { d: "M12 16v-4", key: "1dtifu" }],
+  ["path", { d: "M12 8h.01", key: "e9boi3" }]
 ];
-const RefreshCw = createLucideIcon("refresh-cw", __iconNode$2);
+const Info = createLucideIcon("info", __iconNode$2);
 /**
  * @license lucide-react v0.511.0 - ISC
  *
@@ -60,15 +47,12 @@ const RefreshCw = createLucideIcon("refresh-cw", __iconNode$2);
  * See the LICENSE file in the root directory of this source tree.
  */
 const __iconNode$1 = [
-  [
-    "path",
-    {
-      d: "M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z",
-      key: "oel41y"
-    }
-  ]
+  ["path", { d: "M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8", key: "v9h5vc" }],
+  ["path", { d: "M21 3v5h-5", key: "1q7to0" }],
+  ["path", { d: "M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16", key: "3uifl3" }],
+  ["path", { d: "M8 16H3v5", key: "1cv678" }]
 ];
-const Shield = createLucideIcon("shield", __iconNode$1);
+const RefreshCw = createLucideIcon("refresh-cw", __iconNode$1);
 /**
  * @license lucide-react v0.511.0 - ISC
  *
@@ -79,14 +63,12 @@ const __iconNode = [
   [
     "path",
     {
-      d: "m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3",
-      key: "wmoenq"
+      d: "M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z",
+      key: "oel41y"
     }
-  ],
-  ["path", { d: "M12 9v4", key: "juzpu7" }],
-  ["path", { d: "M12 17h.01", key: "p32p05" }]
+  ]
 ];
-const TriangleAlert = createLucideIcon("triangle-alert", __iconNode);
+const Shield = createLucideIcon("shield", __iconNode);
 const FALLBACK_CYCLES_PER_ICP = 1e13;
 function icpToEstimatedCycles(icpAmount, cyclesPerIcp) {
   return BigInt(Math.floor(icpAmount * cyclesPerIcp));
@@ -885,7 +867,17 @@ function CanisterDetail() {
         ]
       }
     ),
-    isLoading ? /* @__PURE__ */ jsxRuntimeExports.jsx("div", { "data-ocid": "canister_detail.loading_state", children: /* @__PURE__ */ jsxRuntimeExports.jsx(DetailSkeleton, {}) }) : isError || !details ? /* @__PURE__ */ jsxRuntimeExports.jsx(DetailError, { canisterId }) : /* @__PURE__ */ jsxRuntimeExports.jsxs(jsxRuntimeExports.Fragment, { children: [
+    isLoading ? /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { "data-ocid": "canister_detail.loading_state", children: [
+      /* @__PURE__ */ jsxRuntimeExports.jsx(
+        "div",
+        {
+          className: "mb-3 px-3 py-1.5 border border-primary/20 bg-primary/5 font-mono text-[10px] tracking-[0.18em] uppercase",
+          "data-ocid": "canister_detail.controllers_loading_state",
+          children: /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "text-primary/70 animate-pulse", children: "[ CONTROLLERS LOADING... ]" })
+        }
+      ),
+      /* @__PURE__ */ jsxRuntimeExports.jsx(DetailSkeleton, {})
+    ] }) : isError || !details ? /* @__PURE__ */ jsxRuntimeExports.jsx(DetailError, { canisterId }) : /* @__PURE__ */ jsxRuntimeExports.jsxs(jsxRuntimeExports.Fragment, { children: [
       /* @__PURE__ */ jsxRuntimeExports.jsx(HeroStats, { details }),
       /* @__PURE__ */ jsxRuntimeExports.jsx(
         TopUpSection,

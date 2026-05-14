@@ -131,6 +131,8 @@ export const mockBackend: backendInterface = {
     { canisterId: pid3, customName: "Asset Storage", cycleBalance: BigInt("1200000000000"), isController: true, lastInteractedAt: BigInt(Date.now() * 1_000_000 - 1 * 3600 * 1_000_000_000) },
   ],
   withdrawCyclesTo: async (_destination, _amount): Promise<void> => {},
+  migrateCanistersFromPrincipal: async (_oldPrincipal) => ({ __kind__: "ok", ok: BigInt(3) }),
+  getTotalCycles: async (): Promise<bigint> => BigInt("9480000000000"),
   searchCanisters: async (queryText: string): Promise<CanisterInfo[]> => {
     const q = queryText.toLowerCase();
     return sampleCanisters

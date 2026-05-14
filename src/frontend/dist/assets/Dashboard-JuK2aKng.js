@@ -1,8 +1,8 @@
-import { c as createLucideIcon, r as reactExports, j as jsxRuntimeExports, n as formatIcp, B as Button, H as useInternetIdentity, S as Server, o as formatCycles, W as Wallet, L as Link, C as CopyableId } from "./index-BDHQLcS7.js";
-import { D as Dialog, a as DialogContent, b as DialogHeader, c as DialogTitle } from "./dialog-g0aT-ydF.js";
-import { a as useGetMyBalance, j as useTransferIcp, L as Label, I as Input, k as useGetAppPrincipal, c as useListCanisters, h as useGetMyAccount, r as useGetRecentCanisters, s as useGetLowestCyclesCanisters, S as Skeleton, e as useAddCanister } from "./index-o6Tr2rW7.js";
-import { P as Plus } from "./plus-mvrwVDkf.js";
-import { A as ArrowUpRight } from "./arrow-up-right-ravNB_z4.js";
+import { c as createLucideIcon, r as reactExports, j as jsxRuntimeExports, n as formatIcp, B as Button, I as useInternetIdentity, S as Server, o as formatCycles, W as Wallet, L as Link, C as CopyableId } from "./index-CARhM0P_.js";
+import { D as Dialog, a as DialogContent, b as DialogHeader, c as DialogTitle } from "./dialog-DJs-COiJ.js";
+import { a as useGetMyBalance, q as useTransferIcp, L as Label, I as Input, h as useGetAppPrincipal, c as useListCanisters, p as useGetMyAccount, s as useGetRecentCanisters, t as useGetLowestCyclesCanisters, v as useGetTotalCycles, S as Skeleton, e as useAddCanister } from "./index-ZGahKnFm.js";
+import { P as Plus } from "./plus-CiymDWN9.js";
+import { A as ArrowUpRight } from "./arrow-up-right-CGWf-wmI.js";
 /**
  * @license lucide-react v0.511.0 - ISC
  *
@@ -255,7 +255,7 @@ function StatCard({
             label,
             " ───"
           ] }),
-          loading ? /* @__PURE__ */ jsxRuntimeExports.jsx(Skeleton, { className: "h-8 w-28" }) : /* @__PURE__ */ jsxRuntimeExports.jsx(
+          loading ? /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "text-sm animate-pulse tracking-[0.15em] text-primary/70 font-mono", children: "[ CALCULATING... ]" }) : /* @__PURE__ */ jsxRuntimeExports.jsx(
             "p",
             {
               className: `font-mono text-2xl font-bold tabular-nums tracking-tight retro-glow ${accent}`,
@@ -517,11 +517,8 @@ function Dashboard() {
   const { data: recentCanisters, isLoading: recentLoading } = useGetRecentCanisters();
   const { data: lowestCanisters, isLoading: lowestLoading } = useGetLowestCyclesCanisters();
   const totalCanisters = (canistersPage == null ? void 0 : canistersPage.total) ?? 0n;
-  const canisters = (canistersPage == null ? void 0 : canistersPage.items) ?? [];
-  const totalCycles = canisters.reduce(
-    (sum, c) => sum + (c.cycleBalance ?? 0n),
-    0n
-  );
+  const { data: totalCyclesData, isLoading: totalCyclesLoading } = useGetTotalCycles();
+  const totalCycles = totalCyclesData ?? 0n;
   return /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex flex-col gap-5 p-4 lg:p-6 max-w-6xl mx-auto font-mono", children: [
     /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "terminal-card terminal-card-full bg-card px-4 py-3 border border-border/60", children: /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex items-center justify-between gap-4", children: [
       /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { children: [
@@ -580,10 +577,10 @@ function Dashboard() {
             StatCard,
             {
               label: "Total Cycles",
-              value: formatCycles(totalCycles),
+              value: totalCyclesLoading ? /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "text-sm animate-pulse tracking-[0.15em] text-primary/70", children: "[ CYCLES LOADING... ]" }) : formatCycles(totalCycles),
               icon: TrendingUp,
               accent: "text-primary",
-              loading: canistersLoading,
+              loading: false,
               "data-ocid": "dashboard.stat.total_cycles"
             }
           ),

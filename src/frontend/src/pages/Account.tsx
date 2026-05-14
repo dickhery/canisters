@@ -15,6 +15,7 @@ import {
   useGetMyAccount,
   useGetMyBalance,
   useGetTransactionHistory,
+  useRecoverData,
 } from "@/hooks/useBackend";
 import { useTransferIcp } from "@/hooks/useCanisterMutations";
 import {
@@ -25,8 +26,11 @@ import {
 } from "@/lib/format";
 import { cn } from "@/lib/utils";
 import {
+  AlertTriangle,
   ArrowUpRight,
   CheckCircle2,
+  ChevronDown,
+  ChevronRight,
   Clock,
   FileText,
   Layers,
@@ -34,7 +38,170 @@ import {
   Wallet,
   Zap,
 } from "lucide-react";
-import { useState } from "react";
+import { useRef, useState } from "react";
+
+// ─── Recover Data Section ─────────────────────────────────────────────────
+
+type RecoverState = "idle" | "pending" | "success" | "error";
+
+function RecoverDataSection() {
+  const [expanded, setExpanded] = useState(false);
+  const [oldPrincipal, setOldPrincipal] = useState("");
+  const [state, setState] = useState<RecoverState>("idle");
+  const [migratedCount, setMigratedCount] = useState(0);
+  const [errorMsg, setErrorMsg] = useState("");
+  const { migrateFromPrincipal, actor } = useRecoverData();
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  // Basic validation: non-empty and contains hyphens (principal format)
+  const isValidPrincipal =
+    oldPrincipal.trim().length > 0 && oldPrincipal.includes("-");
+
+  const handleMigrate = async () => {
+    if (!isValidPrincipal || state === "pending") return;
+    setState("pending");
+    setErrorMsg("");
+    try {
+      const { migrated } = await migrateFromPrincipal(oldPrincipal);
+      setMigratedCount(migrated);
+      setState("success");
+    } catch (err: unknown) {
+      setErrorMsg(
+        err instanceof Error ? err.message : "Unknown error occurred",
+      );
+      setState("error");
+    }
+  };
+
+  const handleReset = () => {
+    setState("idle");
+    setOldPrincipal("");
+    setErrorMsg("");
+    setMigratedCount(0);
+  };
+
+  return (
+    <div
+      data-ocid="recover.card"
+      className="terminal-card border border-primary/20 bg-card"
+    >
+      {/* Collapsible header */}
+      <button
+        type="button"
+        data-ocid="recover.toggle"
+        onClick={() => setExpanded((v) => !v)}
+        className="w-full border-b border-primary/20 px-4 py-2.5 flex items-center gap-2 hover:bg-primary/5 transition-colors duration-150 text-left"
+        aria-expanded={expanded}
+      >
+        {expanded ? (
+          <ChevronDown className="h-3.5 w-3.5 text-primary/60 shrink-0" />
+        ) : (
+          <ChevronRight className="h-3.5 w-3.5 text-primary/60 shrink-0" />
+        )}
+        <span className="font-mono text-xs font-semibold text-primary/80 uppercase tracking-[0.2em]">
+          &gt; RECOVER DATA FROM OLD PRINCIPAL
+        </span>
+        <span className="ml-auto font-mono text-[9px] text-muted-foreground/50 uppercase tracking-widest">
+          [MIGRATION TOOL]
+        </span>
+      </button>
+
+      {expanded && (
+        <div className="p-4 space-y-4 font-mono">
+          {/* Warning banner */}
+          <div className="flex gap-2.5 border border-amber-500/30 bg-amber-500/5 px-3 py-2.5">
+            <AlertTriangle className="h-3.5 w-3.5 text-amber-400 shrink-0 mt-0.5" />
+            <div className="space-y-1 text-[10px] text-muted-foreground tracking-[0.08em] leading-relaxed">
+              <p className="text-amber-400/90 uppercase font-semibold tracking-[0.15em]">
+                DATA RECOVERY WARNING
+              </p>
+              <p>
+                Use this tool if your canisters disappeared after a domain or
+                login change. Enter the principal ID you used previously — your
+                old tracked canisters will be merged into your current account.
+                Duplicates are skipped automatically.
+              </p>
+            </div>
+          </div>
+
+          {state === "success" ? (
+            <div
+              data-ocid="recover.success_state"
+              className="flex flex-col items-center gap-3 py-8 text-center border border-accent/30 bg-accent/5"
+            >
+              <CheckCircle2 className="h-10 w-10 text-accent" />
+              <p className="font-mono text-sm font-semibold text-foreground uppercase tracking-[0.15em] retro-glow">
+                MIGRATION_COMPLETE
+              </p>
+              <p className="font-mono text-xs text-muted-foreground">
+                {migratedCount} canister{migratedCount !== 1 ? "s" : ""}{" "}
+                migrated to your current account.
+              </p>
+              <p className="font-mono text-[10px] text-primary/70 uppercase tracking-wider">
+                Navigate to Canisters to see your recovered data.
+              </p>
+              <Button
+                data-ocid="recover.reset_button"
+                variant="outline"
+                size="sm"
+                className="mt-2 font-mono text-xs tracking-[0.12em] uppercase h-8 border-border/60"
+                onClick={handleReset}
+              >
+                [ESC] CLOSE
+              </Button>
+            </div>
+          ) : (
+            <div className="space-y-3">
+              <div className="space-y-1.5">
+                <Label
+                  htmlFor="old-principal"
+                  className="font-mono text-[10px] text-muted-foreground uppercase tracking-[0.2em]"
+                >
+                  OLD PRINCIPAL ID
+                </Label>
+                <Input
+                  id="old-principal"
+                  ref={inputRef}
+                  data-ocid="recover.old_principal.input"
+                  placeholder="xxxx-xxxxx-xxxxx-xxxxx-xxx (principal format)"
+                  value={oldPrincipal}
+                  onChange={(e) => {
+                    setOldPrincipal(e.target.value);
+                    if (state === "error") setState("idle");
+                  }}
+                  disabled={state === "pending"}
+                  className="font-mono text-xs h-9 bg-background border-border/60 focus:border-primary"
+                />
+                <p className="font-mono text-[9px] text-muted-foreground/60 tracking-wider">
+                  FIND YOUR OLD PRINCIPAL IN THE SIDEBAR AFTER LOGGING IN ON THE
+                  PREVIOUS URL
+                </p>
+              </div>
+
+              {state === "error" && (
+                <p
+                  data-ocid="recover.error_state"
+                  className="font-mono text-xs text-destructive bg-destructive/10 border border-destructive/40 px-3 py-1.5 uppercase tracking-[0.12em]"
+                >
+                  ERR: {errorMsg}
+                </p>
+              )}
+
+              <Button
+                data-ocid="recover.migrate_button"
+                className="w-full h-9 gap-2 font-mono text-xs tracking-[0.15em] uppercase"
+                disabled={!isValidPrincipal || state === "pending" || !actor}
+                onClick={handleMigrate}
+              >
+                {state === "pending" ? "MIGRATING…" : "[ENTER] MIGRATE DATA"}
+              </Button>
+            </div>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
 
 // ─── Transfer Form ─────────────────────────────────────────────────────────
 
@@ -418,6 +585,9 @@ export default function Account() {
           />
         </div>
       </div>
+
+      {/* Recover Data */}
+      <RecoverDataSection />
 
       {/* Transaction history */}
       <div

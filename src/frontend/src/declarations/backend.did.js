@@ -94,6 +94,7 @@ export const Page = IDL.Record({
   'pageSize' : IDL.Nat,
   'items' : IDL.Vec(CanisterSummary),
 });
+export const Result_1 = IDL.Variant({ 'ok' : IDL.Nat, 'err' : IDL.Text });
 export const CanisterInfo = IDL.Record({
   'cachedCycleBalance' : Cycles,
   'addedAt' : Timestamp,
@@ -103,7 +104,6 @@ export const CanisterInfo = IDL.Record({
   'canisterId' : CanisterId,
 });
 export const Result_2 = IDL.Variant({ 'ok' : Cycles, 'err' : IDL.Text });
-export const Result_1 = IDL.Variant({ 'ok' : IDL.Nat, 'err' : IDL.Text });
 export const Result = IDL.Variant({ 'ok' : IDL.Nat64, 'err' : IDL.Text });
 
 export const idlService = IDL.Service({
@@ -118,8 +118,10 @@ export const idlService = IDL.Service({
   'getMyAccount' : IDL.Func([], [UserAccount], []),
   'getMyBalance' : IDL.Func([], [E8s], []),
   'getRecentCanisters' : IDL.Func([], [IDL.Vec(DashboardItem)], []),
+  'getTotalCycles' : IDL.Func([], [IDL.Nat], []),
   'getTransactionHistory' : IDL.Func([IDL.Nat], [Page_1], []),
   'listCanisters' : IDL.Func([IDL.Nat], [Page], []),
+  'migrateCanistersFromPrincipal' : IDL.Func([IDL.Principal], [Result_1], []),
   'removeCanister' : IDL.Func([CanisterId], [Result_3], []),
   'removeController' : IDL.Func([CanisterId, IDL.Principal], [Result_3], []),
   'renameCanister' : IDL.Func([CanisterId, IDL.Text], [Result_3], []),
@@ -223,6 +225,7 @@ export const idlFactory = ({ IDL }) => {
     'pageSize' : IDL.Nat,
     'items' : IDL.Vec(CanisterSummary),
   });
+  const Result_1 = IDL.Variant({ 'ok' : IDL.Nat, 'err' : IDL.Text });
   const CanisterInfo = IDL.Record({
     'cachedCycleBalance' : Cycles,
     'addedAt' : Timestamp,
@@ -232,7 +235,6 @@ export const idlFactory = ({ IDL }) => {
     'canisterId' : CanisterId,
   });
   const Result_2 = IDL.Variant({ 'ok' : Cycles, 'err' : IDL.Text });
-  const Result_1 = IDL.Variant({ 'ok' : IDL.Nat, 'err' : IDL.Text });
   const Result = IDL.Variant({ 'ok' : IDL.Nat64, 'err' : IDL.Text });
   
   return IDL.Service({
@@ -251,8 +253,10 @@ export const idlFactory = ({ IDL }) => {
     'getMyAccount' : IDL.Func([], [UserAccount], []),
     'getMyBalance' : IDL.Func([], [E8s], []),
     'getRecentCanisters' : IDL.Func([], [IDL.Vec(DashboardItem)], []),
+    'getTotalCycles' : IDL.Func([], [IDL.Nat], []),
     'getTransactionHistory' : IDL.Func([IDL.Nat], [Page_1], []),
     'listCanisters' : IDL.Func([IDL.Nat], [Page], []),
+    'migrateCanistersFromPrincipal' : IDL.Func([IDL.Principal], [Result_1], []),
     'removeCanister' : IDL.Func([CanisterId], [Result_3], []),
     'removeController' : IDL.Func([CanisterId, IDL.Principal], [Result_3], []),
     'renameCanister' : IDL.Func([CanisterId, IDL.Text], [Result_3], []),
