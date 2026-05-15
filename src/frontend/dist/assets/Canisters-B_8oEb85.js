@@ -1,8 +1,8 @@
-import { c as createLucideIcon, r as reactExports, j as jsxRuntimeExports, n as formatIcp, o as formatCycles, B as Button, T as Terminal, X, p as useNavigate, C as CopyableId, q as formatTimestamp, m as cn } from "./index-CARhM0P_.js";
-import { P as PaginationControls } from "./PaginationControls-BAMw0_Kj.js";
-import { S as StatusBadge, T as Trash2, P as Pencil } from "./StatusBadge-BFabuyFT.js";
-import { D as Dialog, a as DialogContent, b as DialogHeader, c as DialogTitle, d as DialogDescription, e as DialogFooter } from "./dialog-DJs-COiJ.js";
-import { u as useGetCreationCostEstimate, a as useGetMyBalance, b as useCreateCanister, L as Label, I as Input, c as useListCanisters, d as useSearchCanisters, S as Skeleton, e as useAddCanister, f as useRemoveCanister, g as useRenameCanister } from "./index-ZGahKnFm.js";
+import { c as createLucideIcon, r as reactExports, j as jsxRuntimeExports, n as formatIcp, o as formatCycles, B as Button, T as Terminal, X, p as useNavigate, C as CopyableId, q as formatTimestamp, m as cn } from "./index-BkGz-69k.js";
+import { P as PaginationControls } from "./PaginationControls-B33dNddM.js";
+import { S as StatusBadge, T as Trash2, P as Pencil } from "./StatusBadge-C0edLt6d.js";
+import { D as Dialog, a as DialogContent, b as DialogHeader, c as DialogTitle, d as DialogDescription, e as DialogFooter } from "./dialog-BL6orJzL.js";
+import { u as useGetCreationCostEstimate, a as useGetMyBalance, b as useCreateCanister, L as Label, I as Input, c as useListCanisters, d as useSearchCanisters, S as Skeleton, e as useAddCanister, f as useRemoveCanister, g as useRenameCanister } from "./index-DQF_mRsu.js";
 /**
  * @license lucide-react v0.511.0 - ISC
  *
@@ -716,6 +716,7 @@ function CanistersPage() {
   const { updateAndGet: getGuardedBalance } = useSavedCycleBalances();
   const { data, isLoading, isFetching } = useListCanisters(BigInt(page - 1));
   const isSearchActive = search.trim().length > 0;
+  const isListInitialLoading = !data && (isLoading || isFetching);
   const isTyping = search.trim() !== debouncedSearch;
   const { data: searchResults, isLoading: isQueryLoading } = useSearchCanisters(debouncedSearch);
   const isSearchLoading = isSearchActive && (isTyping || isQueryLoading);
@@ -762,7 +763,7 @@ function CanistersPage() {
             /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { children: [
               /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "font-mono text-[9px] text-primary/40 tracking-widest select-none mb-0.5", children: "┌─[ CANISTER REGISTRY ]" }),
               /* @__PURE__ */ jsxRuntimeExports.jsx("h1", { className: "font-mono text-base font-bold text-primary tracking-[0.2em] uppercase retro-glow", children: ">_ CANISTERS" }),
-              /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "font-mono text-[10px] text-muted-foreground mt-0.5 tracking-[0.12em]", children: isLoading ? "LOADING…" : `${total} CANISTER${total !== 1 ? "S" : ""} TRACKED` })
+              /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "font-mono text-[10px] text-muted-foreground mt-0.5 tracking-[0.12em]", children: isListInitialLoading ? "LOADING…" : `${total} CANISTER${total !== 1 ? "S" : ""} TRACKED` })
             ] }),
             /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex items-center gap-2 flex-wrap", children: [
               /* @__PURE__ */ jsxRuntimeExports.jsxs(
@@ -817,7 +818,7 @@ function CanistersPage() {
           ] })
         ] }),
         /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex-1 overflow-x-auto", children: [
-          !isSearchActive && isLoading && /* @__PURE__ */ jsxRuntimeExports.jsx(
+          !isSearchActive && isListInitialLoading && /* @__PURE__ */ jsxRuntimeExports.jsx(
             "div",
             {
               className: "px-3 py-1.5 border-b border-primary/20 font-mono text-[10px] tracking-[0.18em] uppercase",
@@ -825,7 +826,7 @@ function CanistersPage() {
               children: /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "text-primary retro-glow animate-pulse", children: "[ PAGE LOADING... ]" })
             }
           ),
-          !isSearchActive && isFetching && !isLoading && /* @__PURE__ */ jsxRuntimeExports.jsx(
+          !isSearchActive && isFetching && !isListInitialLoading && /* @__PURE__ */ jsxRuntimeExports.jsx(
             "div",
             {
               className: "px-3 py-1.5 border-b border-primary/20 font-mono text-[10px] tracking-[0.18em] uppercase",
@@ -857,7 +858,7 @@ function CanistersPage() {
                 "data-ocid": "canisters.loading_state",
                 children: /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "text-primary retro-glow animate-pulse text-xs tracking-[0.2em] uppercase", children: "[SEARCHING...]" })
               }
-            ) }) }) : !isSearchActive && (isLoading || isFetching) ? SKELETON_KEYS.map((k) => /* @__PURE__ */ jsxRuntimeExports.jsx(SkeletonRow, {}, k)) : filtered.length > 0 ? filtered.map((canister, i) => /* @__PURE__ */ jsxRuntimeExports.jsx(
+            ) }) }) : !isSearchActive && isListInitialLoading ? SKELETON_KEYS.map((k) => /* @__PURE__ */ jsxRuntimeExports.jsx(SkeletonRow, {}, k)) : filtered.length > 0 ? filtered.map((canister, i) => /* @__PURE__ */ jsxRuntimeExports.jsx(
               CanisterRow,
               {
                 canister,
@@ -925,7 +926,7 @@ function CanistersPage() {
             ) }) }) })
           ] })
         ] }),
-        !isLoading && total > 0 && !isSearchActive && /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "border-t border-border/40 px-4 py-2 bg-card/30", children: /* @__PURE__ */ jsxRuntimeExports.jsx(
+        !isListInitialLoading && total > 0 && !isSearchActive && /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "border-t border-border/40 px-4 py-2 bg-card/30", children: /* @__PURE__ */ jsxRuntimeExports.jsx(
           PaginationControls,
           {
             page,

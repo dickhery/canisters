@@ -1,8 +1,14 @@
 import Map "mo:core/Map";
 import List "mo:core/List";
+import Blob "mo:core/Blob";
+import Char "mo:core/Char";
+import Error "mo:core/Error";
 import Nat64 "mo:core/Nat64";
+import Nat32 "mo:core/Nat32";
 import Array "mo:core/Array";
 import Nat8 "mo:core/Nat8";
+import Principal "mo:core/Principal";
+import Text "mo:core/Text";
 import Time "mo:core/Time";
 import Runtime "mo:core/Runtime";
 import CommonTypes "../types/common";
@@ -299,11 +305,11 @@ mixin (
 
   func hexNibble(c : Char) : Nat {
     if (c >= '0' and c <= '9') {
-      (Char.toNat32(c) - Char.toNat32('0')).toNat()
+      (c.toNat32() - '0'.toNat32()).toNat()
     } else if (c >= 'a' and c <= 'f') {
-      (Char.toNat32(c) - Char.toNat32('a')).toNat() + 10
+      (c.toNat32() - 'a'.toNat32()).toNat() + 10
     } else if (c >= 'A' and c <= 'F') {
-      (Char.toNat32(c) - Char.toNat32('A')).toNat() + 10
+      (c.toNat32() - 'A'.toNat32()).toNat() + 10
     } else { 0 }
   };
 
@@ -311,6 +317,6 @@ mixin (
   // errorMessage — extract a text description from a caught Error
   // ---------------------------------------------------------------------------
   func errorMessage(err : Error) : Text {
-    Error.message(err)
+    err.message()
   };
 };

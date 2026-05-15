@@ -12,7 +12,7 @@ import CanisterCreationApi "mixins/canister-creation-api";
 
 
 
-actor self {
+persistent actor self {
   // --- Shared state ---
 
   // Per-user list of tracked canisters: UserId → [TrackedCanister]

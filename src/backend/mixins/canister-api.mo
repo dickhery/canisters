@@ -135,35 +135,41 @@ mixin (
 
   // Get a paginated list of tracked canisters using cached data (no live IC calls).
   // Live data is fetched lazily: on detail-page open and via getTotalCycles.
-  // Returning cached data avoids sequential await chains that can exceed IC message time budgets.
-  public shared ({ caller }) func listCanisters(
+  // Returning cached data as a query avoids both cycle burn and update-call latency.
+  public shared query ({ caller }) func listCanisters(
     page : Nat,
   ) : async CommonTypes.Page<CanisterTypes.CanisterSummary> {
     if (caller.isAnonymous()) Runtime.trap("Anonymous caller not allowed");
     let pageSize = 20;
-    let canisters = getUserCanisters(caller);
     let now = Time.now();
-    let infoPage = CanisterLib.listCanisters(canisters, page, pageSize, selfPrincipal);
-    let items = infoPage.items;
-    // Build summaries from cached data — no IC calls, no await, no timeout risk.
-    let summaries = items.map(
-      func(info : CanisterTypes.CanisterInfo) : CanisterTypes.CanisterSummary {
+    switch (userCanisters.get(caller)) {
+      case null {
+        { items = []; total = 0; page; pageSize };
+      };
+      case (?canisters) {
+        let infoPage = CanisterLib.listCanisters(canisters, page, pageSize, selfPrincipal);
+        let items = infoPage.items;
+        // Build summaries from cached data — no IC calls, no await, no timeout risk.
+        let summaries = items.map(
+          func(info : CanisterTypes.CanisterInfo) : CanisterTypes.CanisterSummary {
+            {
+              canisterId = info.canisterId;
+              customName = info.customName;
+              cycleBalance = info.cachedCycleBalance;
+              status = #running;
+              lastChecked = now;
+              fetchFailed = false;
+              isController = info.isController;
+            }
+          }
+        );
         {
-          canisterId = info.canisterId;
-          customName = info.customName;
-          cycleBalance = info.cachedCycleBalance;
-          status = #running;
-          lastChecked = now;
-          fetchFailed = false;
-          isController = info.isController;
-        }
-      }
-    );
-    {
-      items = summaries;
-      total = infoPage.total;
-      page = infoPage.page;
-      pageSize = infoPage.pageSize;
+          items = summaries;
+          total = infoPage.total;
+          page = infoPage.page;
+          pageSize = infoPage.pageSize;
+        };
+      };
     };
   };
 
@@ -290,8 +296,10 @@ mixin (
   // Search ALL tracked canisters by name or canister ID (case-insensitive); returns flat array of CanisterInfo
   public shared query ({ caller }) func searchCanisters(queryText : Text) : async [CanisterTypes.CanisterInfo] {
     if (caller.isAnonymous()) Runtime.trap("Anonymous caller not allowed");
-    let canisters = getUserCanisters(caller);
-    CanisterLib.searchCanisters(canisters, queryText, selfPrincipal);
+    switch (userCanisters.get(caller)) {
+      case null [];
+      case (?canisters) CanisterLib.searchCanisters(canisters, queryText, selfPrincipal);
+    };
   };
 
   // Return up to 5 most recently interacted canisters for the dashboard

@@ -139,7 +139,7 @@ service : {
   getRecentCanisters: () -> (vec DashboardItem);
   getTotalCycles: () -> (nat);
   getTransactionHistory: (page: nat) -> (Page_1);
-  listCanisters: (page: nat) -> (Page);
+  listCanisters: (page: nat) -> (Page) query;
   migrateCanistersFromPrincipal: (oldPrincipal: principal) -> (Result_1);
   removeCanister: (canisterId: CanisterId) -> (Result_3);
   removeController: (canisterId: CanisterId, controller: principal) ->

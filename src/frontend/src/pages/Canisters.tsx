@@ -546,6 +546,7 @@ export default function CanistersPage() {
   // Server-wide search — single backend call via searchCanisters().
   // Uses the debounced value so we don't fire on every keystroke.
   const isSearchActive = search.trim().length > 0;
+  const isListInitialLoading = !data && (isLoading || isFetching);
   // Show loading while the user is still typing (search ≠ debouncedSearch)
   // OR while the debounced query is in-flight.
   const isTyping = search.trim() !== debouncedSearch;
@@ -612,7 +613,7 @@ export default function CanistersPage() {
               &gt;_ CANISTERS
             </h1>
             <p className="font-mono text-[10px] text-muted-foreground mt-0.5 tracking-[0.12em]">
-              {isLoading
+              {isListInitialLoading
                 ? "LOADING…"
                 : `${total} CANISTER${total !== 1 ? "S" : ""} TRACKED`}
             </p>
@@ -665,7 +666,7 @@ export default function CanistersPage() {
       {/* Table */}
       <div className="flex-1 overflow-x-auto">
         {/* Page loading indicator */}
-        {!isSearchActive && isLoading && (
+        {!isSearchActive && isListInitialLoading && (
           <div
             className="px-3 py-1.5 border-b border-primary/20 font-mono text-[10px] tracking-[0.18em] uppercase"
             data-ocid="canisters.page_loading_state"
@@ -676,7 +677,7 @@ export default function CanistersPage() {
           </div>
         )}
         {/* Page switch loading indicator — shown when navigating between pages */}
-        {!isSearchActive && isFetching && !isLoading && (
+        {!isSearchActive && isFetching && !isListInitialLoading && (
           <div
             className="px-3 py-1.5 border-b border-primary/20 font-mono text-[10px] tracking-[0.18em] uppercase"
             data-ocid="canisters.page_switch_loading_state"
@@ -730,7 +731,7 @@ export default function CanistersPage() {
                   </div>
                 </td>
               </tr>
-            ) : !isSearchActive && (isLoading || isFetching) ? (
+            ) : !isSearchActive && isListInitialLoading ? (
               SKELETON_KEYS.map((k) => <SkeletonRow key={k} />)
             ) : filtered.length > 0 ? (
               filtered.map((canister, i) => (
@@ -803,7 +804,7 @@ export default function CanistersPage() {
       </div>
 
       {/* Pagination — hidden during search so results span all pages */}
-      {!isLoading && total > 0 && !isSearchActive && (
+      {!isListInitialLoading && total > 0 && !isSearchActive && (
         <div className="border-t border-border/40 px-4 py-2 bg-card/30">
           <PaginationControls
             page={page}

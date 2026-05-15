@@ -1,6 +1,7 @@
 import Map "mo:core/Map";
 import List "mo:core/List";
 import Nat64 "mo:core/Nat64";
+import Principal "mo:core/Principal";
 import Time "mo:core/Time";
 import Runtime "mo:core/Runtime";
 import CommonTypes "../types/common";

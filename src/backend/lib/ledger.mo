@@ -1,7 +1,9 @@
 import List "mo:core/List";
 import Array "mo:core/Array";
+import Blob "mo:core/Blob";
 import Nat8 "mo:core/Nat8";
 import Nat "mo:core/Nat";
+import Text "mo:core/Text";
 import Types "../types/ledger";
 import CommonTypes "../types/common";
 import Principal "mo:core/Principal";
@@ -14,7 +16,7 @@ module {
   // ---------------------------------------------------------------------------
   public func principalToSubaccount(userId : Types.UserId) : Blob {
     let principalBytes = userId.toBlob();
-    let bytes = Blob.toArray(principalBytes);
+    let bytes = principalBytes.toArray();
     let len = bytes.size();
     let subBytes = Array.tabulate<Nat8>(32, func(i) {
       if (i == 0) { Nat8.fromNat(len) }
@@ -98,7 +100,7 @@ module {
   // Hex encoding helper
   // ---------------------------------------------------------------------------
   func blobToHex(b : Blob) : Text {
-    let bytes = Blob.toArray(b);
+    let bytes = b.toArray();
     let hexChars = "0123456789abcdef".toArray();
     let chars = Array.tabulate(bytes.size() * 2, func(i) : Char {
       let byte = bytes[i / 2];
