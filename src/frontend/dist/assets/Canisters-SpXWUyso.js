@@ -1,8 +1,8 @@
-import { c as createLucideIcon, r as reactExports, j as jsxRuntimeExports, n as formatIcp, o as formatCycles, B as Button, T as Terminal, X, p as useNavigate, C as CopyableId, q as formatTimestamp, m as cn } from "./index-BkGz-69k.js";
-import { P as PaginationControls } from "./PaginationControls-B33dNddM.js";
-import { S as StatusBadge, T as Trash2, P as Pencil } from "./StatusBadge-C0edLt6d.js";
-import { D as Dialog, a as DialogContent, b as DialogHeader, c as DialogTitle, d as DialogDescription, e as DialogFooter } from "./dialog-BL6orJzL.js";
-import { u as useGetCreationCostEstimate, a as useGetMyBalance, b as useCreateCanister, L as Label, I as Input, c as useListCanisters, d as useSearchCanisters, S as Skeleton, e as useAddCanister, f as useRemoveCanister, g as useRenameCanister } from "./index-DQF_mRsu.js";
+import { c as createLucideIcon, r as reactExports, j as jsxRuntimeExports, n as formatIcp, o as formatCycles, B as Button, T as Terminal, X, p as useNavigate, C as CopyableId, q as formatTimestamp, m as cn } from "./index-CxcCKb4z.js";
+import { P as PaginationControls } from "./PaginationControls-BHtWt9Fl.js";
+import { S as StatusBadge, T as Trash2, P as Pencil } from "./StatusBadge-SfXpP4ZY.js";
+import { D as Dialog, a as DialogContent, b as DialogHeader, c as DialogTitle, d as DialogDescription, e as DialogFooter } from "./dialog-CsLEopPF.js";
+import { u as useGetCreationCostEstimate, a as useGetMyBalance, b as useCreateCanister, L as Label, I as Input, c as useListCanisters, d as useSearchCanisters, S as Skeleton, e as useAddCanister, f as useRemoveCanister, g as useRenameCanister } from "./index-DmqIWXif.js";
 /**
  * @license lucide-react v0.511.0 - ISC
  *

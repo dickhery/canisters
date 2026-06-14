@@ -1,9 +1,9 @@
-import { c as createLucideIcon, s as useParams, t as useQueryClient, r as reactExports, j as jsxRuntimeExports, L as Link, B as Button, C as CopyableId, o as formatCycles, q as formatTimestamp, v as truncatePrincipal, w as Check, X, n as formatIcp } from "./index-BkGz-69k.js";
-import { S as StatusBadge, T as Trash2, P as Pencil } from "./StatusBadge-C0edLt6d.js";
-import { D as Dialog, a as DialogContent, b as DialogHeader, c as DialogTitle, e as DialogFooter } from "./dialog-BL6orJzL.js";
-import { h as useGetAppPrincipal, i as useGetCanisterDetails, S as Skeleton, j as useTopUpCanister, k as useGetIcpXdrConversionRate, L as Label, I as Input, l as useTransferCycles, m as useRemoveController, n as useGetTransactionHistory, g as useRenameCanister, o as useAddController } from "./index-DQF_mRsu.js";
-import { T as TriangleAlert, Z as Zap } from "./zap-gG_z0hYZ.js";
-import { P as Plus } from "./plus--ohgIQPj.js";
+import { c as createLucideIcon, s as useParams, t as useQueryClient, r as reactExports, j as jsxRuntimeExports, L as Link, B as Button, C as CopyableId, o as formatCycles, q as formatTimestamp, v as truncatePrincipal, w as Check, X, n as formatIcp } from "./index-CxcCKb4z.js";
+import { S as StatusBadge, T as Trash2, P as Pencil } from "./StatusBadge-SfXpP4ZY.js";
+import { D as Dialog, a as DialogContent, b as DialogHeader, c as DialogTitle, e as DialogFooter } from "./dialog-CsLEopPF.js";
+import { h as useGetAppPrincipal, i as useGetCanisterDetails, S as Skeleton, j as useTopUpCanister, k as useGetIcpXdrConversionRate, L as Label, I as Input, l as useTransferCycles, m as useRemoveController, n as useGetTransactionHistory, g as useRenameCanister, o as useAddController } from "./index-DmqIWXif.js";
+import { T as TriangleAlert, Z as Zap } from "./zap-CZe2I7fo.js";
+import { P as Plus } from "./plus-COGLRLOc.js";
 /**
  * @license lucide-react v0.511.0 - ISC
  *
