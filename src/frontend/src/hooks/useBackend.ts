@@ -81,8 +81,8 @@ export function useGetMyBalance() {
       return actor.getMyBalance();
     },
     enabled: !!actor,
-    staleTime: 15_000,
-    refetchInterval: 30_000,
+    // Refetch only on mount and after explicit invalidation (transfers, top-ups).
+    staleTime: 120_000,
   });
 }
 
@@ -95,7 +95,7 @@ export function useGetTransactionHistory(page: bigint) {
       return actor.getTransactionHistory(page);
     },
     enabled: !!actor,
-    staleTime: 30_000,
+    staleTime: 120_000,
   });
 }
 
@@ -135,7 +135,7 @@ export function useGetRecentCanisters() {
       return actor.getRecentCanisters();
     },
     enabled: !!actor,
-    staleTime: 30_000,
+    staleTime: 5 * 60 * 1_000,
     retry: 1,
     retryDelay: 3_000,
   });
@@ -166,7 +166,7 @@ export function useGetLowestCyclesCanisters() {
       return actor.getLowestCyclesCanisters();
     },
     enabled: !!actor,
-    staleTime: 30_000,
+    staleTime: 5 * 60 * 1_000,
     retry: 1,
     retryDelay: 3_000,
   });
@@ -181,7 +181,7 @@ export function useGetTotalCycles() {
       return actor.getTotalCycles();
     },
     enabled: !!actor,
-    staleTime: 30_000,
+    staleTime: 5 * 60 * 1_000,
     retry: 1,
     retryDelay: 3_000,
   });

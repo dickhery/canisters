@@ -133,12 +133,12 @@ service : {
   getCanisterDetails: (canisterId: CanisterId) -> (opt CanisterDetails);
   getCreationCostEstimate: (seedCyclesIcpE8s: E8s) -> (CreationCostEstimate);
   getIcpXdrConversionRate: () -> (nat);
-  getLowestCyclesCanisters: () -> (vec DashboardItem);
-  getMyAccount: () -> (UserAccount);
+  getLowestCyclesCanisters: () -> (vec DashboardItem) query;
+  getMyAccount: () -> (UserAccount) query;
   getMyBalance: () -> (E8s);
-  getRecentCanisters: () -> (vec DashboardItem);
-  getTotalCycles: () -> (nat);
-  getTransactionHistory: (page: nat) -> (Page_1);
+  getRecentCanisters: () -> (vec DashboardItem) query;
+  getTotalCycles: () -> (nat) query;
+  getTransactionHistory: (page: nat) -> (Page_1) query;
   listCanisters: (page: nat) -> (Page) query;
   migrateCanistersFromPrincipal: (oldPrincipal: principal) -> (Result_1);
   removeCanister: (canisterId: CanisterId) -> (Result_3);

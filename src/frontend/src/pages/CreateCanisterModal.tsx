@@ -9,22 +9,17 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import {
-  useGetCreationCostEstimate,
-  useGetMyBalance,
-} from "@/hooks/useBackend";
+import { useGetIcpXdrConversionRate, useGetMyBalance } from "@/hooks/useBackend";
 import { useCreateCanister } from "@/hooks/useCanisterMutations";
 import {
+  estimateCreationCost,
   estimateTopUpCycles,
   FALLBACK_CYCLES_PER_ICP,
   formatCyclesPerIcp,
-  ICP_TRANSFER_FEE_E8S,
   parseIcpInput,
 } from "@/lib/cycles";
 import { formatCycles, formatIcp } from "@/lib/format";
 import { useEffect, useState } from "react";
-
-const CREATION_FEE_DISPLAY_E8S = 100_000_000n; // 0.1 ICP
 
 interface CreateCanisterModalProps {
   open: boolean;
@@ -42,41 +37,26 @@ export function CreateCanisterModal({
   const seedIcpE8s = parseIcpInput(seedIcpRaw);
   const seedCyclesIcpE8sNum = Number(seedIcpE8s);
 
-  const { data: estimate, isLoading: estimateLoading } =
-    useGetCreationCostEstimate(seedCyclesIcpE8sNum);
+  const { data: liveRate, isLoading: rateLoading } =
+    useGetIcpXdrConversionRate();
   const { data: balance } = useGetMyBalance();
   const { mutate, isPending, data: createResult, reset } = useCreateCanister();
 
-  // Use the live cyclesPerIcp from the estimate if available; fall back
-  // to the conservative constant so math always works without a spinner.
-  const cyclesPerIcp: bigint =
-    estimate?.cyclesPerIcp && estimate.cyclesPerIcp > 0n
-      ? estimate.cyclesPerIcp
-      : FALLBACK_CYCLES_PER_ICP;
+  const hasLiveRate = !rateLoading && !!liveRate && liveRate > 0n;
+  const cyclesPerIcp: bigint = hasLiveRate ? liveRate : FALLBACK_CYCLES_PER_ICP;
+  const estimate = estimateCreationCost(seedIcpE8s, cyclesPerIcp);
 
-  // Derived display values — prefer backend fields when present
-  const creationFeeE8s =
-    estimate?.creationFeeIcpE8s ?? CREATION_FEE_DISPLAY_E8S;
-  const transferFeeE8s = estimate?.transferFeeE8s ?? ICP_TRANSFER_FEE_E8S;
-  const totalIcpRequiredE8s =
-    estimate?.totalIcpRequiredE8s ??
-    creationFeeE8s + seedIcpE8s + transferFeeE8s;
-
-  // Use backend's exact seed cycle estimate when available; fall back to local calc
-  const seedCycles =
-    estimate?.estimatedSeedCycles != null && seedIcpE8s > 0n
-      ? estimate.estimatedSeedCycles
-      : estimateTopUpCycles(seedIcpE8s, cyclesPerIcp);
+  const creationFeeE8s = estimate.creationFeeIcpE8s;
+  const transferFeeE8s = estimate.transferFeeE8s;
+  const totalIcpRequiredE8s = estimate.totalIcpRequiredE8s;
+  const seedCycles = estimate.estimatedSeedCycles;
 
   const userBalance = balance ?? 0n;
   const canAfford = userBalance >= totalIcpRequiredE8s;
   const nameValid = name.trim().length > 0;
   const canSubmit = nameValid && canAfford && !isPending;
 
-  // Detect if we're using the fallback rate
-  const usingFallbackRate =
-    !estimateLoading &&
-    (!estimate?.cyclesPerIcp || estimate.cyclesPerIcp === 0n);
+  const usingFallbackRate = !rateLoading && !hasLiveRate;
 
   // Reset state when modal closes
   useEffect(() => {
@@ -167,7 +147,7 @@ export function CreateCanisterModal({
                 canAfford ? "text-primary" : "text-destructive"
               }`}
             >
-              {estimateLoading
+              {rateLoading
                 ? "CALCULATING…"
                 : `${formatIcp(totalIcpRequiredE8s)} ICP`}
             </span>
@@ -192,7 +172,7 @@ export function CreateCanisterModal({
               CONVERSION RATE
             </span>
             <span className="text-muted-foreground/60 tabular-nums text-[9px]">
-              {estimateLoading
+              {rateLoading
                 ? "FETCHING…"
                 : usingFallbackRate
                   ? `~${formatCyclesPerIcp(FALLBACK_CYCLES_PER_ICP)} cycles/ICP (est)`
@@ -209,7 +189,7 @@ export function CreateCanisterModal({
             </p>
           )}
 
-          {usingFallbackRate && !estimateLoading && (
+          {usingFallbackRate && !rateLoading && (
             <p className="font-mono text-[9px] text-muted-foreground/50 uppercase tracking-wider pt-1">
               * RATE IS ESTIMATED — LIVE RATE UNAVAILABLE
             </p>

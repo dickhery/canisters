@@ -5,6 +5,13 @@ import { useActor } from "@caffeineai/core-infrastructure";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 
+/** Invalidate cheap cached dashboard queries (all are query calls on the backend). */
+function invalidateCachedDashboard(queryClient: ReturnType<typeof useQueryClient>) {
+  queryClient.invalidateQueries({ queryKey: ["dashboard", "total-cycles"] });
+  queryClient.invalidateQueries({ queryKey: ["dashboard", "recent"] });
+  queryClient.invalidateQueries({ queryKey: ["dashboard", "lowest-cycles"] });
+}
+
 export function useAddCanister() {
   const { actor } = useActor(createActor);
   const queryClient = useQueryClient();
@@ -28,7 +35,7 @@ export function useAddCanister() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["canisters"] });
-      queryClient.invalidateQueries({ queryKey: ["dashboard"] });
+      invalidateCachedDashboard(queryClient);
       toast.success("Canister added successfully");
     },
     onError: (err: Error) => {
@@ -51,7 +58,7 @@ export function useRemoveCanister() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["canisters"] });
-      queryClient.invalidateQueries({ queryKey: ["dashboard"] });
+      invalidateCachedDashboard(queryClient);
       toast.success("Canister removed");
     },
     onError: (err: Error) => {
@@ -86,7 +93,6 @@ export function useRenameCanister() {
       queryClient.invalidateQueries({
         queryKey: ["canisters", "details", variables.canisterId],
       });
-      queryClient.invalidateQueries({ queryKey: ["dashboard"] });
       toast.success("Canister renamed");
     },
     onError: (err: Error) => {
@@ -120,7 +126,6 @@ export function useAddController() {
       queryClient.invalidateQueries({
         queryKey: ["canisters", "details", variables.canisterId],
       });
-      queryClient.invalidateQueries({ queryKey: ["dashboard"] });
       toast.success("Controller added");
     },
     onError: (err: Error) => {
@@ -154,7 +159,6 @@ export function useRemoveController() {
       queryClient.invalidateQueries({
         queryKey: ["canisters", "details", variables.canisterId],
       });
-      queryClient.invalidateQueries({ queryKey: ["dashboard"] });
       toast.success("Controller removed");
     },
     onError: (err: Error) => {
@@ -191,7 +195,7 @@ export function useTopUpCanister() {
       });
       queryClient.invalidateQueries({ queryKey: ["account", "balance"] });
       queryClient.invalidateQueries({ queryKey: ["transactions"] });
-      queryClient.invalidateQueries({ queryKey: ["dashboard"] });
+      invalidateCachedDashboard(queryClient);
       toast.success("Canister topped up successfully");
     },
     onError: (err: Error) => {
@@ -221,7 +225,7 @@ export function useCreateCanister() {
       queryClient.invalidateQueries({ queryKey: ["canisters"] });
       queryClient.invalidateQueries({ queryKey: ["account", "balance"] });
       queryClient.invalidateQueries({ queryKey: ["transactions"] });
-      queryClient.invalidateQueries({ queryKey: ["dashboard"] });
+      invalidateCachedDashboard(queryClient);
       toast.success("Canister created!", {
         description: `ID: ${data.canisterId.toString()}`,
       });
@@ -261,7 +265,7 @@ export function useTransferCycles() {
       queryClient.invalidateQueries({
         queryKey: ["canisters", "details", variables.fromCanisterId],
       });
-      queryClient.invalidateQueries({ queryKey: ["dashboard"] });
+      invalidateCachedDashboard(queryClient);
       toast.success("Cycles transferred", {
         description: `${formatCycles(cyclesMoved)} sent to ${variables.toCanisterId.slice(0, 10)}…`,
       });

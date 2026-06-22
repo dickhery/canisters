@@ -37,15 +37,11 @@ mixin (
   // ---------------------------------------------------------------------------
   // getMyAccount — derives or returns the caller's ICP sub-account
   // ---------------------------------------------------------------------------
-  public shared ({ caller }) func getMyAccount() : async LedgerTypes.UserAccount {
+  public shared query ({ caller }) func getMyAccount() : async LedgerTypes.UserAccount {
     if (caller.isAnonymous()) { Runtime.trap("Anonymous caller not allowed") };
     switch (userAccounts.get(caller)) {
       case (?acc) { acc };
-      case null {
-        let acc = LedgerLib.userAccount(selfPrincipal, caller);
-        userAccounts.add(caller, acc);
-        acc
-      };
+      case null { LedgerLib.userAccount(selfPrincipal, caller) };
     }
   };
 
@@ -170,7 +166,18 @@ mixin (
               // Touch interaction and update cached balance for the topped-up canister
               switch (userCanisters.get(caller)) {
                 case (?canisters) {
-                  CanisterLib.touchInteraction(canisters, canisterId, Time.now());
+                  let now = Time.now();
+                  CanisterLib.touchInteraction(canisters, canisterId, now);
+                  switch (CanisterLib.getTracked(canisters, canisterId)) {
+                    case null {};
+                    case (?tracked) {
+                      CanisterLib.updateCachedBalance(
+                        canisters,
+                        canisterId,
+                        tracked.cachedCycleBalance + cyclesAdded,
+                      );
+                    };
+                  };
                 };
                 case null {};
               };
@@ -273,7 +280,7 @@ mixin (
   // ---------------------------------------------------------------------------
   // getTransactionHistory — paginated transaction log for the caller
   // ---------------------------------------------------------------------------
-  public shared ({ caller }) func getTransactionHistory(
+  public shared query ({ caller }) func getTransactionHistory(
     page : Nat,
   ) : async CommonTypes.Page<LedgerTypes.Transaction> {
     if (caller.isAnonymous()) { Runtime.trap("Anonymous caller not allowed") };

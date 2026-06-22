@@ -43,3 +43,25 @@ export function formatCyclesPerIcp(cyclesPerIcp: bigint): string {
   const trillions = Number(cyclesPerIcp) / 1e12;
   return `${trillions.toFixed(2)}T`;
 }
+
+/** Mirrors backend estimateCreationCost — computed client-side to avoid CMC calls. */
+export function estimateCreationCost(
+  seedIcpE8s: bigint,
+  cyclesPerIcp: bigint,
+): {
+  creationFeeIcpE8s: bigint;
+  transferFeeE8s: bigint;
+  totalIcpRequiredE8s: bigint;
+  estimatedSeedCycles: bigint;
+  cyclesPerIcp: bigint;
+} {
+  const totalIcpRequiredE8s =
+    seedIcpE8s > 0n ? seedIcpE8s + ICP_TRANSFER_FEE_E8S : 0n;
+  return {
+    creationFeeIcpE8s: 0n,
+    transferFeeE8s: ICP_TRANSFER_FEE_E8S,
+    totalIcpRequiredE8s,
+    estimatedSeedCycles: estimateTopUpCycles(seedIcpE8s, cyclesPerIcp),
+    cyclesPerIcp,
+  };
+}

@@ -134,7 +134,7 @@ mixin (
   };
 
   // Get a paginated list of tracked canisters using cached data (no live IC calls).
-  // Live data is fetched lazily: on detail-page open and via getTotalCycles.
+  // Live data is fetched lazily on the detail page via getCanisterDetails.
   // Returning cached data as a query avoids both cycle burn and update-call latency.
   public shared query ({ caller }) func listCanisters(
     page : Nat,
@@ -303,39 +303,28 @@ mixin (
   };
 
   // Return up to 5 most recently interacted canisters for the dashboard
-  public shared ({ caller }) func getRecentCanisters() : async [CanisterTypes.DashboardItem] {
+  public shared query ({ caller }) func getRecentCanisters() : async [CanisterTypes.DashboardItem] {
     if (caller.isAnonymous()) Runtime.trap("Anonymous caller not allowed");
     let canisters = getUserCanisters(caller);
     CanisterLib.getRecentCanisters(canisters, selfPrincipal);
   };
 
   // Return up to 5 canisters with the lowest cached cycle balance for the dashboard
-  public shared ({ caller }) func getLowestCyclesCanisters() : async [CanisterTypes.DashboardItem] {
+  public shared query ({ caller }) func getLowestCyclesCanisters() : async [CanisterTypes.DashboardItem] {
     if (caller.isAnonymous()) Runtime.trap("Anonymous caller not allowed");
     let canisters = getUserCanisters(caller);
     CanisterLib.getLowestCyclesCanisters(canisters, selfPrincipal);
   };
 
-  // Return the total cycle balance across ALL tracked canisters for the caller.
-  // This is an update call (not query) because it calls the IC management canister.
-  // Fires all canister_status calls concurrently then sums the results.
-  public shared ({ caller }) func getTotalCycles() : async Nat {
+  // Return the total cached cycle balance across all tracked canisters.
+  // Uses locally cached balances only — no management canister calls.
+  // Balances refresh when a canister detail page is opened or after mutations.
+  public shared query ({ caller }) func getTotalCycles() : async Nat {
     if (caller.isAnonymous()) Runtime.trap("Anonymous caller not allowed");
-    let canisters = getUserCanisters(caller);
-    let now = Time.now();
-    let all = canisters.toArray();
-    // Fetch all cycle balances sequentially — async-in-map is not supported in Motoko
-    var total : Nat = 0;
-    for (tracked in all.values()) {
-      try {
-        let result = await ic.canister_status({ canister_id = tracked.canisterId });
-        CanisterLib.updateCachedBalance(canisters, tracked.canisterId, result.cycles);
-        total += result.cycles;
-      } catch (_) {
-        total += tracked.cachedCycleBalance;
-      };
+    switch (userCanisters.get(caller)) {
+      case null { 0 };
+      case (?canisters) { CanisterLib.sumCachedCycles(canisters) };
     };
-    total;
   };
 
   // --- Principal migration / data recovery ---

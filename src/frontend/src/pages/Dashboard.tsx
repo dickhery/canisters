@@ -463,7 +463,7 @@ export default function Dashboard() {
           data-ocid="dashboard.stat.total_canisters"
         />
         <StatCard
-          label="Total Cycles"
+          label="Total Cycles (cached)"
           value={
             totalCyclesLoading ? (
               <span className="text-sm animate-pulse tracking-[0.15em] text-primary/70">

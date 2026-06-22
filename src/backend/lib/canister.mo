@@ -178,6 +178,17 @@ module {
       .map<Types.TrackedCanister, Types.CanisterInfo>(toInfo);
   };
 
+  // Sum cached cycle balances across all tracked canisters (no IC calls).
+  public func sumCachedCycles(
+    canisters : List.List<Types.TrackedCanister>,
+  ) : Nat {
+    var total : Nat = 0;
+    for (c in canisters.values()) {
+      total += c.cachedCycleBalance;
+    };
+    total;
+  };
+
   // Return up to 5 canisters sorted by lastInteractedAt descending (most recent first)
   // appPrincipal is used to compute isController from cached controllers
   public func getRecentCanisters(
