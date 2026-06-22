@@ -1,4 +1,4 @@
-const __vite__mapDeps=(i,m=__vite__mapDeps,d=(m.f||(m.f=["assets/Dashboard-B4Je8xZU.js","assets/dialog-CsLEopPF.js","assets/index-DmqIWXif.js","assets/plus-COGLRLOc.js","assets/arrow-up-right-DR0lyWoh.js","assets/Canisters-SpXWUyso.js","assets/PaginationControls-BHtWt9Fl.js","assets/StatusBadge-SfXpP4ZY.js","assets/CanisterDetail-DiCPuMwm.js","assets/zap-CZe2I7fo.js","assets/Account-BFtsZeCL.js"])))=>i.map(i=>d[i]);
+const __vite__mapDeps=(i,m=__vite__mapDeps,d=(m.f||(m.f=["assets/Dashboard-BkD4Jf8y.js","assets/dialog-CkBKB0Yb.js","assets/index-CqsqTiPN.js","assets/plus-B2CeZDqq.js","assets/arrow-up-right-DHY0T4qE.js","assets/Canisters-CmRBUG5X.js","assets/PaginationControls-D0rrwFVV.js","assets/cycles-CFlWDWW-.js","assets/CanisterDetail-B6pnsnWp.js","assets/zap-DskeE3HW.js","assets/Account-D5CWM76s.js"])))=>i.map(i=>d[i]);
 var __defProp = Object.defineProperty;
 var __typeError = (msg) => {
   throw TypeError(msg);
@@ -14577,7 +14577,7 @@ function mergeLoginOptions(loginOptions, otherLoginOptions) {
   };
 }
 const ONE_HOUR_IN_NANOSECONDS = BigInt(36e11);
-const DEFAULT_IDENTITY_PROVIDER = "https://id.ai";
+const DEFAULT_IDENTITY_PROVIDER = "https://id.ai/authorize";
 const InternetIdentityReactContext = reactExports.createContext(void 0);
 async function createAuthClient(createOptions) {
   const config = await loadConfig();
@@ -41068,10 +41068,10 @@ function Layout({ children }) {
     /* @__PURE__ */ jsxRuntimeExports.jsx(Toaster, { richColors: true, position: "bottom-right" })
   ] });
 }
-const DashboardPage = reactExports.lazy(() => __vitePreload(() => import("./Dashboard-B4Je8xZU.js"), true ? __vite__mapDeps([0,1,2,3,4]) : void 0));
-const CanistersPage = reactExports.lazy(() => __vitePreload(() => import("./Canisters-SpXWUyso.js"), true ? __vite__mapDeps([5,6,7,2,1]) : void 0));
-const CanisterDetailPage = reactExports.lazy(() => __vitePreload(() => import("./CanisterDetail-DiCPuMwm.js"), true ? __vite__mapDeps([8,7,2,1,9,3]) : void 0));
-const AccountPage = reactExports.lazy(() => __vitePreload(() => import("./Account-BFtsZeCL.js"), true ? __vite__mapDeps([10,6,2,4,9]) : void 0));
+const DashboardPage = reactExports.lazy(() => __vitePreload(() => import("./Dashboard-BkD4Jf8y.js"), true ? __vite__mapDeps([0,1,2,3,4]) : void 0));
+const CanistersPage = reactExports.lazy(() => __vitePreload(() => import("./Canisters-CmRBUG5X.js"), true ? __vite__mapDeps([5,6,7,2,1]) : void 0));
+const CanisterDetailPage = reactExports.lazy(() => __vitePreload(() => import("./CanisterDetail-B6pnsnWp.js"), true ? __vite__mapDeps([8,7,2,1,9,3]) : void 0));
+const AccountPage = reactExports.lazy(() => __vitePreload(() => import("./Account-D5CWM76s.js"), true ? __vite__mapDeps([10,6,2,4,9]) : void 0));
 const PageLoader = () => /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "flex h-full items-center justify-center py-24", children: /* @__PURE__ */ jsxRuntimeExports.jsx(LoaderCircle, { className: "h-6 w-6 animate-spin text-primary" }) });
 const rootRoute = createRootRoute({
   component: () => /* @__PURE__ */ jsxRuntimeExports.jsx(AuthGuard, { children: /* @__PURE__ */ jsxRuntimeExports.jsx(Layout, { children: /* @__PURE__ */ jsxRuntimeExports.jsx(reactExports.Suspense, { fallback: /* @__PURE__ */ jsxRuntimeExports.jsx(PageLoader, {}), children: /* @__PURE__ */ jsxRuntimeExports.jsx(Outlet, {}) }) }) })

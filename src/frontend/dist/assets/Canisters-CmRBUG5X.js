@@ -1,8 +1,8 @@
-import { c as createLucideIcon, r as reactExports, j as jsxRuntimeExports, n as formatIcp, o as formatCycles, B as Button, T as Terminal, X, p as useNavigate, C as CopyableId, q as formatTimestamp, m as cn } from "./index-CxcCKb4z.js";
-import { P as PaginationControls } from "./PaginationControls-BHtWt9Fl.js";
-import { S as StatusBadge, T as Trash2, P as Pencil } from "./StatusBadge-SfXpP4ZY.js";
-import { D as Dialog, a as DialogContent, b as DialogHeader, c as DialogTitle, d as DialogDescription, e as DialogFooter } from "./dialog-CsLEopPF.js";
-import { u as useGetCreationCostEstimate, a as useGetMyBalance, b as useCreateCanister, L as Label, I as Input, c as useListCanisters, d as useSearchCanisters, S as Skeleton, e as useAddCanister, f as useRemoveCanister, g as useRenameCanister } from "./index-DmqIWXif.js";
+import { c as createLucideIcon, r as reactExports, j as jsxRuntimeExports, n as formatIcp, o as formatCycles, B as Button, T as Terminal, X, p as useNavigate, C as CopyableId, q as formatTimestamp, m as cn } from "./index-MXUM5hII.js";
+import { P as PaginationControls } from "./PaginationControls-D0rrwFVV.js";
+import { p as parseIcpInput, F as FALLBACK_CYCLES_PER_ICP, I as ICP_TRANSFER_FEE_E8S, e as estimateTopUpCycles, f as formatCyclesPerIcp, S as StatusBadge, T as Trash2, P as Pencil } from "./cycles-CFlWDWW-.js";
+import { D as Dialog, a as DialogContent, b as DialogHeader, c as DialogTitle, d as DialogDescription, e as DialogFooter } from "./dialog-CkBKB0Yb.js";
+import { u as useGetCreationCostEstimate, a as useGetMyBalance, b as useCreateCanister, L as Label, I as Input, c as useListCanisters, d as useSearchCanisters, S as Skeleton, e as useAddCanister, f as useRemoveCanister, g as useRenameCanister } from "./index-CqsqTiPN.js";
 /**
  * @license lucide-react v0.511.0 - ISC
  *
@@ -44,22 +44,7 @@ const __iconNode = [
   ["circle", { cx: "11", cy: "11", r: "8", key: "4ej97u" }]
 ];
 const Search = createLucideIcon("search", __iconNode);
-const FALLBACK_CYCLES_PER_ICP = 10000000000000n;
 const CREATION_FEE_DISPLAY_E8S = 100000000n;
-const TRANSFER_FEE_E8S = 10000n;
-function icpToEstimatedCycles(icpE8s, cyclesPerIcp) {
-  return icpE8s * cyclesPerIcp / 100000000n;
-}
-function parseIcpInput(raw) {
-  if (!raw || raw === "0" || raw === "") return 0n;
-  const trimmed = raw.trim();
-  const match = trimmed.match(/^(\d+)(?:\.(\d{1,8}))?$/);
-  if (!match) return 0n;
-  const whole = BigInt(match[1]);
-  const fracStr = (match[2] ?? "").padEnd(8, "0").slice(0, 8);
-  const frac = BigInt(fracStr);
-  return whole * 100000000n + frac;
-}
 function CreateCanisterModal({
   open,
   onClose
@@ -74,9 +59,9 @@ function CreateCanisterModal({
   const { mutate, isPending, data: createResult, reset } = useCreateCanister();
   const cyclesPerIcp = (estimate == null ? void 0 : estimate.cyclesPerIcp) && estimate.cyclesPerIcp > 0n ? estimate.cyclesPerIcp : FALLBACK_CYCLES_PER_ICP;
   const creationFeeE8s = (estimate == null ? void 0 : estimate.creationFeeIcpE8s) ?? CREATION_FEE_DISPLAY_E8S;
-  const transferFeeE8s = (estimate == null ? void 0 : estimate.transferFeeE8s) ?? TRANSFER_FEE_E8S;
+  const transferFeeE8s = (estimate == null ? void 0 : estimate.transferFeeE8s) ?? ICP_TRANSFER_FEE_E8S;
   const totalIcpRequiredE8s = (estimate == null ? void 0 : estimate.totalIcpRequiredE8s) ?? creationFeeE8s + seedIcpE8s + transferFeeE8s;
-  const seedCycles = (estimate == null ? void 0 : estimate.estimatedSeedCycles) != null && seedIcpE8s > 0n ? estimate.estimatedSeedCycles : icpToEstimatedCycles(seedIcpE8s, cyclesPerIcp);
+  const seedCycles = (estimate == null ? void 0 : estimate.estimatedSeedCycles) != null && seedIcpE8s > 0n ? estimate.estimatedSeedCycles : estimateTopUpCycles(seedIcpE8s, cyclesPerIcp);
   const userBalance = balance ?? 0n;
   const canAfford = userBalance >= totalIcpRequiredE8s;
   const nameValid = name.trim().length > 0;
@@ -165,7 +150,7 @@ function CreateCanisterModal({
           ] }),
           /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex justify-between items-center pt-0.5", children: [
             /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "text-muted-foreground/60 uppercase text-[9px]", children: "CONVERSION RATE" }),
-            /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "text-muted-foreground/60 tabular-nums text-[9px]", children: estimateLoading ? "FETCHING…" : usingFallbackRate ? `~${(Number(FALLBACK_CYCLES_PER_ICP) / 1e12).toFixed(1)}T cycles/ICP (est)` : `${(Number(cyclesPerIcp) / 1e12).toFixed(2)}T cycles/ICP` })
+            /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "text-muted-foreground/60 tabular-nums text-[9px]", children: estimateLoading ? "FETCHING…" : usingFallbackRate ? `~${formatCyclesPerIcp(FALLBACK_CYCLES_PER_ICP)} cycles/ICP (est)` : `${formatCyclesPerIcp(cyclesPerIcp)} cycles/ICP` })
           ] }),
           !canAfford && /* @__PURE__ */ jsxRuntimeExports.jsx(
             "p",
@@ -252,7 +237,7 @@ function CreateCanisterModal({
               seedIcpE8s > 0n && /* @__PURE__ */ jsxRuntimeExports.jsxs("span", { className: "font-mono text-[10px] text-accent/80 tabular-nums retro-glow-accent", children: [
                 "≈",
                 " ",
-                formatCycles(icpToEstimatedCycles(seedIcpE8s, cyclesPerIcp)),
+                formatCycles(estimateTopUpCycles(seedIcpE8s, cyclesPerIcp)),
                 " ",
                 "cycles"
               ] })

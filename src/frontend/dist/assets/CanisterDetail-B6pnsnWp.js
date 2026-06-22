@@ -1,9 +1,9 @@
-import { c as createLucideIcon, s as useParams, t as useQueryClient, r as reactExports, j as jsxRuntimeExports, L as Link, B as Button, C as CopyableId, o as formatCycles, q as formatTimestamp, v as truncatePrincipal, w as Check, X, n as formatIcp } from "./index-CxcCKb4z.js";
-import { S as StatusBadge, T as Trash2, P as Pencil } from "./StatusBadge-SfXpP4ZY.js";
-import { D as Dialog, a as DialogContent, b as DialogHeader, c as DialogTitle, e as DialogFooter } from "./dialog-CsLEopPF.js";
-import { h as useGetAppPrincipal, i as useGetCanisterDetails, S as Skeleton, j as useTopUpCanister, k as useGetIcpXdrConversionRate, L as Label, I as Input, l as useTransferCycles, m as useRemoveController, n as useGetTransactionHistory, g as useRenameCanister, o as useAddController } from "./index-DmqIWXif.js";
-import { T as TriangleAlert, Z as Zap } from "./zap-CZe2I7fo.js";
-import { P as Plus } from "./plus-COGLRLOc.js";
+import { c as createLucideIcon, s as useParams, t as useQueryClient, r as reactExports, j as jsxRuntimeExports, L as Link, B as Button, C as CopyableId, o as formatCycles, q as formatTimestamp, v as truncatePrincipal, w as Check, X, n as formatIcp } from "./index-MXUM5hII.js";
+import { S as StatusBadge, p as parseIcpInput, f as formatCyclesPerIcp, I as ICP_TRANSFER_FEE_E8S, T as Trash2, P as Pencil, e as estimateTopUpCycles, F as FALLBACK_CYCLES_PER_ICP } from "./cycles-CFlWDWW-.js";
+import { D as Dialog, a as DialogContent, b as DialogHeader, c as DialogTitle, e as DialogFooter } from "./dialog-CkBKB0Yb.js";
+import { h as useGetAppPrincipal, i as useGetCanisterDetails, S as Skeleton, j as useTopUpCanister, k as useGetIcpXdrConversionRate, L as Label, I as Input, l as useTransferCycles, m as useRemoveController, n as useGetTransactionHistory, g as useRenameCanister, o as useAddController } from "./index-CqsqTiPN.js";
+import { T as TriangleAlert, Z as Zap } from "./zap-DskeE3HW.js";
+import { P as Plus } from "./plus-B2CeZDqq.js";
 /**
  * @license lucide-react v0.511.0 - ISC
  *
@@ -69,10 +69,6 @@ const __iconNode = [
   ]
 ];
 const Shield = createLucideIcon("shield", __iconNode);
-const FALLBACK_CYCLES_PER_ICP = 1e13;
-function icpToEstimatedCycles(icpAmount, cyclesPerIcp) {
-  return BigInt(Math.floor(icpAmount * cyclesPerIcp));
-}
 function DetailSkeleton() {
   return /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "space-y-4 font-mono", children: [
     /* @__PURE__ */ jsxRuntimeExports.jsx(Skeleton, { className: "h-8 w-48" }),
@@ -300,16 +296,17 @@ function TopUpSection({
   const [icpInput, setIcpInput] = reactExports.useState("");
   const topUp = useTopUpCanister();
   const { data: liveRate, isLoading: rateLoading } = useGetIcpXdrConversionRate();
-  const cyclesPerIcp = liveRate && liveRate > 0n ? Number(liveRate) : FALLBACK_CYCLES_PER_ICP;
-  const usingFallbackRate = !rateLoading && (!liveRate || liveRate === 0n);
-  const icpAmount = Number.parseFloat(icpInput) || 0;
-  const estimatedCycles = icpAmount > 0 ? icpToEstimatedCycles(icpAmount, cyclesPerIcp) : 0n;
-  const e8s = BigInt(Math.floor(icpAmount * 1e8));
+  const hasLiveRate = !rateLoading && !!liveRate && liveRate > 0n;
+  const usingFallbackRate = !rateLoading && !hasLiveRate;
+  const cyclesPerIcp = hasLiveRate ? liveRate : usingFallbackRate ? FALLBACK_CYCLES_PER_ICP : 0n;
+  const icpAmountE8s = parseIcpInput(icpInput);
+  const canEstimate = hasLiveRate || usingFallbackRate;
+  const estimatedCycles = canEstimate && icpAmountE8s > 0n ? estimateTopUpCycles(icpAmountE8s, cyclesPerIcp) : 0n;
   const handleTopUp = (e) => {
     e.preventDefault();
-    if (!icpAmount || icpAmount <= 0) return;
+    if (icpAmountE8s <= ICP_TRANSFER_FEE_E8S) return;
     topUp.mutate(
-      { canisterId, icpAmountE8s: e8s },
+      { canisterId, icpAmountE8s },
       { onSuccess: () => setIcpInput("") }
     );
   };
@@ -356,19 +353,16 @@ function TopUpSection({
                 ),
                 /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "absolute right-3 top-1/2 -translate-y-1/2 font-mono text-xs font-medium text-muted-foreground", children: "ICP" })
               ] }),
-              /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "font-mono text-[9px] text-muted-foreground/50 uppercase tracking-wider", children: rateLoading ? "FETCHING LIVE RATE…" : usingFallbackRate ? `RATE: ~${(FALLBACK_CYCLES_PER_ICP / 1e12).toFixed(1)}T CYCLES/ICP (EST)` : `RATE: ${(cyclesPerIcp / 1e12).toFixed(2)}T CYCLES/ICP (LIVE)` })
+              /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "font-mono text-[9px] text-muted-foreground/50 uppercase tracking-wider", children: rateLoading ? "FETCHING LIVE RATE…" : usingFallbackRate ? `RATE: ~${formatCyclesPerIcp(FALLBACK_CYCLES_PER_ICP)} CYCLES/ICP (EST)` : `RATE: ${formatCyclesPerIcp(cyclesPerIcp)} CYCLES/ICP (LIVE)` })
             ] }),
-            estimatedCycles > 0n && /* @__PURE__ */ jsxRuntimeExports.jsxs(
+            icpAmountE8s > 0n && /* @__PURE__ */ jsxRuntimeExports.jsxs(
               "div",
               {
                 "data-ocid": "canister_detail.cycles_estimate",
                 className: "flex items-center justify-between border border-primary/30 bg-primary/8 px-4 py-2.5",
                 children: [
                   /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "font-mono text-[10px] text-muted-foreground uppercase tracking-[0.15em]", children: "EST. CYCLES" }),
-                  /* @__PURE__ */ jsxRuntimeExports.jsxs("span", { className: "font-mono text-base font-bold text-primary tabular-nums retro-glow", children: [
-                    "+",
-                    formatCycles(estimatedCycles)
-                  ] })
+                  /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "font-mono text-base font-bold text-primary tabular-nums retro-glow", children: rateLoading ? "CALCULATING…" : estimatedCycles > 0n ? `+${formatCycles(estimatedCycles)}` : "AMOUNT TOO SMALL" })
                 ]
               }
             ),
@@ -378,7 +372,7 @@ function TopUpSection({
                 type: "submit",
                 "data-ocid": "canister_detail.topup_submit_button",
                 className: "w-full font-mono text-xs tracking-[0.15em] uppercase gap-1.5",
-                disabled: !icpAmount || icpAmount <= 0 || topUp.isPending,
+                disabled: icpAmountE8s <= ICP_TRANSFER_FEE_E8S || topUp.isPending,
                 children: [
                   topUp.isPending ? /* @__PURE__ */ jsxRuntimeExports.jsx(RefreshCw, { className: "h-3.5 w-3.5 animate-spin" }) : /* @__PURE__ */ jsxRuntimeExports.jsx(Zap, { className: "h-3.5 w-3.5" }),
                   topUp.isPending ? "PROCESSING…" : "[ENTER] TOP UP CANISTER"

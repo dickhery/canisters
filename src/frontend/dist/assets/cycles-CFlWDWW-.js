@@ -1,5 +1,5 @@
-import { c as createLucideIcon, j as jsxRuntimeExports, m as cn } from "./index-CxcCKb4z.js";
-import { C as CanisterStatus } from "./index-DmqIWXif.js";
+import { c as createLucideIcon, j as jsxRuntimeExports, m as cn } from "./index-MXUM5hII.js";
+import { C as CanisterStatus } from "./index-CqsqTiPN.js";
 /**
  * @license lucide-react v0.511.0 - ISC
  *
@@ -83,8 +83,34 @@ function StatusBadge({
     }
   );
 }
+const ICP_TRANSFER_FEE_E8S = 10000n;
+const FALLBACK_CYCLES_PER_ICP = 1500000000000n;
+function parseIcpInput(raw) {
+  if (!raw || raw === "0" || raw === "") return 0n;
+  const trimmed = raw.trim();
+  const match = trimmed.match(/^(\d+)(?:\.(\d{1,8}))?$/);
+  if (!match) return 0n;
+  const whole = BigInt(match[1]);
+  const fracStr = (match[2] ?? "").padEnd(8, "0").slice(0, 8);
+  const frac = BigInt(fracStr);
+  return whole * 100000000n + frac;
+}
+function estimateTopUpCycles(icpAmountE8s, cyclesPerIcp) {
+  if (icpAmountE8s <= ICP_TRANSFER_FEE_E8S) return 0n;
+  const netIcpE8s = icpAmountE8s - ICP_TRANSFER_FEE_E8S;
+  return netIcpE8s * cyclesPerIcp / 100000000n;
+}
+function formatCyclesPerIcp(cyclesPerIcp) {
+  const trillions = Number(cyclesPerIcp) / 1e12;
+  return `${trillions.toFixed(2)}T`;
+}
 export {
+  FALLBACK_CYCLES_PER_ICP as F,
+  ICP_TRANSFER_FEE_E8S as I,
   Pencil as P,
   StatusBadge as S,
-  Trash2 as T
+  Trash2 as T,
+  estimateTopUpCycles as e,
+  formatCyclesPerIcp as f,
+  parseIcpInput as p
 };
