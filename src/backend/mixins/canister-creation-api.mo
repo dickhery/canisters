@@ -58,7 +58,7 @@ mixin (
   } = actor "rkp4c-7iaaa-aaaaa-aaaca-cai";
 
   // Fetch the live ICP→cycles conversion rate from the CMC.
-  // Returns cycles per 1 ICP (e.g. ~10_000_000_000_000 for ~10 XDR/ICP).
+  // Returns cycles per 1 ICP (e.g. ~1_650_000_000_000 at typical mainnet rates).
   // Falls back to DEFAULT_CYCLES_PER_ICP if the CMC call fails.
   public shared func getIcpXdrConversionRate() : async Nat {
     try {

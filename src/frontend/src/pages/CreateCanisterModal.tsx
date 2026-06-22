@@ -14,33 +14,21 @@ import {
   useGetMyBalance,
 } from "@/hooks/useBackend";
 import { useCreateCanister } from "@/hooks/useCanisterMutations";
+import {
+  estimateTopUpCycles,
+  FALLBACK_CYCLES_PER_ICP,
+  formatCyclesPerIcp,
+  ICP_TRANSFER_FEE_E8S,
+  parseIcpInput,
+} from "@/lib/cycles";
 import { formatCycles, formatIcp } from "@/lib/format";
 import { useEffect, useState } from "react";
 
-// Fallback rate used only when the backend rate is unavailable
-// 10T cycles/ICP is a conservative floor — real rate will replace it
-const FALLBACK_CYCLES_PER_ICP = 10_000_000_000_000n;
 const CREATION_FEE_DISPLAY_E8S = 100_000_000n; // 0.1 ICP
-const TRANSFER_FEE_E8S = 10_000n; // standard ICP transfer fee
 
 interface CreateCanisterModalProps {
   open: boolean;
   onClose: () => void;
-}
-
-function icpToEstimatedCycles(icpE8s: bigint, cyclesPerIcp: bigint): bigint {
-  return (icpE8s * cyclesPerIcp) / 100_000_000n;
-}
-
-function parseIcpInput(raw: string): bigint {
-  if (!raw || raw === "0" || raw === "") return 0n;
-  const trimmed = raw.trim();
-  const match = trimmed.match(/^(\d+)(?:\.(\d{1,8}))?$/);
-  if (!match) return 0n;
-  const whole = BigInt(match[1]);
-  const fracStr = (match[2] ?? "").padEnd(8, "0").slice(0, 8);
-  const frac = BigInt(fracStr);
-  return whole * 100_000_000n + frac;
 }
 
 export function CreateCanisterModal({
@@ -69,7 +57,7 @@ export function CreateCanisterModal({
   // Derived display values — prefer backend fields when present
   const creationFeeE8s =
     estimate?.creationFeeIcpE8s ?? CREATION_FEE_DISPLAY_E8S;
-  const transferFeeE8s = estimate?.transferFeeE8s ?? TRANSFER_FEE_E8S;
+  const transferFeeE8s = estimate?.transferFeeE8s ?? ICP_TRANSFER_FEE_E8S;
   const totalIcpRequiredE8s =
     estimate?.totalIcpRequiredE8s ??
     creationFeeE8s + seedIcpE8s + transferFeeE8s;
@@ -78,7 +66,7 @@ export function CreateCanisterModal({
   const seedCycles =
     estimate?.estimatedSeedCycles != null && seedIcpE8s > 0n
       ? estimate.estimatedSeedCycles
-      : icpToEstimatedCycles(seedIcpE8s, cyclesPerIcp);
+      : estimateTopUpCycles(seedIcpE8s, cyclesPerIcp);
 
   const userBalance = balance ?? 0n;
   const canAfford = userBalance >= totalIcpRequiredE8s;
@@ -207,8 +195,8 @@ export function CreateCanisterModal({
               {estimateLoading
                 ? "FETCHING…"
                 : usingFallbackRate
-                  ? `~${(Number(FALLBACK_CYCLES_PER_ICP) / 1e12).toFixed(1)}T cycles/ICP (est)`
-                  : `${(Number(cyclesPerIcp) / 1e12).toFixed(2)}T cycles/ICP`}
+                  ? `~${formatCyclesPerIcp(FALLBACK_CYCLES_PER_ICP)} cycles/ICP (est)`
+                  : `${formatCyclesPerIcp(cyclesPerIcp)} cycles/ICP`}
             </span>
           </div>
 
@@ -299,7 +287,7 @@ export function CreateCanisterModal({
               {seedIcpE8s > 0n && (
                 <span className="font-mono text-[10px] text-accent/80 tabular-nums retro-glow-accent">
                   ≈{" "}
-                  {formatCycles(icpToEstimatedCycles(seedIcpE8s, cyclesPerIcp))}{" "}
+                  {formatCycles(estimateTopUpCycles(seedIcpE8s, cyclesPerIcp))}{" "}
                   cycles
                 </span>
               )}

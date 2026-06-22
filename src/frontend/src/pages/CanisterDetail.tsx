@@ -30,6 +30,13 @@ import {
   useTransferCycles,
 } from "@/hooks/useCanisterMutations";
 import {
+  estimateTopUpCycles,
+  FALLBACK_CYCLES_PER_ICP,
+  formatCyclesPerIcp,
+  ICP_TRANSFER_FEE_E8S,
+  parseIcpInput,
+} from "@/lib/cycles";
+import {
   formatCycles,
   formatIcp,
   formatTimestamp,
@@ -52,14 +59,6 @@ import {
   Zap,
 } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
-
-// ─── ICP <-> Cycles estimation ───────────────────────────────────────────────
-// Fallback rate: 10T cycles/ICP — conservative floor used when live rate unavailable
-const FALLBACK_CYCLES_PER_ICP = 10_000_000_000_000;
-
-function icpToEstimatedCycles(icpAmount: number, cyclesPerIcp: number): bigint {
-  return BigInt(Math.floor(icpAmount * cyclesPerIcp));
-}
 
 // ─── Loading skeleton ─────────────────────────────────────────────────────────
 function DetailSkeleton() {
@@ -318,21 +317,26 @@ function TopUpSection({
   const { data: liveRate, isLoading: rateLoading } =
     useGetIcpXdrConversionRate();
 
-  // Use live rate if available; fall back to conservative constant
-  const cyclesPerIcp =
-    liveRate && liveRate > 0n ? Number(liveRate) : FALLBACK_CYCLES_PER_ICP;
-  const usingFallbackRate = !rateLoading && (!liveRate || liveRate === 0n);
+  const hasLiveRate = !rateLoading && !!liveRate && liveRate > 0n;
+  const usingFallbackRate = !rateLoading && !hasLiveRate;
+  const cyclesPerIcp: bigint = hasLiveRate
+    ? liveRate
+    : usingFallbackRate
+      ? FALLBACK_CYCLES_PER_ICP
+      : 0n;
 
-  const icpAmount = Number.parseFloat(icpInput) || 0;
+  const icpAmountE8s = parseIcpInput(icpInput);
+  const canEstimate = hasLiveRate || usingFallbackRate;
   const estimatedCycles =
-    icpAmount > 0 ? icpToEstimatedCycles(icpAmount, cyclesPerIcp) : 0n;
-  const e8s = BigInt(Math.floor(icpAmount * 100_000_000));
+    canEstimate && icpAmountE8s > 0n
+      ? estimateTopUpCycles(icpAmountE8s, cyclesPerIcp)
+      : 0n;
 
   const handleTopUp = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!icpAmount || icpAmount <= 0) return;
+    if (icpAmountE8s <= ICP_TRANSFER_FEE_E8S) return;
     topUp.mutate(
-      { canisterId, icpAmountE8s: e8s },
+      { canisterId, icpAmountE8s },
       { onSuccess: () => setIcpInput("") },
     );
   };
@@ -391,11 +395,11 @@ function TopUpSection({
               {rateLoading
                 ? "FETCHING LIVE RATE…"
                 : usingFallbackRate
-                  ? `RATE: ~${(FALLBACK_CYCLES_PER_ICP / 1e12).toFixed(1)}T CYCLES/ICP (EST)`
-                  : `RATE: ${(cyclesPerIcp / 1e12).toFixed(2)}T CYCLES/ICP (LIVE)`}
+                  ? `RATE: ~${formatCyclesPerIcp(FALLBACK_CYCLES_PER_ICP)} CYCLES/ICP (EST)`
+                  : `RATE: ${formatCyclesPerIcp(cyclesPerIcp)} CYCLES/ICP (LIVE)`}
             </p>
           </div>
-          {estimatedCycles > 0n && (
+          {icpAmountE8s > 0n && (
             <div
               data-ocid="canister_detail.cycles_estimate"
               className="flex items-center justify-between border border-primary/30 bg-primary/8 px-4 py-2.5"
@@ -404,7 +408,13 @@ function TopUpSection({
                 EST. CYCLES
               </span>
               <span className="font-mono text-base font-bold text-primary tabular-nums retro-glow">
-                +{formatCycles(estimatedCycles)}
+                {rateLoading ? (
+                  "CALCULATING…"
+                ) : estimatedCycles > 0n ? (
+                  `+${formatCycles(estimatedCycles)}`
+                ) : (
+                  "AMOUNT TOO SMALL"
+                )}
               </span>
             </div>
           )}
@@ -412,7 +422,9 @@ function TopUpSection({
             type="submit"
             data-ocid="canister_detail.topup_submit_button"
             className="w-full font-mono text-xs tracking-[0.15em] uppercase gap-1.5"
-            disabled={!icpAmount || icpAmount <= 0 || topUp.isPending}
+            disabled={
+              icpAmountE8s <= ICP_TRANSFER_FEE_E8S || topUp.isPending
+            }
           >
             {topUp.isPending ? (
               <RefreshCw className="h-3.5 w-3.5 animate-spin" />

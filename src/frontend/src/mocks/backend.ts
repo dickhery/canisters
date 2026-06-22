@@ -99,8 +99,8 @@ export const mockBackend: backendInterface = {
     ok: { canisterId: pid1, cyclesSeeded: BigInt("0") },
   }),
   getCreationCostEstimate: async (seedCyclesIcpE8s): Promise<CreationCostEstimate> => {
-    // Mock a realistic live rate: ~5T cycles/ICP (representative of current XDR rates)
-    const cyclesPerIcp = BigInt("5_000_000_000_000".replace(/_/g, ""));
+    // Mock a realistic live rate: ~1.65T cycles/ICP (representative of current XDR rates)
+    const cyclesPerIcp = BigInt("1_650_000_000_000".replace(/_/g, ""));
     const estimatedSeedCycles = (seedCyclesIcpE8s * cyclesPerIcp) / BigInt("100000000");
     return {
       creationFeeIcpE8s: BigInt("100000000"),
@@ -113,8 +113,8 @@ export const mockBackend: backendInterface = {
     };
   },
   getIcpXdrConversionRate: async (): Promise<bigint> => {
-    // Mock a realistic live rate: ~5T cycles/ICP
-    return BigInt("5000000000000");
+    // Mock a realistic live rate: ~1.65T cycles/ICP
+    return BigInt("1650000000000");
   },
   getRecentCanisters: async (): Promise<DashboardItem[]> => [
     { canisterId: pid1, customName: "Ledger Service", cycleBalance: BigInt("1800000000000"), isController: true, lastInteractedAt: BigInt(Date.now() * 1_000_000 - 1 * 3600 * 1_000_000_000) },

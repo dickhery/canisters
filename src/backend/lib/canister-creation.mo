@@ -20,9 +20,8 @@ module {
   public let CREATION_ICP_FEE_E8S : Nat64 = 0;
 
   // Default cycles-per-ICP rate used as a fallback when the CMC is unavailable.
-  // 1 ICP ≈ 10 XDR at ~13,000 XDR/ICP; 1 XDR = 1T cycles.
-  // xdr_permyriad_per_icp ≈ 100_000 (10 XDR * 10_000), so cycles_per_icp ≈ 10_000_000_000_000.
-  public let DEFAULT_CYCLES_PER_ICP : Nat = 10_000_000_000_000;
+  // Slightly below typical mainnet rates so estimates do not overpromise.
+  public let DEFAULT_CYCLES_PER_ICP : Nat = 1_500_000_000_000;
 
   // Convert xdr_permyriad_per_icp (as returned by CMC) to cycles per ICP.
   // Formula: cycles_per_icp = xdr_permyriad_per_icp * 100_000_000
