@@ -1,8 +1,8 @@
-import { c as createLucideIcon, r as reactExports, j as jsxRuntimeExports, n as formatIcp, o as formatCycles, B as Button, T as Terminal, X, p as useNavigate, C as CopyableId, q as formatTimestamp, m as cn } from "./index-MXUM5hII.js";
-import { P as PaginationControls } from "./PaginationControls-D0rrwFVV.js";
-import { p as parseIcpInput, F as FALLBACK_CYCLES_PER_ICP, I as ICP_TRANSFER_FEE_E8S, e as estimateTopUpCycles, f as formatCyclesPerIcp, S as StatusBadge, T as Trash2, P as Pencil } from "./cycles-CFlWDWW-.js";
-import { D as Dialog, a as DialogContent, b as DialogHeader, c as DialogTitle, d as DialogDescription, e as DialogFooter } from "./dialog-CkBKB0Yb.js";
-import { u as useGetCreationCostEstimate, a as useGetMyBalance, b as useCreateCanister, L as Label, I as Input, c as useListCanisters, d as useSearchCanisters, S as Skeleton, e as useAddCanister, f as useRemoveCanister, g as useRenameCanister } from "./index-CqsqTiPN.js";
+import { c as createLucideIcon, r as reactExports, j as jsxRuntimeExports, n as formatIcp, o as formatCycles, B as Button, T as Terminal, X, p as useNavigate, C as CopyableId, q as formatTimestamp, m as cn } from "./index-i8uOkpMu.js";
+import { P as PaginationControls } from "./PaginationControls-DSlom78o.js";
+import { p as parseIcpInput, f as formatCyclesPerIcp, e as estimateTopUpCycles, a as estimateCreationCost, F as FALLBACK_CYCLES_PER_ICP, S as StatusBadge, T as Trash2, P as Pencil } from "./cycles-BlDQocgd.js";
+import { D as Dialog, a as DialogContent, b as DialogHeader, c as DialogTitle, d as DialogDescription, e as DialogFooter } from "./dialog-B5VCMFdr.js";
+import { u as useGetIcpXdrConversionRate, a as useGetMyBalance, b as useCreateCanister, L as Label, I as Input, c as useListCanisters, d as useSearchCanisters, S as Skeleton, e as useAddCanister, f as useRemoveCanister, g as useRenameCanister } from "./index-tAHiK6TC.js";
 /**
  * @license lucide-react v0.511.0 - ISC
  *
@@ -44,7 +44,6 @@ const __iconNode = [
   ["circle", { cx: "11", cy: "11", r: "8", key: "4ej97u" }]
 ];
 const Search = createLucideIcon("search", __iconNode);
-const CREATION_FEE_DISPLAY_E8S = 100000000n;
 function CreateCanisterModal({
   open,
   onClose
@@ -54,19 +53,21 @@ function CreateCanisterModal({
   const [nameError, setNameError] = reactExports.useState("");
   const seedIcpE8s = parseIcpInput(seedIcpRaw);
   const seedCyclesIcpE8sNum = Number(seedIcpE8s);
-  const { data: estimate, isLoading: estimateLoading } = useGetCreationCostEstimate(seedCyclesIcpE8sNum);
+  const { data: liveRate, isLoading: rateLoading } = useGetIcpXdrConversionRate();
   const { data: balance } = useGetMyBalance();
   const { mutate, isPending, data: createResult, reset } = useCreateCanister();
-  const cyclesPerIcp = (estimate == null ? void 0 : estimate.cyclesPerIcp) && estimate.cyclesPerIcp > 0n ? estimate.cyclesPerIcp : FALLBACK_CYCLES_PER_ICP;
-  const creationFeeE8s = (estimate == null ? void 0 : estimate.creationFeeIcpE8s) ?? CREATION_FEE_DISPLAY_E8S;
-  const transferFeeE8s = (estimate == null ? void 0 : estimate.transferFeeE8s) ?? ICP_TRANSFER_FEE_E8S;
-  const totalIcpRequiredE8s = (estimate == null ? void 0 : estimate.totalIcpRequiredE8s) ?? creationFeeE8s + seedIcpE8s + transferFeeE8s;
-  const seedCycles = (estimate == null ? void 0 : estimate.estimatedSeedCycles) != null && seedIcpE8s > 0n ? estimate.estimatedSeedCycles : estimateTopUpCycles(seedIcpE8s, cyclesPerIcp);
+  const hasLiveRate = !rateLoading && !!liveRate && liveRate > 0n;
+  const cyclesPerIcp = hasLiveRate ? liveRate : FALLBACK_CYCLES_PER_ICP;
+  const estimate = estimateCreationCost(seedIcpE8s, cyclesPerIcp);
+  const creationFeeE8s = estimate.creationFeeIcpE8s;
+  const transferFeeE8s = estimate.transferFeeE8s;
+  const totalIcpRequiredE8s = estimate.totalIcpRequiredE8s;
+  const seedCycles = estimate.estimatedSeedCycles;
   const userBalance = balance ?? 0n;
   const canAfford = userBalance >= totalIcpRequiredE8s;
   const nameValid = name.trim().length > 0;
   const canSubmit = nameValid && canAfford && !isPending;
-  const usingFallbackRate = !estimateLoading && (!(estimate == null ? void 0 : estimate.cyclesPerIcp) || estimate.cyclesPerIcp === 0n);
+  const usingFallbackRate = !rateLoading && !hasLiveRate;
   reactExports.useEffect(() => {
     if (!open) {
       setName("");
@@ -131,7 +132,7 @@ function CreateCanisterModal({
               "span",
               {
                 className: `font-bold tabular-nums retro-glow-sm ${canAfford ? "text-primary" : "text-destructive"}`,
-                children: estimateLoading ? "CALCULATING…" : `${formatIcp(totalIcpRequiredE8s)} ICP`
+                children: rateLoading ? "CALCULATING…" : `${formatIcp(totalIcpRequiredE8s)} ICP`
               }
             )
           ] }),
@@ -150,7 +151,7 @@ function CreateCanisterModal({
           ] }),
           /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex justify-between items-center pt-0.5", children: [
             /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "text-muted-foreground/60 uppercase text-[9px]", children: "CONVERSION RATE" }),
-            /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "text-muted-foreground/60 tabular-nums text-[9px]", children: estimateLoading ? "FETCHING…" : usingFallbackRate ? `~${formatCyclesPerIcp(FALLBACK_CYCLES_PER_ICP)} cycles/ICP (est)` : `${formatCyclesPerIcp(cyclesPerIcp)} cycles/ICP` })
+            /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "text-muted-foreground/60 tabular-nums text-[9px]", children: rateLoading ? "FETCHING…" : usingFallbackRate ? `~${formatCyclesPerIcp(FALLBACK_CYCLES_PER_ICP)} cycles/ICP (est)` : `${formatCyclesPerIcp(cyclesPerIcp)} cycles/ICP` })
           ] }),
           !canAfford && /* @__PURE__ */ jsxRuntimeExports.jsx(
             "p",
@@ -160,7 +161,7 @@ function CreateCanisterModal({
               children: "⚠ INSUFFICIENT BALANCE — DEPOSIT MORE ICP TO YOUR ACCOUNT"
             }
           ),
-          usingFallbackRate && !estimateLoading && /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "font-mono text-[9px] text-muted-foreground/50 uppercase tracking-wider pt-1", children: "* RATE IS ESTIMATED — LIVE RATE UNAVAILABLE" }),
+          usingFallbackRate && !rateLoading && /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "font-mono text-[9px] text-muted-foreground/50 uppercase tracking-wider pt-1", children: "* RATE IS ESTIMATED — LIVE RATE UNAVAILABLE" }),
           seedIcpE8s > 0n && /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "border-t border-primary/10 pt-2 flex justify-between items-center", children: [
             /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "text-muted-foreground uppercase text-[9px]", children: "APPROX CYCLES SEEDED" }),
             /* @__PURE__ */ jsxRuntimeExports.jsxs("span", { className: "text-accent text-[9px] tabular-nums retro-glow-accent", children: [

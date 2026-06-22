@@ -1,8 +1,8 @@
-import { c as createLucideIcon, r as reactExports, j as jsxRuntimeExports, n as formatIcp, B as Button, I as useInternetIdentity, S as Server, o as formatCycles, W as Wallet, L as Link, C as CopyableId } from "./index-MXUM5hII.js";
-import { D as Dialog, a as DialogContent, b as DialogHeader, c as DialogTitle } from "./dialog-CkBKB0Yb.js";
-import { a as useGetMyBalance, q as useTransferIcp, L as Label, I as Input, h as useGetAppPrincipal, c as useListCanisters, p as useGetMyAccount, s as useGetRecentCanisters, t as useGetLowestCyclesCanisters, v as useGetTotalCycles, S as Skeleton, e as useAddCanister } from "./index-CqsqTiPN.js";
-import { P as Plus } from "./plus-B2CeZDqq.js";
-import { A as ArrowUpRight } from "./arrow-up-right-DHY0T4qE.js";
+import { c as createLucideIcon, r as reactExports, j as jsxRuntimeExports, n as formatIcp, B as Button, I as useInternetIdentity, S as Server, o as formatCycles, W as Wallet, L as Link, C as CopyableId } from "./index-i8uOkpMu.js";
+import { D as Dialog, a as DialogContent, b as DialogHeader, c as DialogTitle } from "./dialog-B5VCMFdr.js";
+import { a as useGetMyBalance, p as useTransferIcp, L as Label, I as Input, h as useGetAppPrincipal, c as useListCanisters, o as useGetMyAccount, r as useGetRecentCanisters, s as useGetLowestCyclesCanisters, t as useGetTotalCycles, S as Skeleton, e as useAddCanister } from "./index-tAHiK6TC.js";
+import { P as Plus } from "./plus-BrWikieu.js";
+import { A as ArrowUpRight } from "./arrow-up-right-EFrIUSB0.js";
 /**
  * @license lucide-react v0.511.0 - ISC
  *
@@ -576,7 +576,7 @@ function Dashboard() {
           /* @__PURE__ */ jsxRuntimeExports.jsx(
             StatCard,
             {
-              label: "Total Cycles",
+              label: "Total Cycles (cached)",
               value: totalCyclesLoading ? /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "text-sm animate-pulse tracking-[0.15em] text-primary/70", children: "[ CYCLES LOADING... ]" }) : formatCycles(totalCycles),
               icon: TrendingUp,
               accent: "text-primary",

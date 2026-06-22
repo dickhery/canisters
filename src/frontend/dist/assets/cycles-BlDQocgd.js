@@ -1,5 +1,5 @@
-import { c as createLucideIcon, j as jsxRuntimeExports, m as cn } from "./index-MXUM5hII.js";
-import { C as CanisterStatus } from "./index-CqsqTiPN.js";
+import { c as createLucideIcon, j as jsxRuntimeExports, m as cn } from "./index-i8uOkpMu.js";
+import { C as CanisterStatus } from "./index-tAHiK6TC.js";
 /**
  * @license lucide-react v0.511.0 - ISC
  *
@@ -104,12 +104,23 @@ function formatCyclesPerIcp(cyclesPerIcp) {
   const trillions = Number(cyclesPerIcp) / 1e12;
   return `${trillions.toFixed(2)}T`;
 }
+function estimateCreationCost(seedIcpE8s, cyclesPerIcp) {
+  const totalIcpRequiredE8s = seedIcpE8s > 0n ? seedIcpE8s + ICP_TRANSFER_FEE_E8S : 0n;
+  return {
+    creationFeeIcpE8s: 0n,
+    transferFeeE8s: ICP_TRANSFER_FEE_E8S,
+    totalIcpRequiredE8s,
+    estimatedSeedCycles: estimateTopUpCycles(seedIcpE8s, cyclesPerIcp),
+    cyclesPerIcp
+  };
+}
 export {
   FALLBACK_CYCLES_PER_ICP as F,
   ICP_TRANSFER_FEE_E8S as I,
   Pencil as P,
   StatusBadge as S,
   Trash2 as T,
+  estimateCreationCost as a,
   estimateTopUpCycles as e,
   formatCyclesPerIcp as f,
   parseIcpInput as p

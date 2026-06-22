@@ -1,9 +1,9 @@
-import { c as createLucideIcon, s as useParams, t as useQueryClient, r as reactExports, j as jsxRuntimeExports, L as Link, B as Button, C as CopyableId, o as formatCycles, q as formatTimestamp, v as truncatePrincipal, w as Check, X, n as formatIcp } from "./index-MXUM5hII.js";
-import { S as StatusBadge, p as parseIcpInput, f as formatCyclesPerIcp, I as ICP_TRANSFER_FEE_E8S, T as Trash2, P as Pencil, e as estimateTopUpCycles, F as FALLBACK_CYCLES_PER_ICP } from "./cycles-CFlWDWW-.js";
-import { D as Dialog, a as DialogContent, b as DialogHeader, c as DialogTitle, e as DialogFooter } from "./dialog-CkBKB0Yb.js";
-import { h as useGetAppPrincipal, i as useGetCanisterDetails, S as Skeleton, j as useTopUpCanister, k as useGetIcpXdrConversionRate, L as Label, I as Input, l as useTransferCycles, m as useRemoveController, n as useGetTransactionHistory, g as useRenameCanister, o as useAddController } from "./index-CqsqTiPN.js";
-import { T as TriangleAlert, Z as Zap } from "./zap-DskeE3HW.js";
-import { P as Plus } from "./plus-B2CeZDqq.js";
+import { c as createLucideIcon, s as useParams, t as useQueryClient, r as reactExports, j as jsxRuntimeExports, L as Link, B as Button, C as CopyableId, o as formatCycles, q as formatTimestamp, v as truncatePrincipal, w as Check, X, n as formatIcp } from "./index-i8uOkpMu.js";
+import { S as StatusBadge, p as parseIcpInput, f as formatCyclesPerIcp, I as ICP_TRANSFER_FEE_E8S, T as Trash2, P as Pencil, e as estimateTopUpCycles, F as FALLBACK_CYCLES_PER_ICP } from "./cycles-BlDQocgd.js";
+import { D as Dialog, a as DialogContent, b as DialogHeader, c as DialogTitle, e as DialogFooter } from "./dialog-B5VCMFdr.js";
+import { h as useGetAppPrincipal, i as useGetCanisterDetails, S as Skeleton, j as useTopUpCanister, u as useGetIcpXdrConversionRate, L as Label, I as Input, k as useTransferCycles, l as useRemoveController, m as useGetTransactionHistory, g as useRenameCanister, n as useAddController } from "./index-tAHiK6TC.js";
+import { T as TriangleAlert, Z as Zap } from "./zap-j3N3lJnO.js";
+import { P as Plus } from "./plus-BrWikieu.js";
 /**
  * @license lucide-react v0.511.0 - ISC
  *
