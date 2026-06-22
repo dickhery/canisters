@@ -183,8 +183,11 @@ mixin (
       case null null;
       case (?tracked) {
         let now = Time.now();
-        // Mark as interacted (detail page view)
-        CanisterLib.touchInteraction(canisters, canisterId, now);
+        // Throttle interaction writes — detail refetches should not burn cycles on every poll.
+        let touchThrottleNs : Int = 300_000_000_000; // 5 minutes
+        if (now - tracked.lastInteractedAt > touchThrottleNs) {
+          CanisterLib.touchInteraction(canisters, canisterId, now);
+        };
         try {
           let result = await ic.canister_status({ canister_id = canisterId });
           let status : CanisterTypes.CanisterStatus = switch (result.status) {

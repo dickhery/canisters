@@ -313,9 +313,12 @@ function TopUpSection({
   currentCycles: bigint;
 }) {
   const [icpInput, setIcpInput] = useState("");
+  const [rateRequested, setRateRequested] = useState(false);
   const topUp = useTopUpCanister();
-  const { data: liveRate, isLoading: rateLoading } =
-    useGetIcpXdrConversionRate();
+  const shouldFetchRate = rateRequested || icpInput.length > 0;
+  const { data: liveRate, isLoading: rateLoading } = useGetIcpXdrConversionRate({
+    enabled: shouldFetchRate,
+  });
 
   const hasLiveRate = !rateLoading && !!liveRate && liveRate > 0n;
   const usingFallbackRate = !rateLoading && !hasLiveRate;
@@ -384,6 +387,7 @@ function TopUpSection({
                 step="0.0001"
                 value={icpInput}
                 onChange={(e) => setIcpInput(e.target.value)}
+                onFocus={() => setRateRequested(true)}
                 className="font-mono pr-12 bg-background border-border/50 focus:border-primary"
               />
               <span className="absolute right-3 top-1/2 -translate-y-1/2 font-mono text-xs font-medium text-muted-foreground">

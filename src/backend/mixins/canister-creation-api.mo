@@ -57,29 +57,37 @@ mixin (
     };
   } = actor "rkp4c-7iaaa-aaaaa-aaaca-cai";
 
-  // Fetch the live ICP→cycles conversion rate from the CMC.
-  // Returns cycles per 1 ICP (e.g. ~1_650_000_000_000 at typical mainnet rates).
-  // Falls back to DEFAULT_CYCLES_PER_ICP if the CMC call fails.
-  public shared func getIcpXdrConversionRate() : async Nat {
+  // Cached CMC rate — avoids repeated inter-canister calls for the same data.
+  var cachedCyclesPerIcp : Nat = CreationLib.DEFAULT_CYCLES_PER_ICP;
+  var cachedRateFetchedAt : Int = 0;
+  let RATE_CACHE_TTL_NS : Int = 3_600_000_000_000; // 1 hour
+
+  func fetchCyclesPerIcp() : async Nat {
+    let now = Time.now();
+    if (cachedRateFetchedAt > 0 and (now - cachedRateFetchedAt) < RATE_CACHE_TTL_NS) {
+      return cachedCyclesPerIcp;
+    };
     try {
       let response = await cmcActor.get_icp_xdr_conversion_rate();
-      CreationLib.xdrPermyriadToCyclesPerIcp(response.data.xdr_permyriad_per_icp)
+      let rate = CreationLib.xdrPermyriadToCyclesPerIcp(response.data.xdr_permyriad_per_icp);
+      cachedCyclesPerIcp := rate;
+      cachedRateFetchedAt := now;
+      rate
     } catch (_) {
       CreationLib.DEFAULT_CYCLES_PER_ICP
     }
   };
 
-  // Return an upfront cost estimate for canister creation + optional seed top-up,
-  // using the live CMC ICP/XDR conversion rate for accurate cycles estimates.
+  // Fetch the live ICP→cycles conversion rate from the CMC (cached 1 hour).
+  public shared func getIcpXdrConversionRate() : async Nat {
+    await fetchCyclesPerIcp()
+  };
+
+  // Return an upfront cost estimate for canister creation + optional seed top-up.
   public shared func getCreationCostEstimate(
     seedCyclesIcpE8s : CommonTypes.E8s,
   ) : async CreationTypes.CreationCostEstimate {
-    let cyclesPerIcp = try {
-      let response = await cmcActor.get_icp_xdr_conversion_rate();
-      CreationLib.xdrPermyriadToCyclesPerIcp(response.data.xdr_permyriad_per_icp)
-    } catch (_) {
-      CreationLib.DEFAULT_CYCLES_PER_ICP
-    };
+    let cyclesPerIcp = await fetchCyclesPerIcp();
     CreationLib.estimateCreationCost(seedCyclesIcpE8s, cyclesPerIcp)
   };
 

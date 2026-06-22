@@ -23,7 +23,7 @@ export function SendIcpModal({ open, onClose }: SendIcpModalProps) {
   const [amount, setAmount] = useState("");
   const [memo, setMemo] = useState("");
 
-  const { data: balance } = useGetMyBalance();
+  const { data: balance } = useGetMyBalance({ enabled: open });
   const { mutate: transfer, isPending } = useTransferIcp();
 
   const handleSubmit = (e: React.FormEvent) => {

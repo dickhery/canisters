@@ -2,7 +2,6 @@ import { createActor } from "@/backend";
 import type {
   CanisterDetails,
   CanisterSummary,
-  CreationCostEstimate,
   DashboardItem,
   E8s,
   Page,
@@ -12,32 +11,23 @@ import type {
 import { CanisterStatus } from "@/backend.d";
 import { useActor } from "@caffeineai/core-infrastructure";
 import { keepPreviousData, useQuery } from "@tanstack/react-query";
+import { CACHE_FOREVER, QUERY_DEFAULTS } from "./queryOptions";
 
 const PAGE_SIZE = 20n;
 
+type QueryEnabled = { enabled?: boolean };
+
 export function useListCanisters(page: bigint) {
   const { actor } = useActor(createActor);
-  // NOTE: We intentionally do NOT gate on `isFetching` here.
-  // `isFetching` reflects actor re-initialisation which is a frontend concern
-  // unrelated to data freshness. Gating on it causes queries to toggle off/on
-  // and triggers a re-fetch that may return 0 cycle balances from the backend.
-  // Gating on `!!actor` alone is sufficient — when there is no actor yet the
-  // query simply waits; once the actor is ready it fetches once and stays live.
   return useQuery<Page>({
     queryKey: ["canisters", "list", page.toString()],
     queryFn: async () => {
       return actor!.listCanisters(page);
     },
     enabled: !!actor,
-    staleTime: 60_000, // raised from 30s — reduces re-fetch frequency
-    // keepPreviousData ensures the previous page stays visible while a new
-    // page loads, but does NOT protect against 0-balance overwrites because
-    // the query succeeds (returns data with 0s).  The `select` below handles
-    // that separately.
+    staleTime: CACHE_FOREVER,
+    ...QUERY_DEFAULTS,
     placeholderData: keepPreviousData,
-    // One retry with a short delay is sufficient; immediate retry storms
-    // just produce more 0-balance responses from the same transient error.
-    retry: 1,
     retryDelay: 3_000,
   });
 }
@@ -50,11 +40,11 @@ export function useGetCanisterDetails(canisterId: string | undefined) {
       const { Principal } = await import("@icp-sdk/core/principal");
       return actor!.getCanisterDetails(Principal.fromText(canisterId!));
     },
-    // Same reasoning as useListCanisters — do not gate on isFetching.
     enabled: !!actor && !!canisterId,
-    staleTime: 60_000,
+    // Live status is expensive (management canister call) — cache aggressively.
+    staleTime: 10 * 60 * 1_000,
+    ...QUERY_DEFAULTS,
     placeholderData: keepPreviousData,
-    retry: 1,
     retryDelay: 3_000,
   });
 }
@@ -68,21 +58,27 @@ export function useGetMyAccount() {
       return actor.getMyAccount();
     },
     enabled: !!actor,
-    staleTime: 60_000,
+    staleTime: CACHE_FOREVER,
+    ...QUERY_DEFAULTS,
   });
 }
 
-export function useGetMyBalance() {
+/**
+ * Ledger balance fetch — costs cycles (update + inter-canister call).
+ * Pass enabled:false on pages that can show cached balance instead.
+ */
+export function useGetMyBalance(options?: QueryEnabled) {
   const { actor } = useActor(createActor);
+  const enabled = options?.enabled ?? true;
   return useQuery<E8s>({
     queryKey: ["account", "balance"],
     queryFn: async () => {
       if (!actor) return 0n;
       return actor.getMyBalance();
     },
-    enabled: !!actor,
-    // Refetch only on mount and after explicit invalidation (transfers, top-ups).
-    staleTime: 120_000,
+    enabled: !!actor && enabled,
+    staleTime: CACHE_FOREVER,
+    ...QUERY_DEFAULTS,
   });
 }
 
@@ -95,7 +91,8 @@ export function useGetTransactionHistory(page: bigint) {
       return actor.getTransactionHistory(page);
     },
     enabled: !!actor,
-    staleTime: 120_000,
+    staleTime: CACHE_FOREVER,
+    ...QUERY_DEFAULTS,
   });
 }
 
@@ -109,20 +106,28 @@ export function useGetAppPrincipal() {
       return principal.toString();
     },
     enabled: !!actor,
-    staleTime: 24 * 60 * 60 * 1_000, // 24 hours — it never changes
+    staleTime: CACHE_FOREVER,
+    ...QUERY_DEFAULTS,
   });
 }
 
-export function useGetCreationCostEstimate(seedCyclesIcpE8s: number) {
+/**
+ * CMC conversion rate — costs cycles (update + inter-canister call).
+ * Defer with enabled:false until the user opens a top-up or create flow.
+ */
+export function useGetIcpXdrConversionRate(options?: QueryEnabled) {
   const { actor } = useActor(createActor);
-  return useQuery<CreationCostEstimate>({
-    queryKey: ["creationCostEstimate", seedCyclesIcpE8s],
+  const enabled = options?.enabled ?? true;
+  return useQuery<bigint>({
+    queryKey: ["icpXdrConversionRate"],
     queryFn: async () => {
       if (!actor) throw new Error("No actor");
-      return actor.getCreationCostEstimate(BigInt(seedCyclesIcpE8s));
+      return actor.getIcpXdrConversionRate();
     },
-    enabled: !!actor,
-    staleTime: 30_000,
+    enabled: !!actor && enabled,
+    staleTime: 60 * 60 * 1_000, // 1 hour — backend also caches
+    ...QUERY_DEFAULTS,
+    retryDelay: 3_000,
   });
 }
 
@@ -135,24 +140,8 @@ export function useGetRecentCanisters() {
       return actor.getRecentCanisters();
     },
     enabled: !!actor,
-    staleTime: 5 * 60 * 1_000,
-    retry: 1,
-    retryDelay: 3_000,
-  });
-}
-
-export function useGetIcpXdrConversionRate() {
-  const { actor } = useActor(createActor);
-  return useQuery<bigint>({
-    queryKey: ["icpXdrConversionRate"],
-    queryFn: async () => {
-      if (!actor) throw new Error("No actor");
-      return actor.getIcpXdrConversionRate();
-    },
-    enabled: !!actor,
-    // Rate changes slowly — cache for 5 minutes before re-fetching
-    staleTime: 5 * 60 * 1_000,
-    retry: 1,
+    staleTime: CACHE_FOREVER,
+    ...QUERY_DEFAULTS,
     retryDelay: 3_000,
   });
 }
@@ -166,8 +155,8 @@ export function useGetLowestCyclesCanisters() {
       return actor.getLowestCyclesCanisters();
     },
     enabled: !!actor,
-    staleTime: 5 * 60 * 1_000,
-    retry: 1,
+    staleTime: CACHE_FOREVER,
+    ...QUERY_DEFAULTS,
     retryDelay: 3_000,
   });
 }
@@ -181,8 +170,8 @@ export function useGetTotalCycles() {
       return actor.getTotalCycles();
     },
     enabled: !!actor,
-    staleTime: 5 * 60 * 1_000,
-    retry: 1,
+    staleTime: CACHE_FOREVER,
+    ...QUERY_DEFAULTS,
     retryDelay: 3_000,
   });
 }
@@ -204,16 +193,6 @@ export function useRecoverData() {
   };
 }
 
-/**
- * Calls actor.searchCanisters(queryText) directly — a single backend call that
- * filters all tracked canisters server-side and returns only matches.
- *
- * The backend returns CanisterInfo[] which lacks a few fields present on
- * CanisterSummary (status, fetchFailed, lastChecked).  We map them to safe
- * defaults so the existing CanisterRow component works unchanged.
- *
- * Enabled only when query.trim().length > 0.
- */
 export function useSearchCanisters(query: string) {
   const { actor } = useActor(createActor);
   const trimmed = query.trim();
@@ -222,27 +201,20 @@ export function useSearchCanisters(query: string) {
     queryKey: ["canisters", "search", trimmed],
     queryFn: async () => {
       if (!actor) return [];
-
-      // Single call — backend filters all pages server-side.
       const results = await actor.searchCanisters(trimmed);
-
-      // Map CanisterInfo → CanisterSummary with safe defaults for fields that
-      // the search endpoint doesn't return (they're available on detail fetch).
       return results.map((c) => ({
         canisterId: c.canisterId,
         customName: c.customName,
         cycleBalance: c.cachedCycleBalance,
         isController: c.isController,
-        // CanisterInfo doesn't carry live status — use running as a safe default.
-        // The detail page will show the real status once opened.
         status: CanisterStatus.running,
         fetchFailed: false,
         lastChecked: c.addedAt,
       }));
     },
     enabled: !!actor && trimmed.length > 0,
-    staleTime: 60_000,
-    retry: 1,
+    staleTime: CACHE_FOREVER,
+    ...QUERY_DEFAULTS,
     retryDelay: 3_000,
   });
 }

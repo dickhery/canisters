@@ -17,10 +17,12 @@ declare global {
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
-      // Avoid refetch storms on tab focus — each refetch burns canister cycles.
+      // Avoid refetch storms — each refetch burns canister cycles.
       refetchOnWindowFocus: false,
       refetchOnReconnect: false,
+      refetchOnMount: false,
       staleTime: 60_000,
+      gcTime: 30 * 60 * 1_000,
       retry: 1,
     },
   },

@@ -14,7 +14,6 @@ import {
   useGetAppPrincipal,
   useGetLowestCyclesCanisters,
   useGetMyAccount,
-  useGetMyBalance,
   useGetRecentCanisters,
   useGetTotalCycles,
   useListCanisters,
@@ -24,6 +23,7 @@ import { formatCycles, formatIcp } from "@/lib/format";
 import { SendIcpModal } from "@/pages/SendIcpModal";
 import { useInternetIdentity } from "@caffeineai/core-infrastructure";
 import { Link } from "@tanstack/react-router";
+import { useQueryClient } from "@tanstack/react-query";
 import {
   ArrowRight,
   ArrowUpRight,
@@ -393,10 +393,13 @@ export default function Dashboard() {
   const userPid = identity?.getPrincipal().toText() ?? "";
   const { data: appCanisterPid = "" } = useGetAppPrincipal();
 
+  const queryClient = useQueryClient();
+
   const { data: canistersPage, isLoading: canistersLoading } =
     useListCanisters(0n);
   const { data: account, isLoading: accountLoading } = useGetMyAccount();
-  const { data: balance, isLoading: balanceLoading } = useGetMyBalance();
+  // Avoid ledger call on dashboard — show cached balance from Account page if available.
+  const balance = queryClient.getQueryData<bigint>(["account", "balance"]);
 
   const { data: recentCanisters, isLoading: recentLoading } =
     useGetRecentCanisters();
@@ -480,10 +483,21 @@ export default function Dashboard() {
         />
         <StatCard
           label="ICP Balance"
-          value={balance !== undefined ? `${formatIcp(balance)} ICP` : "—"}
+          value={
+            balance !== undefined ? (
+              `${formatIcp(balance)} ICP`
+            ) : (
+              <Link
+                to="/account"
+                className="text-[10px] text-muted-foreground hover:text-primary tracking-wider"
+              >
+                VIEW ACCOUNT →
+              </Link>
+            )
+          }
           icon={Coins}
           accent="text-accent"
-          loading={balanceLoading}
+          loading={false}
           data-ocid="dashboard.stat.icp_balance"
         />
         <StatCard

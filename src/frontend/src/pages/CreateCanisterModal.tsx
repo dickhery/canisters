@@ -37,9 +37,10 @@ export function CreateCanisterModal({
   const seedIcpE8s = parseIcpInput(seedIcpRaw);
   const seedCyclesIcpE8sNum = Number(seedIcpE8s);
 
-  const { data: liveRate, isLoading: rateLoading } =
-    useGetIcpXdrConversionRate();
-  const { data: balance } = useGetMyBalance();
+  const { data: liveRate, isLoading: rateLoading } = useGetIcpXdrConversionRate({
+    enabled: open,
+  });
+  const { data: balance } = useGetMyBalance({ enabled: open });
   const { mutate, isPending, data: createResult, reset } = useCreateCanister();
 
   const hasLiveRate = !rateLoading && !!liveRate && liveRate > 0n;
