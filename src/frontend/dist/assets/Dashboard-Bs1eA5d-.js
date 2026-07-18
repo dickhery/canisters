@@ -1,8 +1,8 @@
-import { c as createLucideIcon, r as reactExports, j as jsxRuntimeExports, n as formatIcp, B as Button, I as useInternetIdentity, S as Server, o as formatCycles, W as Wallet, L as Link, C as CopyableId } from "./index-i8uOkpMu.js";
-import { D as Dialog, a as DialogContent, b as DialogHeader, c as DialogTitle } from "./dialog-B5VCMFdr.js";
-import { a as useGetMyBalance, p as useTransferIcp, L as Label, I as Input, h as useGetAppPrincipal, c as useListCanisters, o as useGetMyAccount, r as useGetRecentCanisters, s as useGetLowestCyclesCanisters, t as useGetTotalCycles, S as Skeleton, e as useAddCanister } from "./index-tAHiK6TC.js";
-import { P as Plus } from "./plus-BrWikieu.js";
-import { A as ArrowUpRight } from "./arrow-up-right-EFrIUSB0.js";
+import { c as createLucideIcon, r as reactExports, j as jsxRuntimeExports, n as formatIcp, B as Button, I as useInternetIdentity, t as useQueryClient, S as Server, o as formatCycles, L as Link, W as Wallet, C as CopyableId } from "./index-m68ufsA3.js";
+import { D as Dialog, a as DialogContent, b as DialogHeader, c as DialogTitle } from "./dialog-CcdxtTVT.js";
+import { a as useGetMyBalance, p as useTransferIcp, L as Label, I as Input, h as useGetAppPrincipal, c as useListCanisters, o as useGetMyAccount, r as useGetRecentCanisters, s as useGetLowestCyclesCanisters, t as useGetTotalCycles, S as Skeleton, e as useAddCanister } from "./index-D0GLaFVs.js";
+import { P as Plus } from "./plus-CMlaid8w.js";
+import { A as ArrowUpRight } from "./arrow-up-right-CzMlt1QR.js";
 /**
  * @license lucide-react v0.511.0 - ISC
  *
@@ -84,7 +84,7 @@ function SendIcpModal({ open, onClose }) {
   const [toAccountId, setToAccountId] = reactExports.useState("");
   const [amount, setAmount] = reactExports.useState("");
   const [memo, setMemo] = reactExports.useState("");
-  const { data: balance } = useGetMyBalance();
+  const { data: balance } = useGetMyBalance({ enabled: open });
   const { mutate: transfer, isPending } = useTransferIcp();
   const handleSubmit = (e) => {
     e.preventDefault();
@@ -511,9 +511,10 @@ function Dashboard() {
   const { identity } = useInternetIdentity();
   const userPid = (identity == null ? void 0 : identity.getPrincipal().toText()) ?? "";
   const { data: appCanisterPid = "" } = useGetAppPrincipal();
+  const queryClient = useQueryClient();
   const { data: canistersPage, isLoading: canistersLoading } = useListCanisters(0n);
   const { data: account, isLoading: accountLoading } = useGetMyAccount();
-  const { data: balance, isLoading: balanceLoading } = useGetMyBalance();
+  const balance = queryClient.getQueryData(["account", "balance"]);
   const { data: recentCanisters, isLoading: recentLoading } = useGetRecentCanisters();
   const { data: lowestCanisters, isLoading: lowestLoading } = useGetLowestCyclesCanisters();
   const totalCanisters = (canistersPage == null ? void 0 : canistersPage.total) ?? 0n;
@@ -588,10 +589,17 @@ function Dashboard() {
             StatCard,
             {
               label: "ICP Balance",
-              value: balance !== void 0 ? `${formatIcp(balance)} ICP` : "—",
+              value: balance !== void 0 ? `${formatIcp(balance)} ICP` : /* @__PURE__ */ jsxRuntimeExports.jsx(
+                Link,
+                {
+                  to: "/account",
+                  className: "text-[10px] text-muted-foreground hover:text-primary tracking-wider",
+                  children: "VIEW ACCOUNT →"
+                }
+              ),
               icon: Coins,
               accent: "text-accent",
-              loading: balanceLoading,
+              loading: false,
               "data-ocid": "dashboard.stat.icp_balance"
             }
           ),

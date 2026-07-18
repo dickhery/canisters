@@ -1,8 +1,8 @@
-import { c as createLucideIcon, r as reactExports, j as jsxRuntimeExports, n as formatIcp, o as formatCycles, B as Button, T as Terminal, X, p as useNavigate, C as CopyableId, q as formatTimestamp, m as cn } from "./index-i8uOkpMu.js";
-import { P as PaginationControls } from "./PaginationControls-DSlom78o.js";
-import { p as parseIcpInput, f as formatCyclesPerIcp, e as estimateTopUpCycles, a as estimateCreationCost, F as FALLBACK_CYCLES_PER_ICP, S as StatusBadge, T as Trash2, P as Pencil } from "./cycles-BlDQocgd.js";
-import { D as Dialog, a as DialogContent, b as DialogHeader, c as DialogTitle, d as DialogDescription, e as DialogFooter } from "./dialog-B5VCMFdr.js";
-import { u as useGetIcpXdrConversionRate, a as useGetMyBalance, b as useCreateCanister, L as Label, I as Input, c as useListCanisters, d as useSearchCanisters, S as Skeleton, e as useAddCanister, f as useRemoveCanister, g as useRenameCanister } from "./index-tAHiK6TC.js";
+import { c as createLucideIcon, r as reactExports, j as jsxRuntimeExports, n as formatIcp, o as formatCycles, B as Button, T as Terminal, X, p as useNavigate, C as CopyableId, q as formatTimestamp, m as cn } from "./index-m68ufsA3.js";
+import { P as PaginationControls } from "./PaginationControls-BGIFxBDw.js";
+import { p as parseIcpInput, f as formatCyclesPerIcp, e as estimateTopUpCycles, a as estimateCreationCost, F as FALLBACK_CYCLES_PER_ICP, S as StatusBadge, T as Trash2, P as Pencil } from "./cycles-BXldlSZf.js";
+import { D as Dialog, a as DialogContent, b as DialogHeader, c as DialogTitle, d as DialogDescription, e as DialogFooter } from "./dialog-CcdxtTVT.js";
+import { u as useGetIcpXdrConversionRate, a as useGetMyBalance, b as useCreateCanister, L as Label, I as Input, c as useListCanisters, d as useSearchCanisters, S as Skeleton, e as useAddCanister, f as useRemoveCanister, g as useRenameCanister } from "./index-D0GLaFVs.js";
 /**
  * @license lucide-react v0.511.0 - ISC
  *
@@ -53,8 +53,10 @@ function CreateCanisterModal({
   const [nameError, setNameError] = reactExports.useState("");
   const seedIcpE8s = parseIcpInput(seedIcpRaw);
   const seedCyclesIcpE8sNum = Number(seedIcpE8s);
-  const { data: liveRate, isLoading: rateLoading } = useGetIcpXdrConversionRate();
-  const { data: balance } = useGetMyBalance();
+  const { data: liveRate, isLoading: rateLoading } = useGetIcpXdrConversionRate({
+    enabled: open
+  });
+  const { data: balance } = useGetMyBalance({ enabled: open });
   const { mutate, isPending, data: createResult, reset } = useCreateCanister();
   const hasLiveRate = !rateLoading && !!liveRate && liveRate > 0n;
   const cyclesPerIcp = hasLiveRate ? liveRate : FALLBACK_CYCLES_PER_ICP;

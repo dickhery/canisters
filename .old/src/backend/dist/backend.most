@@ -56,6 +56,9 @@ actor {
   stable CREATION_ICP_LEDGER_ID : Principal;
   stable ICP_FEE_E8S : Nat64;
   stable ICP_LEDGER_ID : Principal;
+  stable RATE_CACHE_TTL_NS : Int;
+  stable var cachedCyclesPerIcp : Nat;
+  stable var cachedRateFetchedAt : Int;
   stable cmcActor :
     actor {
       get_icp_xdr_conversion_rate :

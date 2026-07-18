@@ -1,9 +1,9 @@
-import { c as createLucideIcon, s as useParams, t as useQueryClient, r as reactExports, j as jsxRuntimeExports, L as Link, B as Button, C as CopyableId, o as formatCycles, q as formatTimestamp, v as truncatePrincipal, w as Check, X, n as formatIcp } from "./index-i8uOkpMu.js";
-import { S as StatusBadge, p as parseIcpInput, f as formatCyclesPerIcp, I as ICP_TRANSFER_FEE_E8S, T as Trash2, P as Pencil, e as estimateTopUpCycles, F as FALLBACK_CYCLES_PER_ICP } from "./cycles-BlDQocgd.js";
-import { D as Dialog, a as DialogContent, b as DialogHeader, c as DialogTitle, e as DialogFooter } from "./dialog-B5VCMFdr.js";
-import { h as useGetAppPrincipal, i as useGetCanisterDetails, S as Skeleton, j as useTopUpCanister, u as useGetIcpXdrConversionRate, L as Label, I as Input, k as useTransferCycles, l as useRemoveController, m as useGetTransactionHistory, g as useRenameCanister, n as useAddController } from "./index-tAHiK6TC.js";
-import { T as TriangleAlert, Z as Zap } from "./zap-j3N3lJnO.js";
-import { P as Plus } from "./plus-BrWikieu.js";
+import { c as createLucideIcon, s as useParams, t as useQueryClient, r as reactExports, j as jsxRuntimeExports, L as Link, B as Button, C as CopyableId, o as formatCycles, q as formatTimestamp, v as truncatePrincipal, w as Check, X, n as formatIcp } from "./index-m68ufsA3.js";
+import { S as StatusBadge, p as parseIcpInput, f as formatCyclesPerIcp, I as ICP_TRANSFER_FEE_E8S, T as Trash2, P as Pencil, e as estimateTopUpCycles, F as FALLBACK_CYCLES_PER_ICP } from "./cycles-BXldlSZf.js";
+import { D as Dialog, a as DialogContent, b as DialogHeader, c as DialogTitle, e as DialogFooter } from "./dialog-CcdxtTVT.js";
+import { h as useGetAppPrincipal, i as useGetCanisterDetails, S as Skeleton, j as useTopUpCanister, u as useGetIcpXdrConversionRate, L as Label, I as Input, k as useTransferCycles, l as useRemoveController, m as useGetTransactionHistory, g as useRenameCanister, n as useAddController } from "./index-D0GLaFVs.js";
+import { T as TriangleAlert, Z as Zap } from "./zap-DNrOjE3N.js";
+import { P as Plus } from "./plus-CMlaid8w.js";
 /**
  * @license lucide-react v0.511.0 - ISC
  *
@@ -294,8 +294,12 @@ function TopUpSection({
   currentCycles
 }) {
   const [icpInput, setIcpInput] = reactExports.useState("");
+  const [rateRequested, setRateRequested] = reactExports.useState(false);
   const topUp = useTopUpCanister();
-  const { data: liveRate, isLoading: rateLoading } = useGetIcpXdrConversionRate();
+  const shouldFetchRate = rateRequested || icpInput.length > 0;
+  const { data: liveRate, isLoading: rateLoading } = useGetIcpXdrConversionRate({
+    enabled: shouldFetchRate
+  });
   const hasLiveRate = !rateLoading && !!liveRate && liveRate > 0n;
   const usingFallbackRate = !rateLoading && !hasLiveRate;
   const cyclesPerIcp = hasLiveRate ? liveRate : usingFallbackRate ? FALLBACK_CYCLES_PER_ICP : 0n;
@@ -348,6 +352,7 @@ function TopUpSection({
                     step: "0.0001",
                     value: icpInput,
                     onChange: (e) => setIcpInput(e.target.value),
+                    onFocus: () => setRateRequested(true),
                     className: "font-mono pr-12 bg-background border-border/50 focus:border-primary"
                   }
                 ),

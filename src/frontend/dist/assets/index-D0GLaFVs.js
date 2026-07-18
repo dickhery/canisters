@@ -7,7 +7,7 @@ var __privateAdd = (obj, member, value) => member.has(obj) ? __typeError("Cannot
 var __privateSet = (obj, member, value, setter) => (__accessCheck(obj, member, "write to private field"), setter ? setter.call(obj, value) : member.set(obj, value), value);
 var __privateMethod = (obj, member, method) => (__accessCheck(obj, member, "access private method"), method);
 var _client, _currentQuery, _currentQueryInitialState, _currentResult, _currentResultState, _currentResultOptions, _currentThenable, _selectError, _selectFn, _selectResult, _lastQueryWithDefinedData, _staleTimeoutId, _refetchIntervalId, _currentRefetchInterval, _trackedProps, _QueryObserver_instances, executeFetch_fn, updateStaleTimeout_fn, computeRefetchInterval_fn, updateRefetchInterval_fn, updateTimers_fn, clearStaleTimeout_fn, clearRefetchInterval_fn, updateQuery_fn, notify_fn, _a, _client2, _currentResult2, _currentMutation, _mutateOptions, _MutationObserver_instances, updateResult_fn, notify_fn2, _b;
-import { J as ProtocolError, K as TimeoutWaitingForResponseErrorCode, M as utf8ToBytes, N as ExternalError, O as MissingRootKeyErrorCode, Q as Certificate, U as lookupResultToBuffer, V as RequestStatusResponseStatus, Y as UnknownError, Z as RequestStatusDoneNoReplyErrorCode, _ as RejectError, $ as CertifiedRejectErrorCode, a0 as UNREACHABLE_ERROR, a1 as InputError, a2 as InvalidReadStateRequestErrorCode, a3 as ReadRequestType, a4 as Principal, a5 as IDL, a6 as MissingCanisterIdErrorCode, a7 as HttpAgent, a8 as encode, a9 as QueryResponseStatus, aa as UncertifiedRejectErrorCode, ab as isV3ResponseBody, ac as isV2ResponseBody, ad as UncertifiedRejectUpdateErrorCode, ae as UnexpectedErrorCode, af as decode, ag as Subscribable, ah as pendingThenable, ai as resolveEnabled, aj as shallowEqualObjects, ak as resolveStaleTime, al as noop, am as environmentManager, an as isValidTimeout, ao as timeUntilStale, ap as timeoutManager, aq as focusManager, ar as fetchState, as as replaceData, at as notifyManager, au as hashKey, av as getDefaultState, r as reactExports, aw as shouldThrowError, t as useQueryClient, I as useInternetIdentity, ax as createActorWithConfig, j as jsxRuntimeExports, m as cn, ay as createSlot, az as Variant, aA as Record, aB as Vec, aC as Service, aD as Func, aE as Text, aF as Opt, aG as Principal$1, aH as Null, aI as Nat, aJ as Bool, aK as Int, aL as Nat64, aM as Nat8, aN as __vitePreload, aO as keepPreviousData, aT as ue, o as formatCycles, aP as JSON_KEY_PRINCIPAL, aQ as base32Decode, aR as base32Encode, aS as getCrc32 } from "./index-i8uOkpMu.js";
+import { J as ProtocolError, K as TimeoutWaitingForResponseErrorCode, M as utf8ToBytes, N as ExternalError, O as MissingRootKeyErrorCode, Q as Certificate, U as lookupResultToBuffer, V as RequestStatusResponseStatus, Y as UnknownError, Z as RequestStatusDoneNoReplyErrorCode, _ as RejectError, $ as CertifiedRejectErrorCode, a0 as UNREACHABLE_ERROR, a1 as InputError, a2 as InvalidReadStateRequestErrorCode, a3 as ReadRequestType, a4 as Principal, a5 as IDL, a6 as MissingCanisterIdErrorCode, a7 as HttpAgent, a8 as encode, a9 as QueryResponseStatus, aa as UncertifiedRejectErrorCode, ab as isV3ResponseBody, ac as isV2ResponseBody, ad as UncertifiedRejectUpdateErrorCode, ae as UnexpectedErrorCode, af as decode, ag as Subscribable, ah as pendingThenable, ai as resolveEnabled, aj as shallowEqualObjects, ak as resolveStaleTime, al as noop, am as environmentManager, an as isValidTimeout, ao as timeUntilStale, ap as timeoutManager, aq as focusManager, ar as fetchState, as as replaceData, at as notifyManager, au as hashKey, av as getDefaultState, r as reactExports, aw as shouldThrowError, t as useQueryClient, I as useInternetIdentity, ax as createActorWithConfig, j as jsxRuntimeExports, m as cn, ay as createSlot, az as Variant, aA as Record, aB as Vec, aC as Service, aD as Func, aE as Text, aF as Opt, aG as Principal$1, aH as Null, aI as Nat, aJ as Bool, aK as Int, aL as Nat64, aM as Nat8, aN as __vitePreload, aO as keepPreviousData, aT as ue, o as formatCycles, aP as JSON_KEY_PRINCIPAL, aQ as base32Decode, aR as base32Encode, aS as getCrc32 } from "./index-m68ufsA3.js";
 const FIVE_MINUTES_IN_MSEC = 5 * 60 * 1e3;
 function defaultStrategy() {
   return chain(conditionalDelay(once(), 1e3), backoff(1e3, 1.2), timeout(FIVE_MINUTES_IN_MSEC));
@@ -2103,6 +2103,11 @@ var CanisterStatus = /* @__PURE__ */ ((CanisterStatus2) => {
   CanisterStatus2["running"] = "running";
   return CanisterStatus2;
 })(CanisterStatus || {});
+const CACHE_FOREVER = Number.POSITIVE_INFINITY;
+const QUERY_DEFAULTS = {
+  refetchOnMount: false,
+  retry: 1
+};
 const PAGE_SIZE = 20n;
 function useListCanisters(page) {
   const { actor } = useActor(createActor);
@@ -2112,16 +2117,9 @@ function useListCanisters(page) {
       return actor.listCanisters(page);
     },
     enabled: !!actor,
-    staleTime: 6e4,
-    // raised from 30s — reduces re-fetch frequency
-    // keepPreviousData ensures the previous page stays visible while a new
-    // page loads, but does NOT protect against 0-balance overwrites because
-    // the query succeeds (returns data with 0s).  The `select` below handles
-    // that separately.
+    staleTime: CACHE_FOREVER,
+    ...QUERY_DEFAULTS,
     placeholderData: keepPreviousData,
-    // One retry with a short delay is sufficient; immediate retry storms
-    // just produce more 0-balance responses from the same transient error.
-    retry: 1,
     retryDelay: 3e3
   });
 }
@@ -2136,11 +2134,11 @@ function useGetCanisterDetails(canisterId) {
       }, true ? void 0 : void 0);
       return actor.getCanisterDetails(Principal2.fromText(canisterId));
     },
-    // Same reasoning as useListCanisters — do not gate on isFetching.
     enabled: !!actor && !!canisterId,
-    staleTime: 6e4,
+    // Live status is expensive (management canister call) — cache aggressively.
+    staleTime: 10 * 60 * 1e3,
+    ...QUERY_DEFAULTS,
     placeholderData: keepPreviousData,
-    retry: 1,
     retryDelay: 3e3
   });
 }
@@ -2153,20 +2151,22 @@ function useGetMyAccount() {
       return actor.getMyAccount();
     },
     enabled: !!actor,
-    staleTime: 6e4
+    staleTime: CACHE_FOREVER,
+    ...QUERY_DEFAULTS
   });
 }
-function useGetMyBalance() {
+function useGetMyBalance(options) {
   const { actor } = useActor(createActor);
+  const enabled = (options == null ? void 0 : options.enabled) ?? true;
   return useQuery({
     queryKey: ["account", "balance"],
     queryFn: async () => {
       if (!actor) return 0n;
       return actor.getMyBalance();
     },
-    enabled: !!actor,
-    // Refetch only on mount and after explicit invalidation (transfers, top-ups).
-    staleTime: 12e4
+    enabled: !!actor && enabled,
+    staleTime: CACHE_FOREVER,
+    ...QUERY_DEFAULTS
   });
 }
 function useGetTransactionHistory(page) {
@@ -2178,7 +2178,8 @@ function useGetTransactionHistory(page) {
       return actor.getTransactionHistory(page);
     },
     enabled: !!actor,
-    staleTime: 12e4
+    staleTime: CACHE_FOREVER,
+    ...QUERY_DEFAULTS
   });
 }
 function useGetAppPrincipal() {
@@ -2191,8 +2192,24 @@ function useGetAppPrincipal() {
       return principal.toString();
     },
     enabled: !!actor,
-    staleTime: 24 * 60 * 60 * 1e3
-    // 24 hours — it never changes
+    staleTime: CACHE_FOREVER,
+    ...QUERY_DEFAULTS
+  });
+}
+function useGetIcpXdrConversionRate(options) {
+  const { actor } = useActor(createActor);
+  const enabled = (options == null ? void 0 : options.enabled) ?? true;
+  return useQuery({
+    queryKey: ["icpXdrConversionRate"],
+    queryFn: async () => {
+      if (!actor) throw new Error("No actor");
+      return actor.getIcpXdrConversionRate();
+    },
+    enabled: !!actor && enabled,
+    staleTime: 60 * 60 * 1e3,
+    // 1 hour — backend also caches
+    ...QUERY_DEFAULTS,
+    retryDelay: 3e3
   });
 }
 function useGetRecentCanisters() {
@@ -2204,23 +2221,8 @@ function useGetRecentCanisters() {
       return actor.getRecentCanisters();
     },
     enabled: !!actor,
-    staleTime: 5 * 60 * 1e3,
-    retry: 1,
-    retryDelay: 3e3
-  });
-}
-function useGetIcpXdrConversionRate() {
-  const { actor } = useActor(createActor);
-  return useQuery({
-    queryKey: ["icpXdrConversionRate"],
-    queryFn: async () => {
-      if (!actor) throw new Error("No actor");
-      return actor.getIcpXdrConversionRate();
-    },
-    enabled: !!actor,
-    // Rate changes slowly — cache for 5 minutes before re-fetching
-    staleTime: 5 * 60 * 1e3,
-    retry: 1,
+    staleTime: CACHE_FOREVER,
+    ...QUERY_DEFAULTS,
     retryDelay: 3e3
   });
 }
@@ -2233,8 +2235,8 @@ function useGetLowestCyclesCanisters() {
       return actor.getLowestCyclesCanisters();
     },
     enabled: !!actor,
-    staleTime: 5 * 60 * 1e3,
-    retry: 1,
+    staleTime: CACHE_FOREVER,
+    ...QUERY_DEFAULTS,
     retryDelay: 3e3
   });
 }
@@ -2247,8 +2249,8 @@ function useGetTotalCycles() {
       return actor.getTotalCycles();
     },
     enabled: !!actor,
-    staleTime: 5 * 60 * 1e3,
-    retry: 1,
+    staleTime: CACHE_FOREVER,
+    ...QUERY_DEFAULTS,
     retryDelay: 3e3
   });
 }
@@ -2282,16 +2284,14 @@ function useSearchCanisters(query) {
         customName: c.customName,
         cycleBalance: c.cachedCycleBalance,
         isController: c.isController,
-        // CanisterInfo doesn't carry live status — use running as a safe default.
-        // The detail page will show the real status once opened.
         status: CanisterStatus.running,
         fetchFailed: false,
         lastChecked: c.addedAt
       }));
     },
     enabled: !!actor && trimmed.length > 0,
-    staleTime: 6e4,
-    retry: 1,
+    staleTime: CACHE_FOREVER,
+    ...QUERY_DEFAULTS,
     retryDelay: 3e3
   });
 }

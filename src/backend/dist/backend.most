@@ -1,55 +1,55 @@
 // Version: 1.0.0
-type CanisterId__891425985 = Principal;
-type CanisterId__932363329 = CanisterId__891425985;
-type Cycles__859484650 = Nat;
-type Data__678143819<K, V> =
-  {var count : Nat__107743821; kvs : [var ?(K, V)]};
-type E8s__451907263 = E8s__457213288;
-type E8s__457213288 = Nat64;
-type Internal__272372588<K, V> =
-  {children : [var ?Node__216023231<K, V>]; data : Data__678143819<K, V>};
-type Leaf__366843236<K, V> = {data : Data__678143819<K, V>};
-type List__291137870<T> = List__731530306<T>;
-type List__731530306<T> =
+type CanisterId__276104819 = CanisterId__863882071;
+type CanisterId__863882071 = Principal;
+type Cycles__410059581 = Nat;
+type Data__791452850<K, V> =
+  {var count : Nat__490723111; kvs : [var ?(K, V)]};
+type E8s__328334695 = Nat64;
+type E8s__861091686 = E8s__328334695;
+type Internal__8484328<K, V> =
+  {children : [var ?Node__46230540<K, V>]; data : Data__791452850<K, V>};
+type Leaf__809889148<K, V> = {data : Data__791452850<K, V>};
+type List__415060402<T> = List__790383201<T>;
+type List__790383201<T> =
   {
-    var blockIndex : Nat__107743821;
+    var blockIndex : Nat__490723111;
     var blocks : [var [var ?T]];
-    var elementIndex : Nat__107743821
+    var elementIndex : Nat__490723111
   };
-type Nat__107743821 = Nat__920180692;
+type Nat__490723111 = Nat__920180692;
 type Nat__920180692 = Nat;
-type Node__216023231<K, V> =
-  {#internal : Internal__272372588<K, V>; #leaf : Leaf__366843236<K, V>};
-type Timestamp__492812614 = Timestamp__867202833;
-type Timestamp__867202833 = Int;
-type Timestamp__888095769 = Timestamp__867202833;
-type TrackedCanister__32527799 =
+type Node__46230540<K, V> =
+  {#internal : Internal__8484328<K, V>; #leaf : Leaf__809889148<K, V>};
+type Timestamp__301639476 = Int;
+type Timestamp__647675121 = Timestamp__301639476;
+type Timestamp__884806187 = Timestamp__301639476;
+type TrackedCanister__955140980 =
   {
-    addedAt : Timestamp__888095769;
+    addedAt : Timestamp__647675121;
     var cachedControllers : [Principal];
-    var cachedCycleBalance : Cycles__859484650;
-    canisterId : CanisterId__932363329;
+    var cachedCycleBalance : Cycles__410059581;
+    canisterId : CanisterId__276104819;
     var customName : Text;
-    var lastInteractedAt : Timestamp__888095769
+    var lastInteractedAt : Timestamp__647675121
   };
-type Transaction__993434653 =
+type Transaction__554140998 =
   {
-    amountE8s : E8s__451907263;
+    amountE8s : E8s__861091686;
     id : Nat;
-    kind : TxKind__1060124905;
+    kind : TxKind__1024749679;
     memo : Text;
-    timestamp : Timestamp__492812614;
-    userId : UserId__516856611
+    timestamp : Timestamp__884806187;
+    userId : UserId__503354635
   };
-type TxKind__1060124905 =
+type TxKind__1024749679 =
   {
     #icpTransfer : {toAccountId : Text};
-    #topUp : {canisterId : Principal; cyclesAdded : Cycles__859484650}
+    #topUp : {canisterId : Principal; cyclesAdded : Cycles__410059581}
   };
-type UserAccount__563000115 =
-  {accountId : Text; subaccount : Blob; userId : UserId__516856611};
-type UserId__516856611 = UserId__653285603;
-type UserId__653285603 = Principal;
+type UserAccount__951397460 =
+  {accountId : Text; subaccount : Blob; userId : UserId__503354635};
+type UserId__158757552 = Principal;
+type UserId__503354635 = UserId__158757552;
 actor {
   stable CMC_ID : Principal;
   stable CREATION_CMC_ID : Principal;
@@ -133,20 +133,20 @@ actor {
   stable selfPrincipal : Principal;
   stable txLog :
     {
-      var blockIndex : Nat__107743821;
-      var blocks : [var [var ?Transaction__993434653]];
-      var elementIndex : Nat__107743821
+      var blockIndex : Nat__490723111;
+      var blocks : [var [var ?Transaction__554140998]];
+      var elementIndex : Nat__490723111
     };
   stable userAccounts :
     {
-      var root : Node__216023231<UserId__653285603, UserAccount__563000115>;
-      var size : Nat__107743821
+      var root : Node__46230540<UserId__158757552, UserAccount__951397460>;
+      var size : Nat__490723111
     };
   stable userCanisters :
     {
       var root :
-        Node__216023231<UserId__653285603,
-                         List__291137870<TrackedCanister__32527799>>;
-      var size : Nat__107743821
+        Node__46230540<UserId__158757552,
+                        List__415060402<TrackedCanister__955140980>>;
+      var size : Nat__490723111
     }
 };
