@@ -50,8 +50,15 @@ module {
     if (cyclesPerIcp == 0) {
       return FALLBACK_MIN_CREATION_ICP_E8S
     };
-    // ceil(MIN_CREATE_CYCLES * 1e8 / cyclesPerIcp) = net ICP to CMC
-    let raw = (MIN_CREATE_CYCLES * 100_000_000 + cyclesPerIcp - 1) / cyclesPerIcp;
+    // ceil(MIN_CREATE_CYCLES * 1e8 / cyclesPerIcp) without (b - 1) subtraction
+    // so moc does not warn about a trapping Nat operator (M0155).
+    let dividend = MIN_CREATE_CYCLES * 100_000_000;
+    let quotient = dividend / cyclesPerIcp;
+    let raw = if (dividend % cyclesPerIcp == 0) {
+      quotient
+    } else {
+      quotient + 1
+    };
     let withBuffer = raw + raw / 20; // +5%
     // Gross amount matches topUpCanister: user pays net + ledger fee
     let gross = withBuffer + ICP_FEE_E8S.toNat();
@@ -61,7 +68,8 @@ module {
     } else {
       gross
     };
-    // minNat is an ICP e8s amount (<< 2^64). Split to avoid fromNat trap warning.
+    // minNat is an ICP e8s amount (<< 2^64). Split so each half fits Nat32 range
+    // and Nat64.fromNat cannot trap on a large Nat (M0155).
     let lo = minNat % 4_294_967_296;
     let hi = minNat / 4_294_967_296;
     Nat64.fromNat(hi) * 4_294_967_296 + Nat64.fromNat(lo)

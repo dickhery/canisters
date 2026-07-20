@@ -288,7 +288,8 @@ mixin (
     } catch (err) {
       #err("Failed to create canister: " # err.message())
     } finally {
-      ignore createInFlight.delete(caller);
+      // Map.delete is deprecated (M0235); use remove.
+      createInFlight.remove(caller);
     }
   };
 };

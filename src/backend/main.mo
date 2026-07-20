@@ -12,7 +12,8 @@ import CanisterCreationApi "mixins/canister-creation-api";
 
 
 
-persistent actor self {
+// `persistent` omitted: --default-persistent-actors makes all actors persistent (M0217).
+actor self {
   // --- Shared state ---
 
   // Per-user list of tracked canisters: UserId → [TrackedCanister]
