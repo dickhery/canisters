@@ -28,9 +28,11 @@ mixin (
   let CREATION_CMC_ID = Principal.fromText("rkp4c-7iaaa-aaaaa-aaaca-cai");
 
   // CMC actor — rate queries and create-from-ICP (notify_create_canister).
+  // `transient`: remote actor handles are not real state; must not participate
+  // in the stable signature (interface changes would break upgrades otherwise).
   // Settings type is intentionally minimal; unused optional fields are omitted
   // so Candid encoding stays compatible with the CMC service.
-  let cmcActor : actor {
+  transient let cmcActor : actor {
     get_icp_xdr_conversion_rate : () -> async {
       data : { xdr_permyriad_per_icp : Nat64; timestamp_seconds : Nat64 };
       certificate : Blob;
@@ -66,8 +68,8 @@ mixin (
   var cachedRateFetchedAt : Int = 0;
   let RATE_CACHE_TTL_NS : Int = 3_600_000_000_000; // 1 hour
 
-  // Per-caller reentrancy guard for createCanister (financial multi-await flow).
-  let createInFlight = Map.empty<Principal, Bool>();
+  // Per-caller reentrancy guard — ephemeral lock, must not persist across upgrades.
+  transient let createInFlight = Map.empty<Principal, Bool>();
 
   func fetchCyclesPerIcp() : async Nat {
     let now = Time.now();
