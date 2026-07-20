@@ -5,14 +5,13 @@ import Runtime "mo:core/Runtime";
 import CommonTypes "types/common";
 import CanisterTypes "types/canister";
 import LedgerTypes "types/ledger";
+import CreationTypes "types/canister-creation";
 import CanisterApi "mixins/canister-api";
 import LedgerApi "mixins/ledger-api";
 import CanisterCreationApi "mixins/canister-creation-api";
 
 // `persistent` omitted: --default-persistent-actors makes all actors persistent (M0217).
-// No migration: deployed Caffeine versions no longer have stable icMgmt/cmcActor
-// (those remote handles are transient). A migration that consumed them fails M0169
-// against the current previous signature.
+// Adding `failedCreations` is a compatible stable-field addition (no migration needed).
 actor self {
   // --- Shared state ---
 
@@ -28,13 +27,16 @@ actor self {
   // Monotonically increasing transaction ID counter
   let nextTxId = { var value : Nat = 0 };
 
+  // Pending CMC create payments (block index → record) for recovery / retry.
+  let failedCreations = Map.empty<CreationTypes.BlockIndex, CreationTypes.FailedCreation>();
+
   // The canister's own principal — used to derive per-user ICP sub-account IDs
   let selfPrincipal = Principal.fromActor(self);
 
   // --- Mixin composition ---
   include CanisterApi(selfPrincipal, userCanisters, userAccounts, txLog, nextTxId);
   include LedgerApi(selfPrincipal, userAccounts, txLog, nextTxId, userCanisters);
-  include CanisterCreationApi(selfPrincipal, userCanisters, userAccounts, txLog, nextTxId);
+  include CanisterCreationApi(selfPrincipal, userCanisters, userAccounts, txLog, nextTxId, failedCreations);
 
   // Expose the app's own principal so the frontend can display it as the
   // "App Controller PID" and allow users to add it as a controller.

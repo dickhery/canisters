@@ -5,6 +5,7 @@ module {
   public type CanisterId = CommonTypes.CanisterId;
   public type E8s = CommonTypes.E8s;
   public type Cycles = CommonTypes.Cycles;
+  public type Timestamp = CommonTypes.Timestamp;
 
   // Arguments for creating a new canister
   public type CreateCanisterArgs = {
@@ -32,5 +33,30 @@ module {
     creationCycles : Cycles; // Protocol creation fee in cycles (500B)
     estimatedSeedCycles : Cycles; // Est. residual cycles on new canister after creation fee
     cyclesPerIcp : Nat; // Live ICP→cycles rate used for the estimate
+  };
+
+  // ICP ledger block height for a CMC create payment that has not yet
+  // successfully completed notify_create_canister.
+  public type BlockIndex = Nat64;
+
+  // Persisted record of a failed create (transfer OK, notify failed or pending).
+  // Keyed by blockIndex in the actor map. Enables secure retry without
+  // re-spending ICP.
+  public type FailedCreation = {
+    blockIndex : BlockIndex;
+    userId : UserId;
+    var name : Text;
+    amountE8s : E8s; // net ICP sent to CMC (excludes ledger fee)
+    timestamp : Timestamp;
+    var lastError : Text;
+  };
+
+  // Shared/API view of a failed creation (no var fields).
+  public type FailedCreationView = {
+    blockIndex : BlockIndex;
+    name : Text;
+    amountE8s : E8s;
+    timestamp : Timestamp;
+    lastError : Text;
   };
 };

@@ -225,13 +225,88 @@ export function useCreateCanister() {
       queryClient.invalidateQueries({ queryKey: ["canisters"] });
       queryClient.invalidateQueries({ queryKey: ["account", "balance"] });
       queryClient.invalidateQueries({ queryKey: ["transactions"] });
+      queryClient.invalidateQueries({ queryKey: ["account", "failed-creations"] });
       invalidateCachedDashboard(queryClient);
       toast.success("Canister created!", {
         description: `ID: ${data.canisterId.toString()}`,
       });
     },
     onError: (err: Error) => {
+      queryClient.invalidateQueries({ queryKey: ["account", "failed-creations"] });
+      queryClient.invalidateQueries({ queryKey: ["account", "balance"] });
       toast.error("Canister creation failed", { description: err.message });
+    },
+  });
+}
+
+/** Retry CMC notify for a recorded failed create (no new ICP transfer). */
+export function useRetryCreateCanister() {
+  const { actor } = useActor(createActor);
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({
+      blockIndex,
+      name,
+    }: {
+      blockIndex: bigint;
+      name: string;
+    }): Promise<CreateCanisterResult> => {
+      if (!actor) throw new Error("Not connected");
+      const result = await actor.retryCreateCanister(blockIndex, name);
+      if (result.__kind__ === "err") throw new Error(result.err);
+      return result.ok;
+    },
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: ["canisters"] });
+      queryClient.invalidateQueries({ queryKey: ["account", "balance"] });
+      queryClient.invalidateQueries({ queryKey: ["transactions"] });
+      queryClient.invalidateQueries({ queryKey: ["account", "failed-creations"] });
+      invalidateCachedDashboard(queryClient);
+      toast.success("Create recovered!", {
+        description: `ID: ${data.canisterId.toString()}`,
+      });
+    },
+    onError: (err: Error) => {
+      queryClient.invalidateQueries({ queryKey: ["account", "failed-creations"] });
+      queryClient.invalidateQueries({ queryKey: ["account", "balance"] });
+      toast.error("Recovery retry failed", { description: err.message });
+    },
+  });
+}
+
+/** Claim a historical CREA ledger payment by block index, then notify CMC. */
+export function useClaimCreatePayment() {
+  const { actor } = useActor(createActor);
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({
+      blockIndex,
+      name,
+    }: {
+      blockIndex: bigint;
+      name: string;
+    }): Promise<CreateCanisterResult> => {
+      if (!actor) throw new Error("Not connected");
+      const result = await actor.claimCreatePayment(blockIndex, name);
+      if (result.__kind__ === "err") throw new Error(result.err);
+      return result.ok;
+    },
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: ["canisters"] });
+      queryClient.invalidateQueries({ queryKey: ["account", "balance"] });
+      queryClient.invalidateQueries({ queryKey: ["transactions"] });
+      queryClient.invalidateQueries({ queryKey: ["account", "failed-creations"] });
+      invalidateCachedDashboard(queryClient);
+      toast.success("Payment claimed & canister created!", {
+        description: `ID: ${data.canisterId.toString()}`,
+      });
+    },
+    onError: (err: Error) => {
+      queryClient.invalidateQueries({ queryKey: ["account", "failed-creations"] });
+      queryClient.invalidateQueries({ queryKey: ["account", "balance"] });
+      toast.error("Claim failed", { description: err.message });
     },
   });
 }

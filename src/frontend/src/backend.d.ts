@@ -136,9 +136,17 @@ export enum CanisterStatus {
     stopping = "stopping",
     running = "running"
 }
+export interface FailedCreationView {
+    blockIndex: bigint;
+    name: string;
+    amountE8s: E8s;
+    timestamp: Timestamp;
+    lastError: string;
+}
 export interface backendInterface {
     addCanister(canisterId: CanisterId, customName: string): Promise<Result_3>;
     addController(canisterId: CanisterId, controller: Principal): Promise<Result_3>;
+    claimCreatePayment(blockIndex: bigint, name: string): Promise<Result_4>;
     createCanister(name: string, seedCyclesIcpE8s: E8s): Promise<Result_4>;
     getAppPrincipal(): Promise<Principal>;
     getCanisterDetails(canisterId: CanisterId): Promise<CanisterDetails | null>;
@@ -151,10 +159,12 @@ export interface backendInterface {
     getTotalCycles(): Promise<bigint>;
     getTransactionHistory(page: bigint): Promise<Page_1>;
     listCanisters(page: bigint): Promise<Page>;
+    listFailedCreations(): Promise<Array<FailedCreationView>>;
     migrateCanistersFromPrincipal(oldPrincipal: Principal): Promise<Result_1>;
     removeCanister(canisterId: CanisterId): Promise<Result_3>;
     removeController(canisterId: CanisterId, controller: Principal): Promise<Result_3>;
     renameCanister(canisterId: CanisterId, newName: string): Promise<Result_3>;
+    retryCreateCanister(blockIndex: bigint, name: string): Promise<Result_4>;
     searchCanisters(queryText: string): Promise<Array<CanisterInfo>>;
     topUpCanister(canisterId: CanisterId, icpAmountE8s: E8s): Promise<Result_2>;
     transferCycles(fromCanisterId: Principal, toCanisterId: Principal, amount: bigint): Promise<Result_1>;

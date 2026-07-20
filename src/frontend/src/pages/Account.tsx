@@ -15,9 +15,14 @@ import {
   useGetMyAccount,
   useGetMyBalance,
   useGetTransactionHistory,
+  useListFailedCreations,
   useRecoverData,
 } from "@/hooks/useBackend";
-import { useTransferIcp } from "@/hooks/useCanisterMutations";
+import {
+  useClaimCreatePayment,
+  useRetryCreateCanister,
+  useTransferIcp,
+} from "@/hooks/useCanisterMutations";
 import {
   formatIcp,
   formatRelativeTime,
@@ -34,11 +39,176 @@ import {
   Clock,
   FileText,
   Layers,
+  RefreshCw,
   SendHorizonal,
   Wallet,
   Zap,
 } from "lucide-react";
 import { useRef, useState } from "react";
+
+// ─── Failed create recovery ───────────────────────────────────────────────
+
+function FailedCreatesSection() {
+  const [expanded, setExpanded] = useState(true);
+  const [claimBlock, setClaimBlock] = useState("");
+  const [claimName, setClaimName] = useState("Recovered canister");
+  const { data: failed = [], isLoading, refetch } = useListFailedCreations();
+  const retryMutation = useRetryCreateCanister();
+  const claimMutation = useClaimCreatePayment();
+
+  const claimBlockValid = /^\d+$/.test(claimBlock.trim());
+
+  return (
+    <div
+      data-ocid="failed_creates.card"
+      className="terminal-card border border-amber-500/30 bg-card"
+    >
+      <button
+        type="button"
+        data-ocid="failed_creates.toggle"
+        onClick={() => setExpanded((v) => !v)}
+        className="w-full border-b border-amber-500/20 px-4 py-2.5 flex items-center gap-2 hover:bg-amber-500/5 transition-colors duration-150 text-left"
+        aria-expanded={expanded}
+      >
+        {expanded ? (
+          <ChevronDown className="h-3.5 w-3.5 text-amber-400/80 shrink-0" />
+        ) : (
+          <ChevronRight className="h-3.5 w-3.5 text-amber-400/80 shrink-0" />
+        )}
+        <RefreshCw className="h-3.5 w-3.5 text-amber-400 shrink-0" />
+        <span className="font-mono text-xs font-semibold text-amber-400/90 uppercase tracking-[0.2em]">
+          &gt; RECOVER FAILED CREATES
+        </span>
+        {failed.length > 0 && (
+          <span className="ml-2 font-mono text-[9px] px-1.5 py-0.5 border border-amber-500/40 text-amber-400">
+            {failed.length}
+          </span>
+        )}
+        <span className="ml-auto font-mono text-[9px] text-muted-foreground/50 uppercase tracking-widest">
+          [BLOCK INDEX]
+        </span>
+      </button>
+
+      {expanded && (
+        <div className="p-4 space-y-4 font-mono">
+          <div className="flex gap-2.5 border border-amber-500/30 bg-amber-500/5 px-3 py-2.5">
+            <AlertTriangle className="h-3.5 w-3.5 text-amber-400 shrink-0 mt-0.5" />
+            <div className="space-y-1 text-[10px] text-muted-foreground tracking-[0.08em] leading-relaxed">
+              <p className="text-amber-400/90 uppercase font-semibold tracking-[0.15em]">
+                ICP SENT BUT CANISTER NOT CREATED
+              </p>
+              <p>
+                If create failed after ICP left your account, the payment sits
+                at the CMC under a ledger block index. Retry reuses that payment
+                (no second transfer). For older attempts before this list
+                existed, claim by block index (must be a CREA transfer from{" "}
+                <span className="text-primary/80">your</span> in-app account).
+              </p>
+            </div>
+          </div>
+
+          {isLoading ? (
+            <Skeleton className="h-16 w-full" />
+          ) : failed.length === 0 ? (
+            <p
+              className="font-mono text-[10px] text-muted-foreground tracking-wider"
+              data-ocid="failed_creates.empty"
+            >
+              NO PENDING FAILED CREATES ON RECORD. USE CLAIM BELOW FOR
+              HISTORICAL BLOCKS.
+            </p>
+          ) : (
+            <div className="space-y-2" data-ocid="failed_creates.list">
+              {failed.map((item) => (
+                <div
+                  key={item.blockIndex.toString()}
+                  className="border border-border/40 bg-background/60 p-3 space-y-2"
+                  data-ocid="failed_creates.item"
+                >
+                  <div className="flex flex-wrap items-center justify-between gap-2">
+                    <div className="space-y-0.5">
+                      <p className="font-mono text-[10px] text-primary uppercase tracking-wider">
+                        BLOCK {item.blockIndex.toString()}
+                      </p>
+                      <p className="font-mono text-[10px] text-muted-foreground">
+                        {formatIcp(item.amountE8s)} ICP ·{" "}
+                        {item.name || "(unnamed)"}
+                      </p>
+                    </div>
+                    <Button
+                      type="button"
+                      size="sm"
+                      disabled={retryMutation.isPending}
+                      data-ocid="failed_creates.retry_button"
+                      className="font-mono text-[10px] tracking-[0.15em] uppercase"
+                      onClick={() =>
+                        retryMutation.mutate({
+                          blockIndex: item.blockIndex,
+                          name: item.name || "Recovered canister",
+                        })
+                      }
+                    >
+                      {retryMutation.isPending ? "RETRYING…" : "[R] RETRY"}
+                    </Button>
+                  </div>
+                  {item.lastError && (
+                    <p className="font-mono text-[9px] text-destructive/80 break-all">
+                      {item.lastError}
+                    </p>
+                  )}
+                </div>
+              ))}
+            </div>
+          )}
+
+          <div className="border-t border-border/30 pt-3 space-y-2">
+            <p className="font-mono text-[9px] text-muted-foreground uppercase tracking-[0.15em]">
+              CLAIM HISTORICAL CREATE PAYMENT
+            </p>
+            <div className="flex flex-col sm:flex-row gap-2">
+              <Input
+                data-ocid="failed_creates.claim_block_input"
+                placeholder="Ledger block index (e.g. 37538379)"
+                value={claimBlock}
+                onChange={(e) => setClaimBlock(e.target.value)}
+                className="font-mono text-sm bg-background border-primary/30"
+              />
+              <Input
+                data-ocid="failed_creates.claim_name_input"
+                placeholder="Canister name"
+                value={claimName}
+                onChange={(e) => setClaimName(e.target.value)}
+                className="font-mono text-sm bg-background border-primary/30 sm:max-w-[180px]"
+              />
+              <Button
+                type="button"
+                disabled={!claimBlockValid || claimMutation.isPending}
+                data-ocid="failed_creates.claim_button"
+                className="font-mono text-[10px] tracking-[0.15em] uppercase shrink-0"
+                onClick={() =>
+                  claimMutation.mutate({
+                    blockIndex: BigInt(claimBlock.trim()),
+                    name: claimName.trim() || "Recovered canister",
+                  })
+                }
+              >
+                {claimMutation.isPending ? "CLAIMING…" : "[C] CLAIM"}
+              </Button>
+            </div>
+            <button
+              type="button"
+              className="font-mono text-[9px] text-primary/60 hover:text-primary uppercase tracking-wider"
+              data-ocid="failed_creates.refresh"
+              onClick={() => void refetch()}
+            >
+              [REFRESH LIST]
+            </button>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
 
 // ─── Recover Data Section ─────────────────────────────────────────────────
 
@@ -585,6 +755,9 @@ export default function Account() {
           />
         </div>
       </div>
+
+      {/* Failed create recovery (block-index retry / claim) */}
+      <FailedCreatesSection />
 
       {/* Recover Data */}
       <RecoverDataSection />

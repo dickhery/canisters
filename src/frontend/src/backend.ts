@@ -218,9 +218,17 @@ export enum CanisterStatus {
     stopping = "stopping",
     running = "running"
 }
+export interface FailedCreationView {
+    blockIndex: bigint;
+    name: string;
+    amountE8s: E8s;
+    timestamp: Timestamp;
+    lastError: string;
+}
 export interface backendInterface {
     addCanister(canisterId: CanisterId, customName: string): Promise<Result_3>;
     addController(canisterId: CanisterId, controller: Principal): Promise<Result_3>;
+    claimCreatePayment(blockIndex: bigint, name: string): Promise<Result_4>;
     createCanister(name: string, seedCyclesIcpE8s: E8s): Promise<Result_4>;
     getAppPrincipal(): Promise<Principal>;
     getCanisterDetails(canisterId: CanisterId): Promise<CanisterDetails | null>;
@@ -233,10 +241,12 @@ export interface backendInterface {
     getTotalCycles(): Promise<bigint>;
     getTransactionHistory(page: bigint): Promise<Page_1>;
     listCanisters(page: bigint): Promise<Page>;
+    listFailedCreations(): Promise<Array<FailedCreationView>>;
     migrateCanistersFromPrincipal(oldPrincipal: Principal): Promise<Result_1>;
     removeCanister(canisterId: CanisterId): Promise<Result_3>;
     removeController(canisterId: CanisterId, controller: Principal): Promise<Result_3>;
     renameCanister(canisterId: CanisterId, newName: string): Promise<Result_3>;
+    retryCreateCanister(blockIndex: bigint, name: string): Promise<Result_4>;
     searchCanisters(queryText: string): Promise<Array<CanisterInfo>>;
     topUpCanister(canisterId: CanisterId, icpAmountE8s: E8s): Promise<Result_2>;
     transferCycles(fromCanisterId: Principal, toCanisterId: Principal, amount: bigint): Promise<Result_1>;
@@ -246,6 +256,29 @@ export interface backendInterface {
 import type { CanisterDetails as _CanisterDetails, CanisterId as _CanisterId, CanisterStatus as _CanisterStatus, CanisterSummary as _CanisterSummary, CreateCanisterResult as _CreateCanisterResult, Cycles as _Cycles, E8s as _E8s, Page as _Page, Page_1 as _Page_1, Result as _Result, Result_1 as _Result_1, Result_2 as _Result_2, Result_3 as _Result_3, Result_4 as _Result_4, Timestamp as _Timestamp, Transaction as _Transaction, TxKind as _TxKind, UserId as _UserId } from "./declarations/backend.did.d.ts";
 export class Backend implements backendInterface {
     constructor(private actor: ActorSubclass<_SERVICE>, private _uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, private _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, private processError?: (error: unknown) => never){}
+    // Recovery methods — candid bindings lag until next caffeine-bindgen run.
+    private get recoveryActor(): {
+        listFailedCreations: () => Promise<Array<FailedCreationView>>;
+        retryCreateCanister: (blockIndex: bigint, name: string) => Promise<_Result_4>;
+        claimCreatePayment: (blockIndex: bigint, name: string) => Promise<_Result_4>;
+    } {
+        return this.actor as unknown as {
+            listFailedCreations: () => Promise<Array<FailedCreationView>>;
+            retryCreateCanister: (blockIndex: bigint, name: string) => Promise<_Result_4>;
+            claimCreatePayment: (blockIndex: bigint, name: string) => Promise<_Result_4>;
+        };
+    }
+    async listFailedCreations(): Promise<Array<FailedCreationView>> {
+        return this.recoveryActor.listFailedCreations();
+    }
+    async retryCreateCanister(blockIndex: bigint, name: string): Promise<Result_4> {
+        const result = await this.recoveryActor.retryCreateCanister(blockIndex, name);
+        return from_candid_Result_4_n3(this._uploadFile, this._downloadFile, result);
+    }
+    async claimCreatePayment(blockIndex: bigint, name: string): Promise<Result_4> {
+        const result = await this.recoveryActor.claimCreatePayment(blockIndex, name);
+        return from_candid_Result_4_n3(this._uploadFile, this._downloadFile, result);
+    }
     async addCanister(arg0: CanisterId, arg1: string): Promise<Result_3> {
         if (this.processError) {
             try {

@@ -25,6 +25,10 @@ module {
   // ICP ledger transfer fee: 10_000 e8s = 0.0001 ICP
   public let ICP_FEE_E8S : Nat64 = 10_000;
 
+  // Memo used on create payments to the CMC ("CREA" as big-endian ASCII).
+  // Used to identify recoverable create transfers on the ICP ledger.
+  public let CREA_MEMO : Nat64 = 0x43524541;
+
   // Fallback minimum ICP charged for creation when rate is unavailable.
   // ~0.5 ICP covers ≥600B cycles at typical mainnet rates (~1.5T cycles/ICP).
   public let FALLBACK_MIN_CREATION_ICP_E8S : Nat64 = 50_000_000;

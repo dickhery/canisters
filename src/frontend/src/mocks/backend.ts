@@ -1,4 +1,4 @@
-import type { backendInterface, CanisterDetails, CanisterInfo, CanisterSummary, CreationCostEstimate, DashboardItem, Page, Page_1, UserAccount } from "../backend";
+import type { backendInterface, CanisterDetails, CanisterInfo, CanisterSummary, CreationCostEstimate, DashboardItem, FailedCreationView, Page, Page_1, UserAccount } from "../backend";
 import { CanisterStatus } from "../backend";
 import { Principal } from "@icp-sdk/core/principal";
 
@@ -97,6 +97,23 @@ export const mockBackend: backendInterface = {
   createCanister: async (_name, _seedCyclesIcpE8s) => ({
     __kind__: "ok",
     ok: { canisterId: pid1, cyclesSeeded: BigInt("0") },
+  }),
+  listFailedCreations: async (): Promise<FailedCreationView[]> => [
+    {
+      blockIndex: 37538379n,
+      name: "Pending recovery",
+      amountE8s: 209990000n,
+      timestamp: BigInt(Date.now() * 1_000_000 - 3600 * 1_000_000_000),
+      lastError: "Example failed create — use Retry",
+    },
+  ],
+  retryCreateCanister: async (_blockIndex, _name) => ({
+    __kind__: "ok",
+    ok: { canisterId: pid1, cyclesSeeded: BigInt("500000000000") },
+  }),
+  claimCreatePayment: async (_blockIndex, _name) => ({
+    __kind__: "ok",
+    ok: { canisterId: pid2, cyclesSeeded: BigInt("500000000000") },
   }),
   getCreationCostEstimate: async (seedCyclesIcpE8s): Promise<CreationCostEstimate> => {
     // Mock a realistic live rate: ~1.65T cycles/ICP (representative of current XDR rates)

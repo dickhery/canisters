@@ -4,6 +4,7 @@ import type {
   CanisterSummary,
   DashboardItem,
   E8s,
+  FailedCreationView,
   Page,
   Page_1,
   UserAccount,
@@ -191,6 +192,22 @@ export function useRecoverData() {
       return { migrated: Number(result.ok) };
     },
   };
+}
+
+/** Pending CMC create payments that failed after ICP left the account (query). */
+export function useListFailedCreations(options?: QueryEnabled) {
+  const { actor } = useActor(createActor);
+  const enabled = options?.enabled ?? true;
+  return useQuery<FailedCreationView[]>({
+    queryKey: ["account", "failed-creations"],
+    queryFn: async () => {
+      if (!actor) return [];
+      return actor.listFailedCreations();
+    },
+    enabled: !!actor && enabled,
+    staleTime: 30_000,
+    ...QUERY_DEFAULTS,
+  });
 }
 
 export function useSearchCanisters(query: string) {

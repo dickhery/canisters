@@ -1,9 +1,12 @@
 import Map "mo:core/Map";
 import List "mo:core/List";
+import Blob "mo:core/Blob";
 import Nat64 "mo:core/Nat64";
 import Principal "mo:core/Principal";
+import Text "mo:core/Text";
 import Time "mo:core/Time";
 import Runtime "mo:core/Runtime";
+import Order "mo:core/Order";
 import CommonTypes "../types/common";
 import CanisterTypes "../types/canister";
 import LedgerTypes "../types/ledger";
@@ -14,24 +17,25 @@ import LedgerLib "../lib/ledger";
 
 // Canister-creation API mixin.
 // Orchestrates: user ICP → CMC notify_create_canister → auto-track.
+// On notify failure after a successful transfer, records the ledger block so
+// the user can retry without re-paying. Historical payments can be claimed
+// after ICP ledger verification (from caller's sub-account + CREA memo).
 // The app never attaches its own cycles for creation (cycle-drain safe).
-// State slices mirror those in CanisterApi and LedgerApi.
 mixin (
   selfPrincipal : Principal,
   userCanisters : Map.Map<CommonTypes.UserId, List.List<CanisterTypes.TrackedCanister>>,
   userAccounts : Map.Map<CommonTypes.UserId, LedgerTypes.UserAccount>,
   txLog : List.List<LedgerTypes.Transaction>,
   nextTxId : { var value : Nat },
+  // blockIndex → failed/pending create payment owned by a user
+  failedCreations : Map.Map<CreationTypes.BlockIndex, CreationTypes.FailedCreation>,
 ) {
 
   let CREATION_ICP_LEDGER_ID = Principal.fromText("ryjl3-tyaaa-aaaaa-aaaba-cai");
   let CREATION_CMC_ID = Principal.fromText("rkp4c-7iaaa-aaaaa-aaaca-cai");
 
   // CMC actor — rate queries and create-from-ICP (notify_create_canister).
-  // `transient`: remote actor handles are not real state; must not participate
-  // in the stable signature (interface changes would break upgrades otherwise).
-  // Settings type is intentionally minimal; unused optional fields are omitted
-  // so Candid encoding stays compatible with the CMC service.
+  // `transient`: remote actor handles are not real state.
   transient let cmcActor : actor {
     get_icp_xdr_conversion_rate : () -> async {
       data : { xdr_permyriad_per_icp : Nat64; timestamp_seconds : Nat64 };
@@ -63,12 +67,100 @@ mixin (
     };
   } = actor "rkp4c-7iaaa-aaaaa-aaaca-cai";
 
-  // Cached CMC rate — avoids repeated inter-canister calls for the same data.
+  // Classic ICP ledger (for transfer + block ownership checks)
+  type LedgerOp = {
+    #Mint : { to : Blob; amount : { e8s : Nat64 } };
+    #Burn : { from : Blob; amount : { e8s : Nat64 } };
+    #Transfer : {
+      from : Blob;
+      to : Blob;
+      amount : { e8s : Nat64 };
+      fee : { e8s : Nat64 };
+    };
+    #Approve : {
+      from : Blob;
+      spender : Blob;
+      allowance : { e8s : Nat64 };
+      expected_allowance : ?{ e8s : Nat64 };
+      expires_at : ?{ timestamp_nanos : Nat64 };
+      fee : { e8s : Nat64 };
+    };
+    #TransferFrom : {
+      from : Blob;
+      to : Blob;
+      spender : Blob;
+      amount : { e8s : Nat64 };
+      fee : { e8s : Nat64 };
+    };
+  };
+
+  type LedgerTx = {
+    memo : Nat64;
+    icrc1_memo : ?Blob;
+    operation : ?LedgerOp;
+    created_at_time : ?{ timestamp_nanos : Nat64 };
+  };
+
+  type LedgerBlock = {
+    parent_hash : ?Blob;
+    transaction : LedgerTx;
+    timestamp : { timestamp_nanos : Nat64 };
+  };
+
+  type GetBlocksArgs = { start : Nat64; length : Nat64 };
+
+  type BlockRange = { blocks : [LedgerBlock] };
+
+  type GetBlocksError = {
+    #BadFirstBlockIndex : { requested_index : Nat64; first_valid_index : Nat64 };
+    #Other : { error_message : Text; error_code : Nat64 };
+  };
+
+  type ArchivedRange = {
+    start : Nat64;
+    length : Nat64;
+    callback : shared query GetBlocksArgs -> async {
+      #Ok : BlockRange;
+      #Err : GetBlocksError;
+    };
+  };
+
+  type QueryBlocksResponse = {
+    chain_length : Nat64;
+    certificate : ?Blob;
+    blocks : [LedgerBlock];
+    first_block_index : Nat64;
+    archived_blocks : [ArchivedRange];
+  };
+
+  transient let icpLedger : actor {
+    account_balance : query { account : Blob } -> async { e8s : Nat64 };
+    transfer : {
+      memo : Nat64;
+      amount : { e8s : Nat64 };
+      fee : { e8s : Nat64 };
+      from_subaccount : ?Blob;
+      to : Blob;
+      created_at_time : ?{ timestamp_nanos : Nat64 };
+    } -> async {
+      #Ok : Nat64;
+      #Err : {
+        #BadFee : { expected_fee : { e8s : Nat64 } };
+        #InsufficientFunds : { balance : { e8s : Nat64 } };
+        #TxTooOld : { allowed_window_nanos : Nat64 };
+        #TxCreatedInFuture;
+        #TxDuplicate : { duplicate_of : Nat64 };
+      };
+    };
+    query_blocks : query GetBlocksArgs -> async QueryBlocksResponse;
+  } = actor (CREATION_ICP_LEDGER_ID.toText());
+
+  // Cached CMC rate — avoids repeated inter-canister calls.
   var cachedCyclesPerIcp : Nat = CreationLib.DEFAULT_CYCLES_PER_ICP;
   var cachedRateFetchedAt : Int = 0;
   let RATE_CACHE_TTL_NS : Int = 3_600_000_000_000; // 1 hour
 
-  // Per-caller reentrancy guard — ephemeral lock, must not persist across upgrades.
+  // Per-caller reentrancy guard — ephemeral.
   transient let createInFlight = Map.empty<Principal, Bool>();
 
   func fetchCyclesPerIcp() : async Nat {
@@ -95,20 +187,184 @@ mixin (
     #TransactionTooOld : Nat64;
   }) : Text {
     switch (e) {
-      case (#Refunded { reason; block_index = _ }) { "Refunded: " # reason };
+      case (#Refunded { reason; block_index = bi }) {
+        let biText = switch (bi) {
+          case (?b) { " (refund block " # b.toText() # ")" };
+          case null { "" };
+        };
+        "Refunded: " # reason # biText
+      };
       case (#InvalidTransaction(t)) { "Invalid transaction: " # t };
-      case (#Processing) { "Processing, try again" };
+      case (#Processing) { "Processing, try again shortly" };
       case (#TransactionTooOld(_)) { "Transaction too old for CMC" };
       case (#Other { error_message; error_code = _ }) { error_message };
     }
   };
 
-  // Fetch the live ICP→cycles conversion rate from the CMC (cached 1 hour).
+  func recordFailedCreation(
+    blockIndex : CreationTypes.BlockIndex,
+    userId : Principal,
+    name : Text,
+    amountE8s : Nat64,
+    lastError : Text,
+  ) {
+    switch (failedCreations.get(blockIndex)) {
+      case (?existing) {
+        // Only the owner may refresh metadata.
+        if (Principal.equal(existing.userId, userId)) {
+          existing.name := name;
+          existing.lastError := lastError;
+        };
+      };
+      case null {
+        failedCreations.add(blockIndex, {
+          blockIndex;
+          userId;
+          var name;
+          amountE8s;
+          timestamp = Time.now();
+          var lastError;
+        });
+      };
+    };
+  };
+
+  func removeFailedCreation(blockIndex : CreationTypes.BlockIndex) {
+    failedCreations.remove(blockIndex);
+  };
+
+  // CMC notify with correct controller (must be this app) + user as co-controller.
+  func notifyCreate(
+    blockIndex : Nat64,
+    caller : Principal,
+  ) : async {
+    #ok : Principal;
+    #err : Text;
+  } {
+    try {
+      let notifyResult = await cmcActor.notify_create_canister({
+        block_index = blockIndex;
+        // CMC requires controller == notify caller (this canister).
+        controller = selfPrincipal;
+        subnet_type = null;
+        subnet_selection = null;
+        settings = ?{
+          controllers = ?[caller, selfPrincipal];
+          compute_allocation = null;
+          memory_allocation = null;
+          freezing_threshold = null;
+        };
+      });
+      switch (notifyResult) {
+        case (#Ok(id)) { #ok(id) };
+        case (#Err(e)) { #err(notifyErrorText(e)) };
+      }
+    } catch (err) {
+      #err(err.message())
+    }
+  };
+
+  func trackCreated(
+    caller : Principal,
+    newCanisterId : Principal,
+    name : Text,
+    cyclesSeeded : Nat,
+    totalIcpE8s : Nat64,
+  ) {
+    let canisters = switch (userCanisters.get(caller)) {
+      case (?list) list;
+      case null {
+        let list = CanisterLib.initUserRegistry();
+        userCanisters.add(caller, list);
+        list
+      };
+    };
+    ignore CanisterLib.addCanister(canisters, newCanisterId, name, Time.now());
+    CanisterLib.updateCachedControllers(canisters, newCanisterId, [caller, selfPrincipal]);
+    if (cyclesSeeded > 0) {
+      CanisterLib.updateCachedBalance(canisters, newCanisterId, cyclesSeeded);
+    };
+    ignore LedgerLib.recordTransaction(
+      txLog,
+      nextTxId.value,
+      caller,
+      #topUp { canisterId = newCanisterId; cyclesAdded = cyclesSeeded },
+      totalIcpE8s,
+      "Create canister " # newCanisterId.toText(),
+      Time.now(),
+    );
+    nextTxId.value += 1;
+  };
+
+  // Load one ICP ledger block (main + archived ranges).
+  func fetchLedgerBlock(blockIndex : Nat64) : async ?LedgerBlock {
+    try {
+      let resp = await icpLedger.query_blocks({ start = blockIndex; length = 1 });
+      if (resp.blocks.size() > 0) {
+        return ?resp.blocks[0]
+      };
+      // Search archived ranges
+      for (range in resp.archived_blocks.values()) {
+        if (blockIndex >= range.start and blockIndex < range.start + range.length) {
+          let archiveResult = await range.callback({ start = blockIndex; length = 1 });
+          switch (archiveResult) {
+            case (#Ok({ blocks })) {
+              if (blocks.size() > 0) { return ?blocks[0] };
+            };
+            case (#Err(_)) {};
+          };
+        };
+      };
+      null
+    } catch (_) {
+      null
+    }
+  };
+
+  // Verify block is a CREA transfer from caller's in-app sub-account to CMC.
+  // Returns net amount e8s on success.
+  func verifyCreatePaymentOwnedBy(
+    blockIndex : Nat64,
+    caller : Principal,
+  ) : async CommonTypes.Result<Nat64> {
+    let block = switch (await fetchLedgerBlock(blockIndex)) {
+      case null {
+        return #err(
+          "Could not load ledger block " # blockIndex.toText() #
+          ". It may be too old to query, or the block index is wrong."
+        )
+      };
+      case (?b) { b };
+    };
+    let callerSub = LedgerLib.principalToSubaccount(caller);
+    let expectedFrom = selfPrincipal.toLedgerAccount(?callerSub);
+    let expectedTo = CREATION_CMC_ID.toLedgerAccount(null);
+
+    if (block.transaction.memo != CreationLib.CREA_MEMO) {
+      return #err("Block is not a create payment (expected CREA memo)")
+    };
+    switch (block.transaction.operation) {
+      case (?#Transfer(t)) {
+        if (not Blob.equal(t.from, expectedFrom)) {
+          return #err("This create payment was not sent from your in-app account")
+        };
+        if (not Blob.equal(t.to, expectedTo)) {
+          return #err("Payment was not sent to the Cycles Minting Canister")
+        };
+        #ok(t.amount.e8s)
+      };
+      case _ {
+        #err("Block is not an ICP transfer")
+      };
+    }
+  };
+
+  // ── Public API ──────────────────────────────────────────────────────────
+
   public shared func getIcpXdrConversionRate() : async Nat {
     await fetchCyclesPerIcp()
   };
 
-  // Return an upfront cost estimate for canister creation + optional seed ICP.
   public shared func getCreationCostEstimate(
     seedCyclesIcpE8s : CommonTypes.E8s,
   ) : async CreationTypes.CreationCostEstimate {
@@ -116,17 +372,33 @@ mixin (
     CreationLib.estimateCreationCost(seedCyclesIcpE8s, cyclesPerIcp)
   };
 
+  // List this caller's pending/failed create payments (query — no cycle burn beyond query).
+  public shared query ({ caller }) func listFailedCreations() : async [CreationTypes.FailedCreationView] {
+    if (caller.isAnonymous()) { Runtime.trap("Anonymous caller not allowed") };
+    let buf = List.empty<CreationTypes.FailedCreationView>();
+    for ((_, rec) in failedCreations.entries()) {
+      if (Principal.equal(rec.userId, caller)) {
+        buf.add({
+          blockIndex = rec.blockIndex;
+          name = rec.name;
+          amountE8s = rec.amountE8s;
+          timestamp = rec.timestamp;
+          lastError = rec.lastError;
+        });
+      };
+    };
+    // Newest first
+    let arr = buf.toArray();
+    arr.sort(
+      func(a : CreationTypes.FailedCreationView, b : CreationTypes.FailedCreationView) : Order.Order {
+        if (a.timestamp > b.timestamp) { #less }
+        else if (a.timestamp < b.timestamp) { #greater }
+        else { #equal }
+      },
+    )
+  };
+
   // Create a new canister funded entirely by the caller's ICP via the CMC.
-  //
-  // Steps:
-  //   1. Validate inputs and acquire per-caller lock.
-  //   2. Fetch live rate and compute min creation ICP + total gross.
-  //   3. Verify caller's sub-account balance.
-  //   4. Transfer gross - fee ICP from caller sub-account → CMC default account.
-  //   5. CMC notify_create_canister (controllers = [caller, app]).
-  //   6. Auto-track and record a #topUp transaction for the residual cycles estimate.
-  //
-  // The app attaches ZERO cycles — creation cannot drain the app's balance.
   public shared ({ caller }) func createCanister(
     name : Text,
     seedCyclesIcpE8s : CommonTypes.E8s,
@@ -138,7 +410,6 @@ mixin (
       return #err("Canister name cannot be empty")
     };
 
-    // Reject concurrent createCanister calls from the same principal
     switch (createInFlight.get(caller)) {
       case (?_) {
         return #err("A canister creation is already in progress for this account")
@@ -148,8 +419,6 @@ mixin (
       };
     };
 
-    // Entire create path runs under try/finally so the lock is always released
-    // (including when a callback traps — finally runs in cleanup context).
     try {
       let cyclesPerIcp = await fetchCyclesPerIcp();
       let creationFeeIcpE8s = CreationLib.minCreationIcpE8s(cyclesPerIcp);
@@ -162,31 +431,10 @@ mixin (
         )
       };
 
-      // Check balance (gross amount, same pattern as topUpCanister)
       let callerSubaccountBlob = LedgerLib.principalToSubaccount(caller);
       let accountBlob = selfPrincipal.toLedgerAccount(?callerSubaccountBlob);
-      let ledger = actor (CREATION_ICP_LEDGER_ID.toText()) : actor {
-        account_balance : query { account : Blob } -> async { e8s : Nat64 };
-        transfer : {
-          memo : Nat64;
-          amount : { e8s : Nat64 };
-          fee : { e8s : Nat64 };
-          from_subaccount : ?Blob;
-          to : Blob;
-          created_at_time : ?{ timestamp_nanos : Nat64 };
-        } -> async {
-          #Ok : Nat64;
-          #Err : {
-            #BadFee : { expected_fee : { e8s : Nat64 } };
-            #InsufficientFunds : { balance : { e8s : Nat64 } };
-            #TxTooOld : { allowed_window_nanos : Nat64 };
-            #TxCreatedInFuture;
-            #TxDuplicate : { duplicate_of : Nat64 };
-          };
-        };
-      };
 
-      let balResult = await ledger.account_balance({ account = accountBlob });
+      let balResult = await icpLedger.account_balance({ account = accountBlob });
       let balance = balResult.e8s;
       if (balance < totalIcpE8s) {
         return #err(
@@ -196,13 +444,11 @@ mixin (
         )
       };
 
-      // Transfer ICP to CMC default account (required for notify_create_canister).
-      // Top-ups use a per-canister subaccount; create uses the CMC principal account.
       let cmcAccountBlob = CREATION_CMC_ID.toLedgerAccount(null);
       let transferAmount = totalIcpE8s - CreationLib.ICP_FEE_E8S;
 
-      let transferResult = await ledger.transfer({
-        memo = 0x43524541; // "CREA" — create payment marker
+      let transferResult = await icpLedger.transfer({
+        memo = CreationLib.CREA_MEMO;
         amount = { e8s = transferAmount };
         fee = { e8s = CreationLib.ICP_FEE_E8S };
         from_subaccount = ?callerSubaccountBlob;
@@ -230,74 +476,181 @@ mixin (
         case (#Ok(idx)) { idx };
       };
 
-      // CMC converts ICP → cycles, pays creation fee, creates canister.
-      //
-      // Authorization: the CMC only allows the notify *caller* to act as
-      // `controller`. This update is invoked by the app canister (not the
-      // end user), so `controller` must be selfPrincipal. Putting the user
-      // there yields: "<app> is not authorized to call notify_create_canister
-      // on behalf of <user>". Final controllers are set via settings so both
-      // the user and the app control the new canister.
-      let notifyResult = await cmcActor.notify_create_canister({
-        block_index = blockIndex;
-        controller = selfPrincipal;
-        subnet_type = null;
-        subnet_selection = null;
-        settings = ?{
-          controllers = ?[caller, selfPrincipal];
-          compute_allocation = null;
-          memory_allocation = null;
-          freezing_threshold = null;
+      // Notify CMC — controller MUST be this app (notify caller).
+      switch (await notifyCreate(blockIndex, caller)) {
+        case (#err(msg)) {
+          // Payment left the account; record for retry without re-paying.
+          recordFailedCreation(blockIndex, caller, name, transferAmount, msg);
+          return #err(
+            "Failed to create canister: " # msg #
+            " Your ICP payment is on ledger block " # blockIndex.toText() #
+            ". Open Account → Recover failed creates to retry without paying again."
+          )
         };
-      });
-
-      let newCanisterId : Principal = switch (notifyResult) {
-        case (#Err(e)) {
-          return #err("Failed to create canister: " # notifyErrorText(e))
+        case (#ok(newCanisterId)) {
+          let netE8s = transferAmount.toNat();
+          let minted = netE8s * cyclesPerIcp / 100_000_000;
+          let cyclesSeeded : Nat = if (minted > CreationLib.CREATION_FEE_CYCLES) {
+            minted - CreationLib.CREATION_FEE_CYCLES
+          } else { 0 };
+          trackCreated(caller, newCanisterId, name, cyclesSeeded, totalIcpE8s);
+          removeFailedCreation(blockIndex);
+          #ok({ canisterId = newCanisterId; cyclesSeeded })
         };
-        case (#Ok(id)) { id };
-      };
-
-      // Estimate residual cycles on the new canister (CMC returns principal only).
-      let netE8s = transferAmount.toNat();
-      let minted = netE8s * cyclesPerIcp / 100_000_000;
-      let cyclesSeeded : Nat = if (minted > CreationLib.CREATION_FEE_CYCLES) {
-        minted - CreationLib.CREATION_FEE_CYCLES
-      } else {
-        0
-      };
-
-      // Auto-track under the caller's account
-      let canisters = switch (userCanisters.get(caller)) {
-        case (?list) list;
-        case null {
-          let list = CanisterLib.initUserRegistry();
-          userCanisters.add(caller, list);
-          list
-        };
-      };
-      ignore CanisterLib.addCanister(canisters, newCanisterId, name, Time.now());
-      CanisterLib.updateCachedControllers(canisters, newCanisterId, [caller, selfPrincipal]);
-      if (cyclesSeeded > 0) {
-        CanisterLib.updateCachedBalance(canisters, newCanisterId, cyclesSeeded);
-      };
-
-      ignore LedgerLib.recordTransaction(
-        txLog,
-        nextTxId.value,
-        caller,
-        #topUp { canisterId = newCanisterId; cyclesAdded = cyclesSeeded },
-        totalIcpE8s,
-        "Create canister " # newCanisterId.toText(),
-        Time.now(),
-      );
-      nextTxId.value += 1;
-
-      #ok({ canisterId = newCanisterId; cyclesSeeded })
+      }
     } catch (err) {
       #err("Failed to create canister: " # err.message())
     } finally {
-      // Map.delete is deprecated (M0235); use remove.
+      createInFlight.remove(caller);
+    }
+  };
+
+  // Retry notify_create_canister for a previously recorded failed payment.
+  // Does not transfer ICP again.
+  public shared ({ caller }) func retryCreateCanister(
+    blockIndex : CreationTypes.BlockIndex,
+    name : Text,
+  ) : async CommonTypes.Result<CreationTypes.CreateCanisterResult> {
+    if (caller.isAnonymous()) {
+      return #err("Anonymous caller not allowed")
+    };
+    let effectiveName = if (name.size() > 0) { name } else { "Recovered canister" };
+
+    switch (createInFlight.get(caller)) {
+      case (?_) {
+        return #err("A canister creation is already in progress for this account")
+      };
+      case null {
+        createInFlight.add(caller, true);
+      };
+    };
+
+    try {
+      let rec = switch (failedCreations.get(blockIndex)) {
+        case null {
+          return #err(
+            "No failed create found for block " # blockIndex.toText() #
+            ". If this is an older payment, use claimCreatePayment first."
+          )
+        };
+        case (?r) {
+          if (not Principal.equal(r.userId, caller)) {
+            return #err("This create payment belongs to another account")
+          };
+          r
+        };
+      };
+
+      if (effectiveName.size() > 0) {
+        rec.name := effectiveName;
+      };
+
+      switch (await notifyCreate(blockIndex, caller)) {
+        case (#err(msg)) {
+          rec.lastError := msg;
+          // Refunded means ICP returned — drop the pending record.
+          if (msg.startsWith(#text "Refunded:")) {
+            removeFailedCreation(blockIndex);
+          };
+          #err(
+            "Retry failed: " # msg #
+            " Block " # blockIndex.toText() #
+            ". If CMC refunded the payment, the ICP should return to your in-app balance."
+          )
+        };
+        case (#ok(newCanisterId)) {
+          let cyclesPerIcp = await fetchCyclesPerIcp();
+          let netE8s = rec.amountE8s.toNat();
+          let minted = netE8s * cyclesPerIcp / 100_000_000;
+          let cyclesSeeded : Nat = if (minted > CreationLib.CREATION_FEE_CYCLES) {
+            minted - CreationLib.CREATION_FEE_CYCLES
+          } else { 0 };
+          let grossIcp = rec.amountE8s + CreationLib.ICP_FEE_E8S;
+          trackCreated(caller, newCanisterId, rec.name, cyclesSeeded, grossIcp);
+          removeFailedCreation(blockIndex);
+          #ok({ canisterId = newCanisterId; cyclesSeeded })
+        };
+      }
+    } catch (err) {
+      #err("Retry failed: " # err.message())
+    } finally {
+      createInFlight.remove(caller);
+    }
+  };
+
+  // Claim a historical CREA payment (e.g. before failed-create recording existed)
+  // by verifying the ICP ledger block belongs to the caller's sub-account, then
+  // retrying notify. Safe against theft: wrong owner fails verification.
+  public shared ({ caller }) func claimCreatePayment(
+    blockIndex : CreationTypes.BlockIndex,
+    name : Text,
+  ) : async CommonTypes.Result<CreationTypes.CreateCanisterResult> {
+    if (caller.isAnonymous()) {
+      return #err("Anonymous caller not allowed")
+    };
+    let effectiveName = if (name.size() > 0) { name } else { "Recovered canister" };
+
+    switch (createInFlight.get(caller)) {
+      case (?_) {
+        return #err("A canister creation is already in progress for this account")
+      };
+      case null {
+        createInFlight.add(caller, true);
+      };
+    };
+
+    try {
+      // If already recorded for another user, reject.
+      switch (failedCreations.get(blockIndex)) {
+        case (?existing) {
+          if (not Principal.equal(existing.userId, caller)) {
+            return #err("This block is already claimed by another account")
+          };
+        };
+        case null {};
+      };
+
+      let amountE8s = switch (await verifyCreatePaymentOwnedBy(blockIndex, caller)) {
+        case (#err(msg)) { return #err(msg) };
+        case (#ok(a)) { a };
+      };
+
+      recordFailedCreation(
+        blockIndex,
+        caller,
+        effectiveName,
+        amountE8s,
+        "Claimed for recovery",
+      );
+
+      switch (await notifyCreate(blockIndex, caller)) {
+        case (#err(msg)) {
+          recordFailedCreation(blockIndex, caller, effectiveName, amountE8s, msg);
+          if (msg.startsWith(#text "Refunded:")) {
+            removeFailedCreation(blockIndex);
+          };
+          #err(
+            "Claim recorded but CMC notify failed: " # msg #
+            " Block " # blockIndex.toText() #
+            " is saved under Recover failed creates — you can retry later."
+          )
+        };
+        case (#ok(newCanisterId)) {
+          let cyclesPerIcp = await fetchCyclesPerIcp();
+          let netE8s = amountE8s.toNat();
+          let minted = netE8s * cyclesPerIcp / 100_000_000;
+          let cyclesSeeded : Nat = if (minted > CreationLib.CREATION_FEE_CYCLES) {
+            minted - CreationLib.CREATION_FEE_CYCLES
+          } else { 0 };
+          let grossIcp = amountE8s + CreationLib.ICP_FEE_E8S;
+          trackCreated(caller, newCanisterId, effectiveName, cyclesSeeded, grossIcp);
+          removeFailedCreation(blockIndex);
+          #ok({ canisterId = newCanisterId; cyclesSeeded })
+        };
+      }
+    } catch (err) {
+      #err("Claim failed: " # err.message())
+    } finally {
       createInFlight.remove(caller);
     }
   };
