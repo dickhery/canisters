@@ -100,14 +100,27 @@ export const mockBackend: backendInterface = {
   }),
   getCreationCostEstimate: async (seedCyclesIcpE8s): Promise<CreationCostEstimate> => {
     // Mock a realistic live rate: ~1.65T cycles/ICP (representative of current XDR rates)
-    const cyclesPerIcp = BigInt("1_650_000_000_000".replace(/_/g, ""));
-    const estimatedSeedCycles = (seedCyclesIcpE8s * cyclesPerIcp) / BigInt("100000000");
+    const cyclesPerIcp = BigInt("1650000000000");
+    // Mirrors minCreationIcpE8s: ceil(600B * 1e8 / rate) + 5%, floor 0.5 ICP
+    const minCreateCycles = 600_000_000_000n;
+    const raw =
+      (minCreateCycles * 100_000_000n + cyclesPerIcp - 1n) / cyclesPerIcp;
+    const withBuffer = raw + raw / 20n;
+    const creationFeeIcpE8s =
+      withBuffer < 50_000_000n ? 50_000_000n : withBuffer;
+    const totalIcpRequiredE8s = creationFeeIcpE8s + seedCyclesIcpE8s;
+    const net =
+      totalIcpRequiredE8s > 10_000n ? totalIcpRequiredE8s - 10_000n : 0n;
+    const minted = (net * cyclesPerIcp) / 100_000_000n;
+    const creationFeeCycles = 500_000_000_000n;
+    const estimatedSeedCycles =
+      minted > creationFeeCycles ? minted - creationFeeCycles : 0n;
     return {
-      creationFeeIcpE8s: BigInt("100000000"),
-      transferFeeE8s: BigInt("10000"),
-      totalIcpRequiredE8s: BigInt("100010000") + seedCyclesIcpE8s,
-      seedCyclesIcpE8s: seedCyclesIcpE8s,
-      creationCycles: BigInt("500000000000"),
+      creationFeeIcpE8s,
+      transferFeeE8s: 10_000n,
+      totalIcpRequiredE8s,
+      seedCyclesIcpE8s,
+      creationCycles: creationFeeCycles,
       cyclesPerIcp,
       estimatedSeedCycles,
     };

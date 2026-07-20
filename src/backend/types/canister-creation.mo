@@ -9,23 +9,28 @@ module {
   // Arguments for creating a new canister
   public type CreateCanisterArgs = {
     name : Text;
-    seedCyclesIcpE8s : E8s; // 0 means no initial top-up; creation fee still applies
+    // Additional ICP beyond the base CMC creation minimum (0 = base only).
+    seedCyclesIcpE8s : E8s;
   };
 
   // Successful result of canister creation
   public type CreateCanisterResult = {
     canisterId : CanisterId;
-    cyclesSeeded : Cycles; // 0 if no seed top-up was requested
+    // Estimated residual cycles on the new canister after creation fee
+    // (CMC notify_create_canister returns only the principal).
+    cyclesSeeded : Cycles;
   };
 
-  // Cost breakdown shown upfront to the user before committing
+  // Cost breakdown shown upfront to the user before committing.
+  // Creation is fully user-funded via CMC notify_create_canister — the app
+  // attaches zero of its own cycles so multi-user creation cannot drain it.
   public type CreationCostEstimate = {
-    creationFeeIcpE8s : E8s;       // ICP charged to USER for creation — always 0 (app pays 500B cycles from its own balance)
-    transferFeeE8s : E8s;          // ICP ledger fee per transfer (10_000 e8s)
-    totalIcpRequiredE8s : E8s;     // Total ICP user must have: 0 if no seeding, else seedCyclesIcpE8s + transferFeeE8s
-    seedCyclesIcpE8s : E8s;        // Passthrough of the user's requested seed amount
-    creationCycles : Cycles;       // 500B cycles deducted from app's own balance for IC create_canister call
-    estimatedSeedCycles : Cycles;  // Estimated cycles the seed ICP will buy at the live CMC rate
-    cyclesPerIcp : Nat;            // Live ICP→cycles rate used for the estimate (cycles per 1 ICP)
+    creationFeeIcpE8s : E8s; // Min ICP charged for CMC create (covers fee + residual cycles)
+    transferFeeE8s : E8s; // ICP ledger fee per transfer (10_000 e8s)
+    totalIcpRequiredE8s : E8s; // Gross ICP user must hold: creationFee + seed
+    seedCyclesIcpE8s : E8s; // Passthrough of the user's requested extra seed ICP
+    creationCycles : Cycles; // Protocol creation fee in cycles (500B)
+    estimatedSeedCycles : Cycles; // Est. residual cycles on new canister after creation fee
+    cyclesPerIcp : Nat; // Live ICP→cycles rate used for the estimate
   };
 };

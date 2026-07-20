@@ -101,8 +101,9 @@ export function CreateCanisterModal({
             &gt;_ CREATE NEW CANISTER
           </DialogTitle>
           <DialogDescription className="font-mono text-[10px] text-muted-foreground tracking-[0.12em]">
-            PROVISION A NEW CANISTER ON THE INTERNET COMPUTER. ICP WILL BE
-            DEDUCTED FROM YOUR IN-APP BALANCE.
+            PROVISION A NEW CANISTER VIA THE CYCLES MINTING CANISTER. ICP IS
+            DEDUCTED FROM YOUR IN-APP BALANCE — THE APP DOES NOT SPEND ITS OWN
+            CYCLES.
           </DialogDescription>
         </DialogHeader>
 
@@ -114,16 +115,16 @@ export function CreateCanisterModal({
 
           <div className="flex justify-between items-center">
             <span className="text-muted-foreground uppercase">
-              BASE CREATION FEE
+              BASE CREATION (MIN ICP)
             </span>
             <span className="text-primary tabular-nums retro-glow-sm">
-              {formatIcp(creationFeeE8s)} ICP
+              {rateLoading ? "…" : `${formatIcp(creationFeeE8s)} ICP`}
             </span>
           </div>
 
           <div className="flex justify-between items-center">
             <span className="text-muted-foreground uppercase">
-              SEED CYCLES ICP
+              EXTRA SEED ICP
             </span>
             <span className="text-primary tabular-nums">
               {formatIcp(seedIcpE8s)} ICP
@@ -132,7 +133,7 @@ export function CreateCanisterModal({
 
           <div className="flex justify-between items-center">
             <span className="text-muted-foreground uppercase">
-              TRANSFER FEE
+              LEDGER FEE (INCL. IN BASE)
             </span>
             <span className="text-primary/60 tabular-nums text-[9px]">
               {formatIcp(transferFeeE8s)} ICP
@@ -274,8 +275,9 @@ export function CreateCanisterModal({
               )}
             </div>
             <p className="font-mono text-[9px] text-muted-foreground/60 tracking-wider">
-              ENTER ADDITIONAL ICP TO TOP UP THE NEW CANISTER WITH CYCLES ON
-              CREATION. LEAVE 0 TO ONLY PAY THE BASE CREATION FEE.
+              OPTIONAL EXTRA ICP ABOVE THE BASE MINIMUM. THE BASE ALREADY FUNDS
+              CREATION + A SMALL CYCLE RESERVE; ADD MORE FOR A LARGER BALANCE.
+              LEAVE 0 TO PAY ONLY THE BASE.
             </p>
           </div>
 

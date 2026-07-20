@@ -1,16 +1,28 @@
 /**
  * ICP → cycles estimation helpers.
- * Mirrors backend logic in canister-creation.mo (net ICP after transfer fee).
+ * Mirrors backend logic in canister-creation.mo (CMC-funded create + top-up).
  */
 
 /** Standard ICP ledger transfer fee: 10_000 e8s = 0.0001 ICP */
 export const ICP_TRANSFER_FEE_E8S = 10_000n;
+
+/** Protocol canister creation fee in cycles (500B). */
+export const CREATION_FEE_CYCLES = 500_000_000_000n;
+
+/** Min residual cycles after creation fee so empty canisters can allocate memory. */
+export const MIN_INITIAL_CYCLES = 100_000_000_000n;
+
+/** Total cycles the ICP payment must mint at minimum. */
+export const MIN_CREATE_CYCLES = CREATION_FEE_CYCLES + MIN_INITIAL_CYCLES;
 
 /**
  * Conservative fallback when the live CMC rate is unavailable.
  * Slightly below typical mainnet rates so estimates do not overpromise.
  */
 export const FALLBACK_CYCLES_PER_ICP = 1_500_000_000_000n;
+
+/** Fallback minimum creation ICP (~0.5 ICP) when rate is unavailable. */
+export const FALLBACK_MIN_CREATION_ICP_E8S = 50_000_000n;
 
 /** Parse a decimal ICP input string into e8s (max 8 fractional digits). */
 export function parseIcpInput(raw: string): bigint {
@@ -22,6 +34,21 @@ export function parseIcpInput(raw: string): bigint {
   const fracStr = (match[2] ?? "").padEnd(8, "0").slice(0, 8);
   const frac = BigInt(fracStr);
   return whole * 100_000_000n + frac;
+}
+
+/**
+ * Minimum ICP (gross) so CMC can mint MIN_CREATE_CYCLES after the ledger fee.
+ * Mirrors backend minCreationIcpE8s (+5% buffer, +fee, floor at fallback).
+ */
+export function minCreationIcpE8s(cyclesPerIcp: bigint): bigint {
+  if (cyclesPerIcp <= 0n) return FALLBACK_MIN_CREATION_ICP_E8S;
+  const raw =
+    (MIN_CREATE_CYCLES * 100_000_000n + cyclesPerIcp - 1n) / cyclesPerIcp;
+  const withBuffer = raw + raw / 20n;
+  const gross = withBuffer + ICP_TRANSFER_FEE_E8S;
+  return gross < FALLBACK_MIN_CREATION_ICP_E8S
+    ? FALLBACK_MIN_CREATION_ICP_E8S
+    : gross;
 }
 
 /**
@@ -44,7 +71,11 @@ export function formatCyclesPerIcp(cyclesPerIcp: bigint): string {
   return `${trillions.toFixed(2)}T`;
 }
 
-/** Mirrors backend estimateCreationCost — computed client-side to avoid CMC calls. */
+/**
+ * Mirrors backend estimateCreationCost — CMC-funded create.
+ * totalIcpRequired = base creation min + optional seed (gross, top-up style).
+ * estimatedSeedCycles = residual on new canister after protocol creation fee.
+ */
 export function estimateCreationCost(
   seedIcpE8s: bigint,
   cyclesPerIcp: bigint,
@@ -55,13 +86,16 @@ export function estimateCreationCost(
   estimatedSeedCycles: bigint;
   cyclesPerIcp: bigint;
 } {
-  const totalIcpRequiredE8s =
-    seedIcpE8s > 0n ? seedIcpE8s + ICP_TRANSFER_FEE_E8S : 0n;
+  const creationFeeIcpE8s = minCreationIcpE8s(cyclesPerIcp);
+  const totalIcpRequiredE8s = creationFeeIcpE8s + seedIcpE8s;
+  const minted = estimateTopUpCycles(totalIcpRequiredE8s, cyclesPerIcp);
+  const estimatedSeedCycles =
+    minted > CREATION_FEE_CYCLES ? minted - CREATION_FEE_CYCLES : 0n;
   return {
-    creationFeeIcpE8s: 0n,
+    creationFeeIcpE8s,
     transferFeeE8s: ICP_TRANSFER_FEE_E8S,
     totalIcpRequiredE8s,
-    estimatedSeedCycles: estimateTopUpCycles(seedIcpE8s, cyclesPerIcp),
+    estimatedSeedCycles,
     cyclesPerIcp,
   };
 }
