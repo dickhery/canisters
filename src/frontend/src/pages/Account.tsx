@@ -98,11 +98,12 @@ function FailedCreatesSection() {
                 ICP SENT BUT CANISTER NOT CREATED
               </p>
               <p>
-                If create failed after ICP left your account, the payment sits
-                at the CMC under a ledger block index. Retry reuses that payment
-                (no second transfer). For older attempts before this list
-                existed, claim by block index (must be a CREA transfer from{" "}
-                <span className="text-primary/80">your</span> in-app account).
+                If create failed after ICP left your account, retry reuses that
+                payment (no second transfer). Claim historical blocks by index
+                only if they were paid to the correct CMC create account. Older
+                payments sent to the CMC default account cannot be notified —
+                watch for a refund on your balance, then create again with the
+                fixed app.
               </p>
             </div>
           </div>

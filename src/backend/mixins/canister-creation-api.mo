@@ -321,7 +321,8 @@ mixin (
     }
   };
 
-  // Verify block is a CREA transfer from caller's in-app sub-account to CMC.
+  // Verify block is a CREA transfer from caller's in-app sub-account to the
+  // correct CMC create destination: AccountIdentifier(CMC, Subaccount(app)).
   // Returns net amount e8s on success.
   func verifyCreatePaymentOwnedBy(
     blockIndex : Nat64,
@@ -338,18 +339,32 @@ mixin (
     };
     let callerSub = LedgerLib.principalToSubaccount(caller);
     let expectedFrom = selfPrincipal.toLedgerAccount(?callerSub);
-    let expectedTo = CREATION_CMC_ID.toLedgerAccount(null);
+    // Must match create_canister_txn: CMC + subaccount(controller=app).
+    let expectedTo = CreationLib.createPaymentAccountBlob(CREATION_CMC_ID, selfPrincipal);
+    // Legacy mistaken destination (CMC default account, no subaccount) — cannot notify.
+    let legacyWrongTo = CREATION_CMC_ID.toLedgerAccount(null);
 
-    if (block.transaction.memo != CreationLib.CREA_MEMO) {
-      return #err("Block is not a create payment (expected CREA memo)")
-    };
     switch (block.transaction.operation) {
       case (?#Transfer(t)) {
         if (not Blob.equal(t.from, expectedFrom)) {
           return #err("This create payment was not sent from your in-app account")
         };
+        if (Blob.equal(t.to, legacyWrongTo)) {
+          return #err(
+            "This payment used an old incorrect CMC destination account, so " #
+            "notify_create_canister cannot succeed. The ICP may be refunded by " #
+            "the CMC or remain unusable for create; check your balance for a refund. " #
+            "New creates use the correct destination."
+          )
+        };
         if (not Blob.equal(t.to, expectedTo)) {
-          return #err("Payment was not sent to the Cycles Minting Canister")
+          return #err("Payment was not sent to the CMC create-canister account for this app")
+        };
+        // Accept both LE CREA memo (correct) and legacy BE memo for ownership listing only.
+        let memoOk = block.transaction.memo == CreationLib.CREA_MEMO
+          or block.transaction.memo == 0x43524541;
+        if (not memoOk) {
+          return #err("Block is not a create payment (expected CREA memo)")
         };
         #ok(t.amount.e8s)
       };
@@ -444,11 +459,15 @@ mixin (
         )
       };
 
-      let cmcAccountBlob = CREATION_CMC_ID.toLedgerAccount(null);
+      // CMC create payments MUST go to AccountIdentifier(CMC, Subaccount(controller)).
+      // controller = selfPrincipal (this app) for notify authorization.
+      // Sending to CMC's default account (null subaccount) causes:
+      // "Destination account in the block ... different than in the notification".
+      let cmcAccountBlob = CreationLib.createPaymentAccountBlob(CREATION_CMC_ID, selfPrincipal);
       let transferAmount = totalIcpE8s - CreationLib.ICP_FEE_E8S;
 
       let transferResult = await icpLedger.transfer({
-        memo = CreationLib.CREA_MEMO;
+        memo = CreationLib.CREA_MEMO; // 0x41455243 little-endian 'CREA'
         amount = { e8s = transferAmount };
         fee = { e8s = CreationLib.ICP_FEE_E8S };
         from_subaccount = ?callerSubaccountBlob;
@@ -543,6 +562,15 @@ mixin (
 
       if (effectiveName.size() > 0) {
         rec.name := effectiveName;
+      };
+
+      // Re-check ledger destination — legacy wrong-account payments cannot notify.
+      switch (await verifyCreatePaymentOwnedBy(blockIndex, caller)) {
+        case (#err(verifyMsg)) {
+          rec.lastError := verifyMsg;
+          return #err(verifyMsg)
+        };
+        case (#ok(_)) {};
       };
 
       switch (await notifyCreate(blockIndex, caller)) {

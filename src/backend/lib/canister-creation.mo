@@ -1,11 +1,21 @@
 import Nat64 "mo:core/Nat64";
+import Principal "mo:core/Principal";
 import CommonTypes "../types/common";
 import CreationTypes "../types/canister-creation";
+import LedgerLib "ledger";
 
 // Domain helpers for the canister-creation flow.
 // All business logic lives in the mixin; this module provides
 // pure helper functions (cost estimation, constant definitions).
 module {
+  // Destination account for notify_create_canister payments:
+  // AccountIdentifier(cmc, Subaccount(controller)).
+  // controller must equal the notify_create_canister `controller` field and
+  // the notify caller (the app principal). See CMC create_canister_txn.
+  public func createPaymentAccountBlob(cmc : Principal, controller : Principal) : Blob {
+    let sub = LedgerLib.principalToSubaccount(controller);
+    cmc.toLedgerAccount(?sub)
+  };
   // IC canister creation fee deducted (in cycles) by the protocol when a
   // canister is created via the CMC. User pays this in ICP via CMC conversion
   // — the app canister does NOT attach its own cycles.
@@ -25,9 +35,10 @@ module {
   // ICP ledger transfer fee: 10_000 e8s = 0.0001 ICP
   public let ICP_FEE_E8S : Nat64 = 10_000;
 
-  // Memo used on create payments to the CMC ("CREA" as big-endian ASCII).
-  // Used to identify recoverable create transfers on the ICP ledger.
-  public let CREA_MEMO : Nat64 = 0x43524541;
+  // Memo for create payments to the CMC (NNS CMC MEMO_CREATE_CANISTER).
+  // Value is little-endian ASCII 'CREA' = 0x41455243 (see cycles_minting_canister).
+  // NOT 0x43524541 (big-endian); wrong memo/destination causes InvalidTransaction.
+  public let CREA_MEMO : Nat64 = 0x41455243;
 
   // Fallback minimum ICP charged for creation when rate is unavailable.
   // ~0.5 ICP covers ≥600B cycles at typical mainnet rates (~1.5T cycles/ICP).
