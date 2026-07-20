@@ -231,9 +231,16 @@ mixin (
       };
 
       // CMC converts ICP → cycles, pays creation fee, creates canister.
+      //
+      // Authorization: the CMC only allows the notify *caller* to act as
+      // `controller`. This update is invoked by the app canister (not the
+      // end user), so `controller` must be selfPrincipal. Putting the user
+      // there yields: "<app> is not authorized to call notify_create_canister
+      // on behalf of <user>". Final controllers are set via settings so both
+      // the user and the app control the new canister.
       let notifyResult = await cmcActor.notify_create_canister({
         block_index = blockIndex;
-        controller = caller;
+        controller = selfPrincipal;
         subnet_type = null;
         subnet_selection = null;
         settings = ?{
