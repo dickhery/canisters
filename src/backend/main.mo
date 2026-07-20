@@ -8,12 +8,11 @@ import LedgerTypes "types/ledger";
 import CanisterApi "mixins/canister-api";
 import LedgerApi "mixins/ledger-api";
 import CanisterCreationApi "mixins/canister-creation-api";
-import Migration "migration";
 
-// Drop obsolete stable actor stubs (icMgmt / old cmcActor) on upgrade so the
-// CMC-funded create path can ship without M0169/M0170 stable-type errors.
 // `persistent` omitted: --default-persistent-actors makes all actors persistent (M0217).
-(with migration = Migration.run)
+// No migration: deployed Caffeine versions no longer have stable icMgmt/cmcActor
+// (those remote handles are transient). A migration that consumed them fails M0169
+// against the current previous signature.
 actor self {
   // --- Shared state ---
 
