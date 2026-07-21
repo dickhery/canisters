@@ -1,8 +1,9 @@
-import { c as createLucideIcon, r as reactExports, j as jsxRuntimeExports, W as Wallet, n as formatIcp, C as CopyableId, x as truncateAccountId, B as Button, y as ChevronDown, z as TooltipProvider, m as cn, A as Tooltip, E as TooltipTrigger, G as formatRelativeTime, H as TooltipContent, q as formatTimestamp } from "./index-m68ufsA3.js";
-import { P as PaginationControls, C as ChevronRight } from "./PaginationControls-BGIFxBDw.js";
-import { o as useGetMyAccount, a as useGetMyBalance, m as useGetTransactionHistory, S as Skeleton, p as useTransferIcp, L as Label, I as Input, q as useRecoverData } from "./index-D0GLaFVs.js";
-import { A as ArrowUpRight } from "./arrow-up-right-CzMlt1QR.js";
-import { T as TriangleAlert, Z as Zap } from "./zap-DNrOjE3N.js";
+import { c as createLucideIcon, r as reactExports, j as jsxRuntimeExports, W as Wallet, n as formatIcp, C as CopyableId, x as truncateAccountId, B as Button, y as ChevronDown, z as TooltipProvider, m as cn, A as Tooltip, E as TooltipTrigger, G as formatRelativeTime, H as TooltipContent, q as formatTimestamp } from "./index-CQ9sjVFl.js";
+import { P as PaginationControls, C as ChevronRight } from "./PaginationControls-C0BfYreH.js";
+import { o as useGetMyAccount, a as useGetMyBalance, m as useGetTransactionHistory, S as Skeleton, p as useTransferIcp, L as Label, I as Input, q as useListFailedCreations, r as useRetryCreateCanister, s as useClaimCreatePayment, t as useDismissFailedCreation, v as useRecoverData } from "./index-DhWlHdoS.js";
+import { A as ArrowUpRight } from "./arrow-up-right-d7KCEuSi.js";
+import { R as RefreshCw, T as TriangleAlert, Z as Zap } from "./zap-Y4Io-g_M.js";
+import { T as Trash2 } from "./trash-2-DGO-Xhcc.js";
 /**
  * @license lucide-react v0.511.0 - ISC
  *
@@ -86,6 +87,175 @@ const __iconNode = [
   ["path", { d: "M6 12h16", key: "s4cdu5" }]
 ];
 const SendHorizontal = createLucideIcon("send-horizontal", __iconNode);
+function FailedCreatesSection() {
+  const [expanded, setExpanded] = reactExports.useState(true);
+  const [claimBlock, setClaimBlock] = reactExports.useState("");
+  const [claimName, setClaimName] = reactExports.useState("Recovered canister");
+  const { data: failed = [], isLoading, refetch } = useListFailedCreations();
+  const retryMutation = useRetryCreateCanister();
+  const claimMutation = useClaimCreatePayment();
+  const dismissMutation = useDismissFailedCreation();
+  const claimBlockValid = /^\d+$/.test(claimBlock.trim());
+  const busy = retryMutation.isPending || claimMutation.isPending || dismissMutation.isPending;
+  return /* @__PURE__ */ jsxRuntimeExports.jsxs(
+    "div",
+    {
+      "data-ocid": "failed_creates.card",
+      className: "terminal-card border border-amber-500/30 bg-card",
+      children: [
+        /* @__PURE__ */ jsxRuntimeExports.jsxs(
+          "button",
+          {
+            type: "button",
+            "data-ocid": "failed_creates.toggle",
+            onClick: () => setExpanded((v) => !v),
+            className: "w-full border-b border-amber-500/20 px-4 py-2.5 flex items-center gap-2 hover:bg-amber-500/5 transition-colors duration-150 text-left",
+            "aria-expanded": expanded,
+            children: [
+              expanded ? /* @__PURE__ */ jsxRuntimeExports.jsx(ChevronDown, { className: "h-3.5 w-3.5 text-amber-400/80 shrink-0" }) : /* @__PURE__ */ jsxRuntimeExports.jsx(ChevronRight, { className: "h-3.5 w-3.5 text-amber-400/80 shrink-0" }),
+              /* @__PURE__ */ jsxRuntimeExports.jsx(RefreshCw, { className: "h-3.5 w-3.5 text-amber-400 shrink-0" }),
+              /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "font-mono text-xs font-semibold text-amber-400/90 uppercase tracking-[0.2em]", children: "> RECOVER FAILED CREATES" }),
+              failed.length > 0 && /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "ml-2 font-mono text-[9px] px-1.5 py-0.5 border border-amber-500/40 text-amber-400", children: failed.length }),
+              /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "ml-auto font-mono text-[9px] text-muted-foreground/50 uppercase tracking-widest", children: "[BLOCK INDEX]" })
+            ]
+          }
+        ),
+        expanded && /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "p-4 space-y-4 font-mono", children: [
+          /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex gap-2.5 border border-amber-500/30 bg-amber-500/5 px-3 py-2.5", children: [
+            /* @__PURE__ */ jsxRuntimeExports.jsx(TriangleAlert, { className: "h-3.5 w-3.5 text-amber-400 shrink-0 mt-0.5" }),
+            /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "space-y-1 text-[10px] text-muted-foreground tracking-[0.08em] leading-relaxed", children: [
+              /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "text-amber-400/90 uppercase font-semibold tracking-[0.15em]", children: "ICP SENT BUT CANISTER NOT CREATED" }),
+              /* @__PURE__ */ jsxRuntimeExports.jsx("p", { children: "If create failed after ICP left your account, retry reuses that payment (no second transfer). Claim historical blocks by index only if they were paid to the correct CMC create account. Older payments sent to the CMC default account cannot be notified — watch for a refund on your balance, then create again with the fixed app. Use DISMISS to clear unrecoverable rows from this list (does not move ICP)." })
+            ] })
+          ] }),
+          isLoading ? /* @__PURE__ */ jsxRuntimeExports.jsx(Skeleton, { className: "h-16 w-full" }) : failed.length === 0 ? /* @__PURE__ */ jsxRuntimeExports.jsx(
+            "p",
+            {
+              className: "font-mono text-[10px] text-muted-foreground tracking-wider",
+              "data-ocid": "failed_creates.empty",
+              children: "NO PENDING FAILED CREATES ON RECORD. USE CLAIM BELOW FOR HISTORICAL BLOCKS."
+            }
+          ) : /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "space-y-2", "data-ocid": "failed_creates.list", children: failed.map((item) => /* @__PURE__ */ jsxRuntimeExports.jsxs(
+            "div",
+            {
+              className: "border border-border/40 bg-background/60 p-3 space-y-2",
+              "data-ocid": "failed_creates.item",
+              children: [
+                /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex flex-wrap items-center justify-between gap-2", children: [
+                  /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "space-y-0.5", children: [
+                    /* @__PURE__ */ jsxRuntimeExports.jsxs("p", { className: "font-mono text-[10px] text-primary uppercase tracking-wider", children: [
+                      "BLOCK ",
+                      item.blockIndex.toString()
+                    ] }),
+                    /* @__PURE__ */ jsxRuntimeExports.jsxs("p", { className: "font-mono text-[10px] text-muted-foreground", children: [
+                      formatIcp(item.amountE8s),
+                      " ICP ·",
+                      " ",
+                      item.name || "(unnamed)"
+                    ] })
+                  ] }),
+                  /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex items-center gap-1.5 shrink-0", children: [
+                    /* @__PURE__ */ jsxRuntimeExports.jsx(
+                      Button,
+                      {
+                        type: "button",
+                        size: "sm",
+                        disabled: busy,
+                        "data-ocid": "failed_creates.retry_button",
+                        className: "font-mono text-[10px] tracking-[0.15em] uppercase",
+                        onClick: () => retryMutation.mutate({
+                          blockIndex: item.blockIndex,
+                          name: item.name || "Recovered canister"
+                        }),
+                        children: retryMutation.isPending ? "RETRYING…" : "[R] RETRY"
+                      }
+                    ),
+                    /* @__PURE__ */ jsxRuntimeExports.jsxs(
+                      Button,
+                      {
+                        type: "button",
+                        size: "sm",
+                        variant: "outline",
+                        disabled: busy,
+                        "data-ocid": "failed_creates.dismiss_button",
+                        className: "font-mono text-[10px] tracking-[0.15em] uppercase border-destructive/40 text-destructive hover:bg-destructive/10",
+                        onClick: () => {
+                          if (!window.confirm(
+                            `Dismiss block ${item.blockIndex.toString()} from this list?
+
+This only removes the recovery row. It does not refund ICP or contact the CMC.`
+                          )) {
+                            return;
+                          }
+                          dismissMutation.mutate(item.blockIndex);
+                        },
+                        children: [
+                          /* @__PURE__ */ jsxRuntimeExports.jsx(Trash2, { className: "h-3 w-3 mr-1" }),
+                          dismissMutation.isPending ? "…" : "DISMISS"
+                        ]
+                      }
+                    )
+                  ] })
+                ] }),
+                item.lastError && /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "font-mono text-[9px] text-destructive/80 break-all", children: item.lastError })
+              ]
+            },
+            item.blockIndex.toString()
+          )) }),
+          /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "border-t border-border/30 pt-3 space-y-2", children: [
+            /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "font-mono text-[9px] text-muted-foreground uppercase tracking-[0.15em]", children: "CLAIM HISTORICAL CREATE PAYMENT" }),
+            /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex flex-col sm:flex-row gap-2", children: [
+              /* @__PURE__ */ jsxRuntimeExports.jsx(
+                Input,
+                {
+                  "data-ocid": "failed_creates.claim_block_input",
+                  placeholder: "Ledger block index (e.g. 37538379)",
+                  value: claimBlock,
+                  onChange: (e) => setClaimBlock(e.target.value),
+                  className: "font-mono text-sm bg-background border-primary/30"
+                }
+              ),
+              /* @__PURE__ */ jsxRuntimeExports.jsx(
+                Input,
+                {
+                  "data-ocid": "failed_creates.claim_name_input",
+                  placeholder: "Canister name",
+                  value: claimName,
+                  onChange: (e) => setClaimName(e.target.value),
+                  className: "font-mono text-sm bg-background border-primary/30 sm:max-w-[180px]"
+                }
+              ),
+              /* @__PURE__ */ jsxRuntimeExports.jsx(
+                Button,
+                {
+                  type: "button",
+                  disabled: !claimBlockValid || claimMutation.isPending,
+                  "data-ocid": "failed_creates.claim_button",
+                  className: "font-mono text-[10px] tracking-[0.15em] uppercase shrink-0",
+                  onClick: () => claimMutation.mutate({
+                    blockIndex: BigInt(claimBlock.trim()),
+                    name: claimName.trim() || "Recovered canister"
+                  }),
+                  children: claimMutation.isPending ? "CLAIMING…" : "[C] CLAIM"
+                }
+              )
+            ] }),
+            /* @__PURE__ */ jsxRuntimeExports.jsx(
+              "button",
+              {
+                type: "button",
+                className: "font-mono text-[9px] text-primary/60 hover:text-primary uppercase tracking-wider",
+                "data-ocid": "failed_creates.refresh",
+                onClick: () => void refetch(),
+                children: "[REFRESH LIST]"
+              }
+            )
+          ] })
+        ] })
+      ]
+    }
+  );
+}
 function RecoverDataSection() {
   const [expanded, setExpanded] = reactExports.useState(false);
   const [oldPrincipal, setOldPrincipal] = reactExports.useState("");
@@ -543,6 +713,7 @@ function Account() {
             ]
           }
         ),
+        /* @__PURE__ */ jsxRuntimeExports.jsx(FailedCreatesSection, {}),
         /* @__PURE__ */ jsxRuntimeExports.jsx(RecoverDataSection, {}),
         /* @__PURE__ */ jsxRuntimeExports.jsxs(
           "div",

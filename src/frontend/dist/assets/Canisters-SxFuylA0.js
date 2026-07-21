@@ -1,8 +1,9 @@
-import { c as createLucideIcon, r as reactExports, j as jsxRuntimeExports, n as formatIcp, o as formatCycles, B as Button, T as Terminal, X, p as useNavigate, C as CopyableId, q as formatTimestamp, m as cn } from "./index-m68ufsA3.js";
-import { P as PaginationControls } from "./PaginationControls-BGIFxBDw.js";
-import { p as parseIcpInput, f as formatCyclesPerIcp, e as estimateTopUpCycles, a as estimateCreationCost, F as FALLBACK_CYCLES_PER_ICP, S as StatusBadge, T as Trash2, P as Pencil } from "./cycles-BXldlSZf.js";
-import { D as Dialog, a as DialogContent, b as DialogHeader, c as DialogTitle, d as DialogDescription, e as DialogFooter } from "./dialog-CcdxtTVT.js";
-import { u as useGetIcpXdrConversionRate, a as useGetMyBalance, b as useCreateCanister, L as Label, I as Input, c as useListCanisters, d as useSearchCanisters, S as Skeleton, e as useAddCanister, f as useRemoveCanister, g as useRenameCanister } from "./index-D0GLaFVs.js";
+import { c as createLucideIcon, r as reactExports, j as jsxRuntimeExports, n as formatIcp, o as formatCycles, B as Button, T as Terminal, X, p as useNavigate, C as CopyableId, q as formatTimestamp, m as cn } from "./index-CQ9sjVFl.js";
+import { P as PaginationControls } from "./PaginationControls-C0BfYreH.js";
+import { p as parseIcpInput, f as formatCyclesPerIcp, e as estimateTopUpCycles, a as estimateCreationCost, F as FALLBACK_CYCLES_PER_ICP, S as StatusBadge, P as Pencil } from "./cycles-zbUF4qCO.js";
+import { D as Dialog, a as DialogContent, b as DialogHeader, c as DialogTitle, d as DialogDescription, e as DialogFooter } from "./dialog-OaAJKUhY.js";
+import { u as useGetIcpXdrConversionRate, a as useGetMyBalance, b as useCreateCanister, L as Label, I as Input, c as useListCanisters, d as useSearchCanisters, S as Skeleton, e as useAddCanister, f as useRemoveCanister, g as useRenameCanister } from "./index-DhWlHdoS.js";
+import { T as Trash2 } from "./trash-2-DGO-Xhcc.js";
 /**
  * @license lucide-react v0.511.0 - ISC
  *
@@ -103,26 +104,23 @@ function CreateCanisterModal({
       children: [
         /* @__PURE__ */ jsxRuntimeExports.jsxs(DialogHeader, { children: [
           /* @__PURE__ */ jsxRuntimeExports.jsx(DialogTitle, { className: "font-mono text-base tracking-[0.2em] text-primary uppercase retro-glow-sm", children: ">_ CREATE NEW CANISTER" }),
-          /* @__PURE__ */ jsxRuntimeExports.jsx(DialogDescription, { className: "font-mono text-[10px] text-muted-foreground tracking-[0.12em]", children: "PROVISION A NEW CANISTER ON THE INTERNET COMPUTER. ICP WILL BE DEDUCTED FROM YOUR IN-APP BALANCE." })
+          /* @__PURE__ */ jsxRuntimeExports.jsx(DialogDescription, { className: "font-mono text-[10px] text-muted-foreground tracking-[0.12em]", children: "PROVISION A NEW CANISTER VIA THE CYCLES MINTING CANISTER. ICP IS DEDUCTED FROM YOUR IN-APP BALANCE — THE APP DOES NOT SPEND ITS OWN CYCLES." })
         ] }),
         /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "border border-primary/20 bg-background/60 p-3 space-y-2 text-[10px] font-mono tracking-[0.1em]", children: [
           /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "font-mono text-[9px] text-primary/40 tracking-widest select-none mb-1", children: "┌─[ COST ESTIMATE ]" }),
           /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex justify-between items-center", children: [
-            /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "text-muted-foreground uppercase", children: "BASE CREATION FEE" }),
-            /* @__PURE__ */ jsxRuntimeExports.jsxs("span", { className: "text-primary tabular-nums retro-glow-sm", children: [
-              formatIcp(creationFeeE8s),
-              " ICP"
-            ] })
+            /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "text-muted-foreground uppercase", children: "BASE CREATION (MIN ICP)" }),
+            /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "text-primary tabular-nums retro-glow-sm", children: rateLoading ? "…" : `${formatIcp(creationFeeE8s)} ICP` })
           ] }),
           /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex justify-between items-center", children: [
-            /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "text-muted-foreground uppercase", children: "SEED CYCLES ICP" }),
+            /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "text-muted-foreground uppercase", children: "EXTRA SEED ICP" }),
             /* @__PURE__ */ jsxRuntimeExports.jsxs("span", { className: "text-primary tabular-nums", children: [
               formatIcp(seedIcpE8s),
               " ICP"
             ] })
           ] }),
           /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex justify-between items-center", children: [
-            /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "text-muted-foreground uppercase", children: "TRANSFER FEE" }),
+            /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "text-muted-foreground uppercase", children: "LEDGER FEE (INCL. IN BASE)" }),
             /* @__PURE__ */ jsxRuntimeExports.jsxs("span", { className: "text-primary/60 tabular-nums text-[9px]", children: [
               formatIcp(transferFeeE8s),
               " ICP"
@@ -245,7 +243,7 @@ function CreateCanisterModal({
                 "cycles"
               ] })
             ] }),
-            /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "font-mono text-[9px] text-muted-foreground/60 tracking-wider", children: "ENTER ADDITIONAL ICP TO TOP UP THE NEW CANISTER WITH CYCLES ON CREATION. LEAVE 0 TO ONLY PAY THE BASE CREATION FEE." })
+            /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "font-mono text-[9px] text-muted-foreground/60 tracking-wider", children: "OPTIONAL EXTRA ICP ABOVE THE BASE MINIMUM. THE BASE ALREADY FUNDS CREATION + A SMALL CYCLE RESERVE; ADD MORE FOR A LARGER BALANCE. LEAVE 0 TO PAY ONLY THE BASE." })
           ] }),
           /* @__PURE__ */ jsxRuntimeExports.jsxs(DialogFooter, { className: "gap-2 pt-2", children: [
             /* @__PURE__ */ jsxRuntimeExports.jsx(

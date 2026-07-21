@@ -26,12 +26,12 @@ type Timestamp = int;
 type Result_4 = 
  variant {
    err: text;
-   ok: CreateCanisterResult;
+   ok;
  };
 type Result_3 = 
  variant {
    err: text;
-   ok;
+   ok: CreateCanisterResult;
  };
 type Result_2 = 
  variant {
@@ -61,6 +61,14 @@ type Page =
    page: nat;
    pageSize: nat;
    total: nat;
+ };
+type FailedCreationView = 
+ record {
+   amountE8s: E8s;
+   blockIndex: BlockIndex;
+   lastError: text;
+   name: text;
+   timestamp: Timestamp;
  };
 type E8s = nat64;
 type DashboardItem = 
@@ -124,11 +132,14 @@ type CanisterDetails =
    lastChecked: Timestamp;
    status: CanisterStatus;
  };
+type BlockIndex = nat64;
 service : {
-  addCanister: (canisterId: CanisterId, customName: text) -> (Result_3);
+  addCanister: (canisterId: CanisterId, customName: text) -> (Result_4);
   addController: (canisterId: CanisterId, controller: principal) ->
-   (Result_3);
-  createCanister: (name: text, seedCyclesIcpE8s: E8s) -> (Result_4);
+   (Result_4);
+  claimCreatePayment: (blockIndex: BlockIndex, name: text) -> (Result_3);
+  createCanister: (name: text, seedCyclesIcpE8s: E8s) -> (Result_3);
+  dismissFailedCreation: (blockIndex: BlockIndex) -> (Result_4);
   getAppPrincipal: () -> (principal) query;
   getCanisterDetails: (canisterId: CanisterId) -> (opt CanisterDetails);
   getCreationCostEstimate: (seedCyclesIcpE8s: E8s) -> (CreationCostEstimate);
@@ -140,11 +151,13 @@ service : {
   getTotalCycles: () -> (nat) query;
   getTransactionHistory: (page: nat) -> (Page_1) query;
   listCanisters: (page: nat) -> (Page) query;
+  listFailedCreations: () -> (vec FailedCreationView) query;
   migrateCanistersFromPrincipal: (oldPrincipal: principal) -> (Result_1);
-  removeCanister: (canisterId: CanisterId) -> (Result_3);
+  removeCanister: (canisterId: CanisterId) -> (Result_4);
   removeController: (canisterId: CanisterId, controller: principal) ->
-   (Result_3);
-  renameCanister: (canisterId: CanisterId, newName: text) -> (Result_3);
+   (Result_4);
+  renameCanister: (canisterId: CanisterId, newName: text) -> (Result_4);
+  retryCreateCanister: (blockIndex: BlockIndex, name: text) -> (Result_3);
   searchCanisters: (queryText: text) -> (vec CanisterInfo) query;
   topUpCanister: (canisterId: CanisterId, icpAmountE8s: E8s) -> (Result_2);
   transferCycles: (fromCanisterId: principal, toCanisterId: principal,

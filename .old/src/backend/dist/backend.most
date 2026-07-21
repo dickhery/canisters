@@ -1,11 +1,22 @@
 // Version: 1.0.0
+type BlockIndex__886921616 = Nat64;
 type CanisterId__276104819 = CanisterId__863882071;
 type CanisterId__863882071 = Principal;
 type Cycles__410059581 = Nat;
 type Data__791452850<K, V> =
   {var count : Nat__490723111; kvs : [var ?(K, V)]};
+type E8s__212892593 = E8s__328334695;
 type E8s__328334695 = Nat64;
 type E8s__861091686 = E8s__328334695;
+type FailedCreation__988954878 =
+  {
+    amountE8s : E8s__212892593;
+    blockIndex : BlockIndex__886921616;
+    var lastError : Text;
+    var name : Text;
+    timestamp : Timestamp__333489049;
+    userId : UserId__99730569
+  };
 type Internal__8484328<K, V> =
   {children : [var ?Node__46230540<K, V>]; data : Data__791452850<K, V>};
 type Leaf__809889148<K, V> = {data : Data__791452850<K, V>};
@@ -21,6 +32,7 @@ type Nat__920180692 = Nat;
 type Node__46230540<K, V> =
   {#internal : Internal__8484328<K, V>; #leaf : Leaf__809889148<K, V>};
 type Timestamp__301639476 = Int;
+type Timestamp__333489049 = Timestamp__301639476;
 type Timestamp__647675121 = Timestamp__301639476;
 type Timestamp__884806187 = Timestamp__301639476;
 type TrackedCanister__955140980 =
@@ -50,6 +62,7 @@ type UserAccount__951397460 =
   {accountId : Text; subaccount : Blob; userId : UserId__503354635};
 type UserId__158757552 = Principal;
 type UserId__503354635 = UserId__158757552;
+type UserId__99730569 = UserId__158757552;
 actor {
   stable CMC_ID : Principal;
   stable CREATION_CMC_ID : Principal;
@@ -59,30 +72,11 @@ actor {
   stable RATE_CACHE_TTL_NS : Int;
   stable var cachedCyclesPerIcp : Nat;
   stable var cachedRateFetchedAt : Int;
-  stable cmcActor :
-    actor {
-      get_icp_xdr_conversion_rate :
-        shared () ->
-          async
-            {
-              certificate : Blob;
-              data :
-                {timestamp_seconds : Nat64; xdr_permyriad_per_icp : Nat64}
-            };
-      notify_top_up :
-        shared {block_index : Nat64; canister_id : Principal} ->
-          async
-            {
-              #Err :
-                {
-                  #InvalidTransaction : Text;
-                  #Other : {error_code : Nat64; error_message : Text};
-                  #Processing;
-                  #Refunded : {block_index : ?Nat64; reason : Text};
-                  #TransactionTooOld : Nat64
-                };
-              #Ok : Nat
-            }
+  stable failedCreations :
+    {
+      var root :
+        Node__46230540<BlockIndex__886921616, FailedCreation__988954878>;
+      var size : Nat__490723111
     };
   stable ic :
     actor {
@@ -114,20 +108,6 @@ actor {
                    }
                } ->
           async ()
-    };
-  stable icMgmt :
-    actor {
-      create_canister :
-        shared {
-                 settings :
-                   ?{
-                      compute_allocation : ?Nat;
-                      controllers : ?[Principal];
-                      freezing_threshold : ?Nat;
-                      memory_allocation : ?Nat
-                    }
-               } ->
-          async {canister_id : Principal}
     };
   stable nextTxId : {var value : Nat};
   stable selfPrincipal : Principal;

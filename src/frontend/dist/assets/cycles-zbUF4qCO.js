@@ -1,12 +1,12 @@
-import { c as createLucideIcon, j as jsxRuntimeExports, m as cn } from "./index-m68ufsA3.js";
-import { C as CanisterStatus } from "./index-D0GLaFVs.js";
+import { c as createLucideIcon, j as jsxRuntimeExports, m as cn } from "./index-CQ9sjVFl.js";
+import { C as CanisterStatus } from "./index-DhWlHdoS.js";
 /**
  * @license lucide-react v0.511.0 - ISC
  *
  * This source code is licensed under the ISC license.
  * See the LICENSE file in the root directory of this source tree.
  */
-const __iconNode$1 = [
+const __iconNode = [
   [
     "path",
     {
@@ -16,21 +16,7 @@ const __iconNode$1 = [
   ],
   ["path", { d: "m15 5 4 4", key: "1mk7zo" }]
 ];
-const Pencil = createLucideIcon("pencil", __iconNode$1);
-/**
- * @license lucide-react v0.511.0 - ISC
- *
- * This source code is licensed under the ISC license.
- * See the LICENSE file in the root directory of this source tree.
- */
-const __iconNode = [
-  ["path", { d: "M3 6h18", key: "d0wm0j" }],
-  ["path", { d: "M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6", key: "4alrt4" }],
-  ["path", { d: "M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2", key: "v07s0e" }],
-  ["line", { x1: "10", x2: "10", y1: "11", y2: "17", key: "1uufr5" }],
-  ["line", { x1: "14", x2: "14", y1: "11", y2: "17", key: "xtxkd" }]
-];
-const Trash2 = createLucideIcon("trash-2", __iconNode);
+const Pencil = createLucideIcon("pencil", __iconNode);
 const STATUS_CONFIG = {
   [CanisterStatus.running]: {
     label: "ONLINE",
@@ -84,7 +70,11 @@ function StatusBadge({
   );
 }
 const ICP_TRANSFER_FEE_E8S = 10000n;
+const CREATION_FEE_CYCLES = 500000000000n;
+const MIN_INITIAL_CYCLES = 100000000000n;
+const MIN_CREATE_CYCLES = CREATION_FEE_CYCLES + MIN_INITIAL_CYCLES;
 const FALLBACK_CYCLES_PER_ICP = 1500000000000n;
+const FALLBACK_MIN_CREATION_ICP_E8S = 50000000n;
 function parseIcpInput(raw) {
   if (!raw || raw === "0" || raw === "") return 0n;
   const trimmed = raw.trim();
@@ -94,6 +84,13 @@ function parseIcpInput(raw) {
   const fracStr = (match[2] ?? "").padEnd(8, "0").slice(0, 8);
   const frac = BigInt(fracStr);
   return whole * 100000000n + frac;
+}
+function minCreationIcpE8s(cyclesPerIcp) {
+  if (cyclesPerIcp <= 0n) return FALLBACK_MIN_CREATION_ICP_E8S;
+  const raw = (MIN_CREATE_CYCLES * 100000000n + cyclesPerIcp - 1n) / cyclesPerIcp;
+  const withBuffer = raw + raw / 20n;
+  const gross = withBuffer + ICP_TRANSFER_FEE_E8S;
+  return gross < FALLBACK_MIN_CREATION_ICP_E8S ? FALLBACK_MIN_CREATION_ICP_E8S : gross;
 }
 function estimateTopUpCycles(icpAmountE8s, cyclesPerIcp) {
   if (icpAmountE8s <= ICP_TRANSFER_FEE_E8S) return 0n;
@@ -105,12 +102,15 @@ function formatCyclesPerIcp(cyclesPerIcp) {
   return `${trillions.toFixed(2)}T`;
 }
 function estimateCreationCost(seedIcpE8s, cyclesPerIcp) {
-  const totalIcpRequiredE8s = seedIcpE8s > 0n ? seedIcpE8s + ICP_TRANSFER_FEE_E8S : 0n;
+  const creationFeeIcpE8s = minCreationIcpE8s(cyclesPerIcp);
+  const totalIcpRequiredE8s = creationFeeIcpE8s + seedIcpE8s;
+  const minted = estimateTopUpCycles(totalIcpRequiredE8s, cyclesPerIcp);
+  const estimatedSeedCycles = minted > CREATION_FEE_CYCLES ? minted - CREATION_FEE_CYCLES : 0n;
   return {
-    creationFeeIcpE8s: 0n,
+    creationFeeIcpE8s,
     transferFeeE8s: ICP_TRANSFER_FEE_E8S,
     totalIcpRequiredE8s,
-    estimatedSeedCycles: estimateTopUpCycles(seedIcpE8s, cyclesPerIcp),
+    estimatedSeedCycles,
     cyclesPerIcp
   };
 }
@@ -119,7 +119,6 @@ export {
   ICP_TRANSFER_FEE_E8S as I,
   Pencil as P,
   StatusBadge as S,
-  Trash2 as T,
   estimateCreationCost as a,
   estimateTopUpCycles as e,
   formatCyclesPerIcp as f,

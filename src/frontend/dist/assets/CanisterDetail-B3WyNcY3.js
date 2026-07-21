@@ -1,20 +1,10 @@
-import { c as createLucideIcon, s as useParams, t as useQueryClient, r as reactExports, j as jsxRuntimeExports, L as Link, B as Button, C as CopyableId, o as formatCycles, q as formatTimestamp, v as truncatePrincipal, w as Check, X, n as formatIcp } from "./index-m68ufsA3.js";
-import { S as StatusBadge, p as parseIcpInput, f as formatCyclesPerIcp, I as ICP_TRANSFER_FEE_E8S, T as Trash2, P as Pencil, e as estimateTopUpCycles, F as FALLBACK_CYCLES_PER_ICP } from "./cycles-BXldlSZf.js";
-import { D as Dialog, a as DialogContent, b as DialogHeader, c as DialogTitle, e as DialogFooter } from "./dialog-CcdxtTVT.js";
-import { h as useGetAppPrincipal, i as useGetCanisterDetails, S as Skeleton, j as useTopUpCanister, u as useGetIcpXdrConversionRate, L as Label, I as Input, k as useTransferCycles, l as useRemoveController, m as useGetTransactionHistory, g as useRenameCanister, n as useAddController } from "./index-D0GLaFVs.js";
-import { T as TriangleAlert, Z as Zap } from "./zap-DNrOjE3N.js";
-import { P as Plus } from "./plus-CMlaid8w.js";
-/**
- * @license lucide-react v0.511.0 - ISC
- *
- * This source code is licensed under the ISC license.
- * See the LICENSE file in the root directory of this source tree.
- */
-const __iconNode$4 = [
-  ["path", { d: "m12 19-7-7 7-7", key: "1l729n" }],
-  ["path", { d: "M19 12H5", key: "x3x0zl" }]
-];
-const ArrowLeft = createLucideIcon("arrow-left", __iconNode$4);
+import { c as createLucideIcon, s as useParams, t as useQueryClient, r as reactExports, j as jsxRuntimeExports, L as Link, B as Button, C as CopyableId, o as formatCycles, q as formatTimestamp, v as truncatePrincipal, w as Check, X, n as formatIcp } from "./index-CQ9sjVFl.js";
+import { S as StatusBadge, p as parseIcpInput, f as formatCyclesPerIcp, I as ICP_TRANSFER_FEE_E8S, P as Pencil, e as estimateTopUpCycles, F as FALLBACK_CYCLES_PER_ICP } from "./cycles-zbUF4qCO.js";
+import { D as Dialog, a as DialogContent, b as DialogHeader, c as DialogTitle, e as DialogFooter } from "./dialog-OaAJKUhY.js";
+import { h as useGetAppPrincipal, i as useGetCanisterDetails, S as Skeleton, j as useTopUpCanister, u as useGetIcpXdrConversionRate, L as Label, I as Input, k as useTransferCycles, l as useRemoveController, m as useGetTransactionHistory, g as useRenameCanister, n as useAddController } from "./index-DhWlHdoS.js";
+import { T as TriangleAlert, Z as Zap, R as RefreshCw } from "./zap-Y4Io-g_M.js";
+import { P as Plus } from "./plus-_7ONs4_j.js";
+import { T as Trash2 } from "./trash-2-DGO-Xhcc.js";
 /**
  * @license lucide-react v0.511.0 - ISC
  *
@@ -22,12 +12,10 @@ const ArrowLeft = createLucideIcon("arrow-left", __iconNode$4);
  * See the LICENSE file in the root directory of this source tree.
  */
 const __iconNode$3 = [
-  ["path", { d: "m16 3 4 4-4 4", key: "1x1c3m" }],
-  ["path", { d: "M20 7H4", key: "zbl0bi" }],
-  ["path", { d: "m8 21-4-4 4-4", key: "h9nckh" }],
-  ["path", { d: "M4 17h16", key: "g4d7ey" }]
+  ["path", { d: "m12 19-7-7 7-7", key: "1l729n" }],
+  ["path", { d: "M19 12H5", key: "x3x0zl" }]
 ];
-const ArrowRightLeft = createLucideIcon("arrow-right-left", __iconNode$3);
+const ArrowLeft = createLucideIcon("arrow-left", __iconNode$3);
 /**
  * @license lucide-react v0.511.0 - ISC
  *
@@ -35,11 +23,12 @@ const ArrowRightLeft = createLucideIcon("arrow-right-left", __iconNode$3);
  * See the LICENSE file in the root directory of this source tree.
  */
 const __iconNode$2 = [
-  ["circle", { cx: "12", cy: "12", r: "10", key: "1mglay" }],
-  ["path", { d: "M12 16v-4", key: "1dtifu" }],
-  ["path", { d: "M12 8h.01", key: "e9boi3" }]
+  ["path", { d: "m16 3 4 4-4 4", key: "1x1c3m" }],
+  ["path", { d: "M20 7H4", key: "zbl0bi" }],
+  ["path", { d: "m8 21-4-4 4-4", key: "h9nckh" }],
+  ["path", { d: "M4 17h16", key: "g4d7ey" }]
 ];
-const Info = createLucideIcon("info", __iconNode$2);
+const ArrowRightLeft = createLucideIcon("arrow-right-left", __iconNode$2);
 /**
  * @license lucide-react v0.511.0 - ISC
  *
@@ -47,12 +36,11 @@ const Info = createLucideIcon("info", __iconNode$2);
  * See the LICENSE file in the root directory of this source tree.
  */
 const __iconNode$1 = [
-  ["path", { d: "M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8", key: "v9h5vc" }],
-  ["path", { d: "M21 3v5h-5", key: "1q7to0" }],
-  ["path", { d: "M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16", key: "3uifl3" }],
-  ["path", { d: "M8 16H3v5", key: "1cv678" }]
+  ["circle", { cx: "12", cy: "12", r: "10", key: "1mglay" }],
+  ["path", { d: "M12 16v-4", key: "1dtifu" }],
+  ["path", { d: "M12 8h.01", key: "e9boi3" }]
 ];
-const RefreshCw = createLucideIcon("refresh-cw", __iconNode$1);
+const Info = createLucideIcon("info", __iconNode$1);
 /**
  * @license lucide-react v0.511.0 - ISC
  *

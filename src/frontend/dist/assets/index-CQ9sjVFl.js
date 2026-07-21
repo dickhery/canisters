@@ -1,4 +1,4 @@
-const __vite__mapDeps=(i,m=__vite__mapDeps,d=(m.f||(m.f=["assets/Dashboard-Bs1eA5d-.js","assets/dialog-CcdxtTVT.js","assets/index-D0GLaFVs.js","assets/plus-CMlaid8w.js","assets/arrow-up-right-CzMlt1QR.js","assets/Canisters-C8VMNmsW.js","assets/PaginationControls-BGIFxBDw.js","assets/cycles-BXldlSZf.js","assets/CanisterDetail-CmI3C98r.js","assets/zap-DNrOjE3N.js","assets/Account-CCSHTobB.js"])))=>i.map(i=>d[i]);
+const __vite__mapDeps=(i,m=__vite__mapDeps,d=(m.f||(m.f=["assets/Dashboard-BNkbqPUt.js","assets/dialog-OaAJKUhY.js","assets/index-DhWlHdoS.js","assets/plus-_7ONs4_j.js","assets/arrow-up-right-d7KCEuSi.js","assets/Canisters-SxFuylA0.js","assets/PaginationControls-C0BfYreH.js","assets/cycles-zbUF4qCO.js","assets/trash-2-DGO-Xhcc.js","assets/CanisterDetail-B3WyNcY3.js","assets/zap-Y4Io-g_M.js","assets/Account-CZNHqK3h.js"])))=>i.map(i=>d[i]);
 var __defProp = Object.defineProperty;
 var __typeError = (msg) => {
   throw TypeError(msg);
@@ -41068,10 +41068,10 @@ function Layout({ children }) {
     /* @__PURE__ */ jsxRuntimeExports.jsx(Toaster, { richColors: true, position: "bottom-right" })
   ] });
 }
-const DashboardPage = reactExports.lazy(() => __vitePreload(() => import("./Dashboard-Bs1eA5d-.js"), true ? __vite__mapDeps([0,1,2,3,4]) : void 0));
-const CanistersPage = reactExports.lazy(() => __vitePreload(() => import("./Canisters-C8VMNmsW.js"), true ? __vite__mapDeps([5,6,7,2,1]) : void 0));
-const CanisterDetailPage = reactExports.lazy(() => __vitePreload(() => import("./CanisterDetail-CmI3C98r.js"), true ? __vite__mapDeps([8,7,2,1,9,3]) : void 0));
-const AccountPage = reactExports.lazy(() => __vitePreload(() => import("./Account-CCSHTobB.js"), true ? __vite__mapDeps([10,6,2,4,9]) : void 0));
+const DashboardPage = reactExports.lazy(() => __vitePreload(() => import("./Dashboard-BNkbqPUt.js"), true ? __vite__mapDeps([0,1,2,3,4]) : void 0));
+const CanistersPage = reactExports.lazy(() => __vitePreload(() => import("./Canisters-SxFuylA0.js"), true ? __vite__mapDeps([5,6,7,2,1,8]) : void 0));
+const CanisterDetailPage = reactExports.lazy(() => __vitePreload(() => import("./CanisterDetail-B3WyNcY3.js"), true ? __vite__mapDeps([9,7,2,1,10,3,8]) : void 0));
+const AccountPage = reactExports.lazy(() => __vitePreload(() => import("./Account-CZNHqK3h.js"), true ? __vite__mapDeps([11,6,2,4,10,8]) : void 0));
 const PageLoader = () => /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "flex h-full items-center justify-center py-24", children: /* @__PURE__ */ jsxRuntimeExports.jsx(LoaderCircle, { className: "h-6 w-6 animate-spin text-primary" }) });
 const rootRoute = createRootRoute({
   component: () => /* @__PURE__ */ jsxRuntimeExports.jsx(AuthGuard, { children: /* @__PURE__ */ jsxRuntimeExports.jsx(Layout, { children: /* @__PURE__ */ jsxRuntimeExports.jsx(reactExports.Suspense, { fallback: /* @__PURE__ */ jsxRuntimeExports.jsx(PageLoader, {}), children: /* @__PURE__ */ jsxRuntimeExports.jsx(Outlet, {}) }) }) })
