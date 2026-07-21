@@ -20,6 +20,7 @@ import {
 } from "@/hooks/useBackend";
 import {
   useClaimCreatePayment,
+  useDismissFailedCreation,
   useRetryCreateCanister,
   useTransferIcp,
 } from "@/hooks/useCanisterMutations";
@@ -41,6 +42,7 @@ import {
   Layers,
   RefreshCw,
   SendHorizonal,
+  Trash2,
   Wallet,
   Zap,
 } from "lucide-react";
@@ -55,8 +57,13 @@ function FailedCreatesSection() {
   const { data: failed = [], isLoading, refetch } = useListFailedCreations();
   const retryMutation = useRetryCreateCanister();
   const claimMutation = useClaimCreatePayment();
+  const dismissMutation = useDismissFailedCreation();
 
   const claimBlockValid = /^\d+$/.test(claimBlock.trim());
+  const busy =
+    retryMutation.isPending ||
+    claimMutation.isPending ||
+    dismissMutation.isPending;
 
   return (
     <div
@@ -103,7 +110,8 @@ function FailedCreatesSection() {
                 only if they were paid to the correct CMC create account. Older
                 payments sent to the CMC default account cannot be notified —
                 watch for a refund on your balance, then create again with the
-                fixed app.
+                fixed app. Use DISMISS to clear unrecoverable rows from this
+                list (does not move ICP).
               </p>
             </div>
           </div>
@@ -136,21 +144,44 @@ function FailedCreatesSection() {
                         {item.name || "(unnamed)"}
                       </p>
                     </div>
-                    <Button
-                      type="button"
-                      size="sm"
-                      disabled={retryMutation.isPending}
-                      data-ocid="failed_creates.retry_button"
-                      className="font-mono text-[10px] tracking-[0.15em] uppercase"
-                      onClick={() =>
-                        retryMutation.mutate({
-                          blockIndex: item.blockIndex,
-                          name: item.name || "Recovered canister",
-                        })
-                      }
-                    >
-                      {retryMutation.isPending ? "RETRYING…" : "[R] RETRY"}
-                    </Button>
+                    <div className="flex items-center gap-1.5 shrink-0">
+                      <Button
+                        type="button"
+                        size="sm"
+                        disabled={busy}
+                        data-ocid="failed_creates.retry_button"
+                        className="font-mono text-[10px] tracking-[0.15em] uppercase"
+                        onClick={() =>
+                          retryMutation.mutate({
+                            blockIndex: item.blockIndex,
+                            name: item.name || "Recovered canister",
+                          })
+                        }
+                      >
+                        {retryMutation.isPending ? "RETRYING…" : "[R] RETRY"}
+                      </Button>
+                      <Button
+                        type="button"
+                        size="sm"
+                        variant="outline"
+                        disabled={busy}
+                        data-ocid="failed_creates.dismiss_button"
+                        className="font-mono text-[10px] tracking-[0.15em] uppercase border-destructive/40 text-destructive hover:bg-destructive/10"
+                        onClick={() => {
+                          if (
+                            !window.confirm(
+                              `Dismiss block ${item.blockIndex.toString()} from this list?\n\nThis only removes the recovery row. It does not refund ICP or contact the CMC.`,
+                            )
+                          ) {
+                            return;
+                          }
+                          dismissMutation.mutate(item.blockIndex);
+                        }}
+                      >
+                        <Trash2 className="h-3 w-3 mr-1" />
+                        {dismissMutation.isPending ? "…" : "DISMISS"}
+                      </Button>
+                    </div>
                   </div>
                   {item.lastError && (
                     <p className="font-mono text-[9px] text-destructive/80 break-all">

@@ -115,6 +115,10 @@ export const mockBackend: backendInterface = {
     __kind__: "ok",
     ok: { canisterId: pid2, cyclesSeeded: BigInt("500000000000") },
   }),
+  dismissFailedCreation: async (_blockIndex) => ({
+    __kind__: "ok",
+    ok: null,
+  }),
   getCreationCostEstimate: async (seedCyclesIcpE8s): Promise<CreationCostEstimate> => {
     // Mock a realistic live rate: ~1.65T cycles/ICP (representative of current XDR rates)
     const cyclesPerIcp = BigInt("1650000000000");

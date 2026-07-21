@@ -148,6 +148,7 @@ export interface backendInterface {
     addController(canisterId: CanisterId, controller: Principal): Promise<Result_3>;
     claimCreatePayment(blockIndex: bigint, name: string): Promise<Result_4>;
     createCanister(name: string, seedCyclesIcpE8s: E8s): Promise<Result_4>;
+    dismissFailedCreation(blockIndex: bigint): Promise<Result_3>;
     getAppPrincipal(): Promise<Principal>;
     getCanisterDetails(canisterId: CanisterId): Promise<CanisterDetails | null>;
     getCreationCostEstimate(seedCyclesIcpE8s: E8s): Promise<CreationCostEstimate>;

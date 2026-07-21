@@ -413,6 +413,29 @@ mixin (
     )
   };
 
+  // Remove a failed-create record from the caller's recovery list.
+  // Does not transfer ICP or call CMC — only clears app tracking for entries
+  // the user no longer wants (e.g. legacy wrong-destination payments).
+  public shared ({ caller }) func dismissFailedCreation(
+    blockIndex : CreationTypes.BlockIndex,
+  ) : async CommonTypes.Result<()> {
+    if (caller.isAnonymous()) {
+      return #err("Anonymous caller not allowed")
+    };
+    switch (failedCreations.get(blockIndex)) {
+      case null {
+        #err("No failed create found for block " # blockIndex.toText())
+      };
+      case (?rec) {
+        if (not Principal.equal(rec.userId, caller)) {
+          return #err("This create payment belongs to another account")
+        };
+        removeFailedCreation(blockIndex);
+        #ok(())
+      };
+    }
+  };
+
   // Create a new canister funded entirely by the caller's ICP via the CMC.
   public shared ({ caller }) func createCanister(
     name : Text,

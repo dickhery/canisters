@@ -230,6 +230,7 @@ export interface backendInterface {
     addController(canisterId: CanisterId, controller: Principal): Promise<Result_3>;
     claimCreatePayment(blockIndex: bigint, name: string): Promise<Result_4>;
     createCanister(name: string, seedCyclesIcpE8s: E8s): Promise<Result_4>;
+    dismissFailedCreation(blockIndex: bigint): Promise<Result_3>;
     getAppPrincipal(): Promise<Principal>;
     getCanisterDetails(canisterId: CanisterId): Promise<CanisterDetails | null>;
     getCreationCostEstimate(seedCyclesIcpE8s: E8s): Promise<CreationCostEstimate>;
@@ -261,11 +262,13 @@ export class Backend implements backendInterface {
         listFailedCreations: () => Promise<Array<FailedCreationView>>;
         retryCreateCanister: (blockIndex: bigint, name: string) => Promise<_Result_4>;
         claimCreatePayment: (blockIndex: bigint, name: string) => Promise<_Result_4>;
+        dismissFailedCreation: (blockIndex: bigint) => Promise<_Result_3>;
     } {
         return this.actor as unknown as {
             listFailedCreations: () => Promise<Array<FailedCreationView>>;
             retryCreateCanister: (blockIndex: bigint, name: string) => Promise<_Result_4>;
             claimCreatePayment: (blockIndex: bigint, name: string) => Promise<_Result_4>;
+            dismissFailedCreation: (blockIndex: bigint) => Promise<_Result_3>;
         };
     }
     async listFailedCreations(): Promise<Array<FailedCreationView>> {
@@ -278,6 +281,10 @@ export class Backend implements backendInterface {
     async claimCreatePayment(blockIndex: bigint, name: string): Promise<Result_4> {
         const result = await this.recoveryActor.claimCreatePayment(blockIndex, name);
         return from_candid_Result_4_n3(this._uploadFile, this._downloadFile, result);
+    }
+    async dismissFailedCreation(blockIndex: bigint): Promise<Result_3> {
+        const result = await this.recoveryActor.dismissFailedCreation(blockIndex);
+        return from_candid_Result_3_n1(this._uploadFile, this._downloadFile, result);
     }
     async addCanister(arg0: CanisterId, arg1: string): Promise<Result_3> {
         if (this.processError) {

@@ -275,6 +275,28 @@ export function useRetryCreateCanister() {
   });
 }
 
+/** Remove a failed-create recovery row (does not touch ICP/CMC). */
+export function useDismissFailedCreation() {
+  const { actor } = useActor(createActor);
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (blockIndex: bigint) => {
+      if (!actor) throw new Error("Not connected");
+      const result = await actor.dismissFailedCreation(blockIndex);
+      if (result.__kind__ === "err") throw new Error(result.err);
+      return result.ok;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["account", "failed-creations"] });
+      toast.success("Failed create dismissed");
+    },
+    onError: (err: Error) => {
+      toast.error("Dismiss failed", { description: err.message });
+    },
+  });
+}
+
 /** Claim a historical CREA ledger payment by block index, then notify CMC. */
 export function useClaimCreatePayment() {
   const { actor } = useActor(createActor);
